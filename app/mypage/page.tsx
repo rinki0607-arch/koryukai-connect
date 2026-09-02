@@ -94,6 +94,16 @@ export default async function MyPage() {
               defaultValue={p?.connect_with || ""}
             />
           </div>
+          <div>
+            <label className="label">自己紹介(参加者名簿に表示されます)</label>
+            <textarea
+              name="bio"
+              className="input"
+              rows={4}
+              placeholder="事業内容や得意分野、交流会でお話ししたいことなど、自由にご記入ください。"
+              defaultValue={p?.bio || ""}
+            />
+          </div>
           <button type="submit" className="btn-primary">
             保存する
           </button>

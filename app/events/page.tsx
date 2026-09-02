@@ -30,12 +30,18 @@ export default async function EventsPage() {
     redirect("/login?next=/events");
   }
 
-  const { data } = await supabase
-    .from("events")
-    .select("*")
-    .order("event_date", { ascending: false });
+  const [{ data }, { data: myRegs }] = await Promise.all([
+    supabase.from("events").select("*").order("event_date", { ascending: false }),
+    supabase
+      .from("registrations")
+      .select("event_id, attending")
+      .eq("participant_id", user.id),
+  ]);
 
   const events = (data as EventRow[]) || [];
+  const registeredEventIds = new Set(
+    (myRegs || []).filter((r) => r.attending).map((r) => r.event_id)
+  );
 
   const grouped = new Map<string, EventRow[]>();
   for (const ev of events) {
@@ -75,11 +81,22 @@ export default async function EventsPage() {
                         </p>
                       )}
                     </div>
-                    <span
-                      className={`badge shrink-0 ${STATUS_COLOR[ev.status]}`}
-                    >
-                      {STATUS_LABEL[ev.status]}
-                    </span>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <span className={`badge ${STATUS_COLOR[ev.status]}`}>
+                        {STATUS_LABEL[ev.status]}
+                      </span>
+                      {registeredEventIds.has(ev.id) && (
+                        <span className="badge bg-primary-light text-primary">
+                          参加登録済み
+                        </span>
+                      )}
+                      {ev.status === "upcoming" &&
+                        !registeredEventIds.has(ev.id) && (
+                          <span className="text-xs text-primary">
+                            申し込む &gt;
+                          </span>
+                        )}
+                    </div>
                   </Link>
                 ))}
               </div>

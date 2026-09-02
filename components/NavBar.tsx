@@ -36,6 +36,9 @@ export default async function NavBar() {
               <Link href="/mypage" className="text-gray-600 hover:text-primary">
                 マイページ
               </Link>
+              <Link href="/members" className="text-gray-600 hover:text-primary">
+                参加者名簿
+              </Link>
               <Link
                 href="/mypage/ticket"
                 className="text-gray-600 hover:text-primary"

@@ -14,6 +14,7 @@ export async function updateProfile(formData: FormData) {
   const company = String(formData.get("company") || "");
   const industry = String(formData.get("industry") || "");
   const connectWith = String(formData.get("connect_with") || "");
+  const bio = String(formData.get("bio") || "");
   const tags = formData.getAll("connect_with_tags").map(String);
 
   const { error } = await supabase
@@ -24,6 +25,7 @@ export async function updateProfile(formData: FormData) {
       industry,
       connect_with: connectWith,
       connect_with_tags: tags,
+      bio,
     })
     .eq("id", user.id);
 

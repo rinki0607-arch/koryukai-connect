@@ -35,6 +35,8 @@ export interface EventRow {
   status: EventStatus;
   capacity: number | null;
   created_at: string;
+  notified_at: string | null;
+  notified_count: number | null;
 }
 
 export interface RegistrationRow {
@@ -56,6 +58,17 @@ export interface AttendeeCandidate {
   industry: string | null;
   connect_with: string | null;
   already_liked: boolean;
+}
+
+export interface DirectoryEntry {
+  participant_id: string;
+  name: string | null;
+  company: string | null;
+  industry: string | null;
+  connect_with: string | null;
+  connect_with_tags: string[] | null;
+  bio: string | null;
+  events_attended: number;
 }
 
 export interface MatchRow {

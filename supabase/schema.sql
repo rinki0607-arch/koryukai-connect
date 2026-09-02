@@ -272,3 +272,50 @@ create policy attendance_select_own_or_admin on public.attendance
 drop policy if exists attendance_admin_write on public.attendance;
 create policy attendance_admin_write on public.attendance
   for all using (public.is_admin()) with check (public.is_admin());
+
+-- ============================================================
+-- 新着交流会メール通知の送信状況
+-- ============================================================
+alter table public.events
+  add column if not exists notified_at timestamptz;
+alter table public.events
+  add column if not exists notified_count int;
+
+-- ============================================================
+-- get_member_directory: 参加者名簿(参加者アプリ側から他の参加者のプロフィールを閲覧)
+-- メールアドレスは含めない(連絡先はマッチング成立後のみ開示)
+-- ============================================================
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
