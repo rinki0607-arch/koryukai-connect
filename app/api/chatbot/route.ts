@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-3-5-haiku-20241022";
+const MODEL = "claude-haiku-4-5-20251001";
 const MAX_HISTORY = 12;
 const NOT_CONFIGURED_REPLY =
   "現在AIチャットボットの設定準備中のため、自動応答できません。お問い合わせは交流会当日の運営スタッフ、またはアプリ内の各ページの案内をご確認のうえ、運営までご連絡ください。";
