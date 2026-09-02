@@ -593,3 +593,29 @@ as $$
 $$;
 
 grant execute on function public.get_my_capital_summary() to authenticated;
+
+-- ============================================================
+-- get_upcoming_events_public: 未ログインでも見られる公開イベント情報
+-- (AIチャットボットが最新の開催予定を答えられるようにするための最小限の公開ビュー)
+-- ============================================================
+create or replace function public.get_upcoming_events_public()
+returns table(
+  title text,
+  event_date date,
+  start_time time,
+  venue text,
+  description text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select title, event_date, start_time, venue, description
+  from public.events
+  where event_date >= current_date
+    and status in ('upcoming','closed')
+  order by event_date asc
+  limit 5;
+$$;
+
+grant execute on function public.get_upcoming_events_public() to anon, authenticated;

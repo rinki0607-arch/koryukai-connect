@@ -3,6 +3,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { BrandRailLeft, BrandRailRight } from "@/components/BrandRails";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 export const metadata: Metadata = {
   title: "ARKIVE",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <BrandRailRight />
         <NavBar />
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <ChatbotWidget />
         <ServiceWorkerRegister />
       </body>
     </html>
