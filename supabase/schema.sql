@@ -366,3 +366,178 @@ as $$
 $$;
 
 grant execute on function public.get_member_directory() to authenticated;
+
+-- ============================================================
+-- messages: マッチ成立した相手同士のチャット(履歴は交流会をまたいで蓄積)
+-- ============================================================
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null check (char_length(trim(content)) > 0),
+  read_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (sender_id <> recipient_id)
+);
+
+create index if not exists messages_pair_created_idx
+  on public.messages (least(sender_id, recipient_id), greatest(sender_id, recipient_id), created_at);
+
+create index if not exists messages_recipient_unread_idx
+  on public.messages (recipient_id, read_at);
+
+-- 過去含め、いずれかの交流会で相互に「話してみたい」が成立している相手か
+create or replace function public.is_matched_with(other_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists(
+    select 1 from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id
+     and a.from_id = b.to_id
+     and a.to_id = b.from_id
+    where a.from_id = auth.uid() and a.to_id = other_id
+  );
+$$;
+
+grant execute on function public.is_matched_with(uuid) to authenticated;
+
+alter table public.messages enable row level security;
+
+drop policy if exists messages_select_own on public.messages;
+create policy messages_select_own on public.messages
+  for select using (sender_id = auth.uid() or recipient_id = auth.uid() or public.is_admin());
+
+-- 送信はマッチが成立している相手にのみ許可(既読フラグの更新は mark_conversation_read 経由のみ)
+drop policy if exists messages_insert_matched on public.messages;
+create policy messages_insert_matched on public.messages
+  for insert with check (
+    sender_id = auth.uid() and public.is_matched_with(recipient_id)
+  );
+
+create or replace function public.mark_conversation_read(partner uuid)
+returns void
+language sql
+security definer set search_path = public
+as $$
+  update public.messages
+  set read_at = now()
+  where recipient_id = auth.uid() and sender_id = partner and read_at is null;
+$$;
+
+grant execute on function public.mark_conversation_read(uuid) to authenticated;
+
+-- チャット相手のプロフィール(マッチしている場合のみ返す。profiles は本人のみ閲覧可のため専用RPCが必要)
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select p.id, p.name, p.company, p.job_title, p.industry, p.connect_with
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
+
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
+
+create or replace function public.get_unread_message_count()
+returns int
+language sql
+security definer set search_path = public
+stable
+as $$
+  select count(*)::int from public.messages
+  where recipient_id = auth.uid() and read_at is null;
+$$;
+
+grant execute on function public.get_unread_message_count() to authenticated;
+
+-- 「メッセージ」一覧(旧マッチ一覧): マッチ相手ごとに1行、交流会をまたいで集約
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
+
+grant execute on function public.get_my_conversations() to authenticated;
+
+-- Realtime: チャットの新着メッセージをクライアントに配信できるようにする
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages'
+  ) then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+end $$;

@@ -52,7 +52,7 @@ export default async function NavBar() {
                 href="/mypage/matches"
                 className="text-gray-600 hover:text-primary"
               >
-                マッチ一覧
+                メッセージ
               </Link>
             </>
           )}

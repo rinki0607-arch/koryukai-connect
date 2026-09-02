@@ -87,3 +87,34 @@ export interface MatchRow {
   email: string | null;
   matched_at: string;
 }
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface ConversationRow {
+  partner_id: string;
+  name: string | null;
+  company: string | null;
+  job_title: string | null;
+  last_message: string | null;
+  last_message_at: string | null;
+  last_sender_id: string | null;
+  unread_count: number;
+  matched_events: string[] | null;
+  first_matched_at: string;
+}
+
+export interface ConversationPartner {
+  participant_id: string;
+  name: string | null;
+  company: string | null;
+  job_title: string | null;
+  industry: string | null;
+  connect_with: string | null;
+}

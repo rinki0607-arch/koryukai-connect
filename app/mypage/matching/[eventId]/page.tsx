@@ -59,9 +59,9 @@ export default async function MatchingPage({
       <p className="mt-6 text-sm text-gray-500">
         お互いに「話してみたい」を選ぶとマッチが成立し、
         <Link href="/mypage/matches" className="text-primary hover:underline">
-          マッチ一覧
+          メッセージ
         </Link>
-        から連絡先が確認できるようになります。
+        からチャットできるようになります。
       </p>
     </div>
   );
