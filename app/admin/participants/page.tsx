@@ -11,11 +11,12 @@ export default async function AdminParticipantsPage() {
   const { data, error } = await supabase
     .from("registrations")
     .select(
-      "attending, afterparty, industry, connect_with, connect_with_tags, events(title, event_date), profiles(name, email, company)"
+      "participant_id, attending, afterparty, industry, connect_with, connect_with_tags, events(title, event_date), profiles(name, email, company)"
     )
     .order("created_at", { ascending: false });
 
   const rows: ParticipantRow[] = (data || []).map((r: any) => ({
+    participant_id: r.participant_id,
     event_title: r.events?.title || "",
     event_date: r.events?.event_date || "",
     name: r.profiles?.name || null,

@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 export interface ParticipantRow {
+  participant_id: string;
   event_title: string;
   event_date: string;
   name: string | null;
@@ -145,6 +147,7 @@ export default function ParticipantsTable({
                 "繋がりたい人",
                 "参加",
                 "二次会",
+                "",
               ].map((h) => (
                 <th
                   key={h}
@@ -168,6 +171,14 @@ export default function ParticipantsTable({
                 </td>
                 <td className="px-3 py-2">
                   {r.afterparty ? "希望" : ""}
+                </td>
+                <td className="px-3 py-2">
+                  <Link
+                    href={`/admin/participants/${r.participant_id}`}
+                    className="text-primary hover:underline"
+                  >
+                    詳細
+                  </Link>
                 </td>
               </tr>
             ))}

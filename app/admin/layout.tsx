@@ -46,6 +46,15 @@ export default async function AdminLayout({
         >
           参加実績ダッシュボード
         </Link>
+        <Link
+          href="/admin/analytics"
+          className="text-gray-600 hover:text-primary"
+        >
+          全体集計・分析
+        </Link>
+        <Link href="/admin/team" className="text-gray-600 hover:text-primary">
+          運営メンバー
+        </Link>
       </div>
       {children}
     </div>
