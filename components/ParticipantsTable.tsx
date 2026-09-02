@@ -9,7 +9,10 @@ export interface ParticipantRow {
   event_date: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   company: string | null;
+  job_type: string | null;
+  job_title: string | null;
   industry: string | null;
   connect_with: string | null;
   connect_with_tags: string[] | null;
@@ -54,7 +57,10 @@ export default function ParticipantsTable({
       "開催日",
       "氏名",
       "メール",
+      "電話番号",
       "会社",
+      "役職",
+      "職種",
       "業種",
       "繋がりたい人",
       "タグ",
@@ -67,7 +73,10 @@ export default function ParticipantsTable({
         r.event_date,
         r.name || "",
         r.email || "",
+        r.phone || "",
         r.company || "",
+        r.job_title || "",
+        r.job_type || "",
         r.industry || "",
         (r.connect_with || "").replace(/\n/g, " "),
         (r.connect_with_tags || []).join("/"),
@@ -143,6 +152,7 @@ export default function ParticipantsTable({
                 "交流会",
                 "氏名",
                 "会社",
+                "職種",
                 "業種",
                 "繋がりたい人",
                 "参加",
@@ -164,6 +174,7 @@ export default function ParticipantsTable({
                 <td className="px-3 py-2">{r.event_title}</td>
                 <td className="px-3 py-2">{r.name}</td>
                 <td className="px-3 py-2">{r.company}</td>
+                <td className="px-3 py-2">{r.job_type}</td>
                 <td className="px-3 py-2">{r.industry}</td>
                 <td className="px-3 py-2">{r.connect_with}</td>
                 <td className="px-3 py-2">

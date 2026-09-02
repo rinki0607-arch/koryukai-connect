@@ -72,8 +72,10 @@ export default function MemberDirectory({
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-semibold">{e.name || "(名前未設定)"}</p>
-                  {e.company && (
-                    <p className="text-sm text-gray-500">{e.company}</p>
+                  {(e.job_title || e.company) && (
+                    <p className="text-sm text-gray-500">
+                      {[e.job_title, e.company].filter(Boolean).join(" / ")}
+                    </p>
                   )}
                 </div>
                 {e.events_attended > 0 && (
@@ -83,9 +85,9 @@ export default function MemberDirectory({
                 )}
               </div>
 
-              {e.industry && (
+              {(e.job_type || e.industry) && (
                 <p className="mt-2 text-sm text-gray-600">
-                  業種: {e.industry}
+                  {[e.job_type, e.industry].filter(Boolean).join(" ・ ")}
                 </p>
               )}
 

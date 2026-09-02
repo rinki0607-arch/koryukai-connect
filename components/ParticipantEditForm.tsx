@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateParticipant, deleteParticipant } from "@/app/admin/participants/[id]/actions";
 import { Profile } from "@/lib/types";
-import { INDUSTRIES } from "@/lib/constants";
+import { INDUSTRIES, JOB_TYPES } from "@/lib/constants";
 
 export default function ParticipantEditForm({
   profile,
@@ -49,6 +49,30 @@ export default function ParticipantEditForm({
           defaultValue={profile.company || ""}
         />
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="label">役職</label>
+          <input
+            name="job_title"
+            className="input"
+            defaultValue={profile.job_title || ""}
+          />
+        </div>
+        <div>
+          <label className="label">職種</label>
+          <input
+            name="job_type"
+            list="job-type-list"
+            className="input"
+            defaultValue={profile.job_type || ""}
+          />
+          <datalist id="job-type-list">
+            {JOB_TYPES.map((j) => (
+              <option key={j} value={j} />
+            ))}
+          </datalist>
+        </div>
+      </div>
       <div>
         <label className="label">業種</label>
         <input
@@ -62,6 +86,15 @@ export default function ParticipantEditForm({
             <option key={i} value={i} />
           ))}
         </datalist>
+      </div>
+      <div>
+        <label className="label">電話番号</label>
+        <input
+          name="phone"
+          type="tel"
+          className="input"
+          defaultValue={profile.phone || ""}
+        />
       </div>
       <div>
         <label className="label">繋がりたい人について</label>

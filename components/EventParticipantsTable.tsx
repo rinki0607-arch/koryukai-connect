@@ -4,7 +4,10 @@ export interface EventParticipantRow {
   participant_id: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   company: string | null;
+  job_type: string | null;
+  job_title: string | null;
   industry: string | null;
   connect_with: string | null;
   connect_with_tags: string[] | null;
@@ -23,7 +26,10 @@ export default function EventParticipantsTable({
     const header = [
       "氏名",
       "メール",
+      "電話番号",
       "会社",
+      "役職",
+      "職種",
       "業種",
       "繋がりたい人",
       "タグ",
@@ -34,7 +40,10 @@ export default function EventParticipantsTable({
       [
         r.name || "",
         r.email || "",
+        r.phone || "",
         r.company || "",
+        r.job_title || "",
+        r.job_type || "",
         r.industry || "",
         (r.connect_with || "").replace(/\n/g, " "),
         (r.connect_with_tags || []).join("/"),
@@ -72,8 +81,16 @@ export default function EventParticipantsTable({
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              {["氏名", "会社", "業種", "繋がりたい人", "参加", "二次会", ""].map(
-                (h) => (
+              {[
+                "氏名",
+                "会社",
+                "職種",
+                "業種",
+                "繋がりたい人",
+                "参加",
+                "二次会",
+                "",
+              ].map((h) => (
                   <th
                     key={h}
                     className="px-3 py-2 text-left font-medium text-gray-500"
@@ -89,6 +106,7 @@ export default function EventParticipantsTable({
               <tr key={r.participant_id}>
                 <td className="px-3 py-2">{r.name}</td>
                 <td className="px-3 py-2">{r.company}</td>
+                <td className="px-3 py-2">{r.job_type}</td>
                 <td className="px-3 py-2">{r.industry}</td>
                 <td className="px-3 py-2">{r.connect_with}</td>
                 <td className="px-3 py-2">

@@ -77,7 +77,14 @@ export default async function ParticipantDetailPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold">{p.name || "(名前未設定)"}</h1>
-        <p className="text-sm text-gray-500">{p.email}</p>
+        <p className="text-sm text-gray-500">
+          {[p.email, p.phone].filter(Boolean).join(" / ")}
+        </p>
+        {(p.job_title || p.job_type) && (
+          <p className="mt-1 text-sm text-gray-500">
+            {[p.job_title, p.job_type].filter(Boolean).join(" / ")}
+          </p>
+        )}
       </div>
 
       <ParticipantEditForm profile={p} isSelf={isSelf} />

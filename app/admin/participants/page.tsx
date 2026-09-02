@@ -11,7 +11,7 @@ export default async function AdminParticipantsPage() {
   const { data, error } = await supabase
     .from("registrations")
     .select(
-      "participant_id, attending, afterparty, industry, connect_with, connect_with_tags, events(title, event_date), profiles(name, email, company)"
+      "participant_id, attending, afterparty, industry, connect_with, connect_with_tags, events(title, event_date), profiles(name, email, phone, company, job_type, job_title)"
     )
     .order("created_at", { ascending: false });
 
@@ -21,7 +21,10 @@ export default async function AdminParticipantsPage() {
     event_date: r.events?.event_date || "",
     name: r.profiles?.name || null,
     email: r.profiles?.email || null,
+    phone: r.profiles?.phone || null,
     company: r.profiles?.company || null,
+    job_type: r.profiles?.job_type || null,
+    job_title: r.profiles?.job_title || null,
     industry: r.industry,
     connect_with: r.connect_with,
     connect_with_tags: r.connect_with_tags,

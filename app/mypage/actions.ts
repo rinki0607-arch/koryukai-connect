@@ -12,6 +12,9 @@ export async function updateProfile(formData: FormData) {
 
   const name = String(formData.get("name") || "");
   const company = String(formData.get("company") || "");
+  const jobType = String(formData.get("job_type") || "");
+  const jobTitle = String(formData.get("job_title") || "");
+  const phone = String(formData.get("phone") || "");
   const industry = String(formData.get("industry") || "");
   const connectWith = String(formData.get("connect_with") || "");
   const bio = String(formData.get("bio") || "");
@@ -22,6 +25,9 @@ export async function updateProfile(formData: FormData) {
     .update({
       name,
       company,
+      job_type: jobType,
+      job_title: jobTitle,
+      phone,
       industry,
       connect_with: connectWith,
       connect_with_tags: tags,

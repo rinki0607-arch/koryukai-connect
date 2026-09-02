@@ -2,7 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventRow, Profile, RegistrationRow } from "@/lib/types";
-import { formatEventDate, INDUSTRIES, CONNECT_TAGS } from "@/lib/constants";
+import {
+  formatEventDate,
+  INDUSTRIES,
+  JOB_TYPES,
+  CONNECT_TAGS,
+} from "@/lib/constants";
 import { updateProfile } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +57,31 @@ export default async function MyPage() {
               defaultValue={p?.company || ""}
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">役職</label>
+              <input
+                name="job_title"
+                className="input"
+                placeholder="例: 代表取締役"
+                defaultValue={p?.job_title || ""}
+              />
+            </div>
+            <div>
+              <label className="label">職種</label>
+              <input
+                name="job_type"
+                list="job-type-list"
+                className="input"
+                defaultValue={p?.job_type || ""}
+              />
+              <datalist id="job-type-list">
+                {JOB_TYPES.map((j) => (
+                  <option key={j} value={j} />
+                ))}
+              </datalist>
+            </div>
+          </div>
           <div>
             <label className="label">業種</label>
             <input
@@ -65,6 +95,19 @@ export default async function MyPage() {
                 <option key={i} value={i} />
               ))}
             </datalist>
+          </div>
+          <div>
+            <label className="label">電話番号</label>
+            <input
+              name="phone"
+              type="tel"
+              className="input"
+              placeholder="例: 090-1234-5678"
+              defaultValue={p?.phone || ""}
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              運営からの緊急連絡のみに使用し、他の参加者には公開されません。
+            </p>
           </div>
           <div>
             <p className="label">繋がりたい人のタイプ</p>

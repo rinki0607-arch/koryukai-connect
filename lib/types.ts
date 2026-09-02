@@ -6,6 +6,9 @@ export interface Profile {
   name: string | null;
   email: string | null;
   company: string | null;
+  job_type: string | null;
+  job_title: string | null;
+  phone: string | null;
   industry: string | null;
   connect_with: string | null;
   connect_with_tags: string[] | null;
@@ -64,6 +67,8 @@ export interface DirectoryEntry {
   participant_id: string;
   name: string | null;
   company: string | null;
+  job_type: string | null;
+  job_title: string | null;
   industry: string | null;
   connect_with: string | null;
   connect_with_tags: string[] | null;

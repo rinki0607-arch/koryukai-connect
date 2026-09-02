@@ -30,6 +30,9 @@ export async function updateParticipant(
 
   const name = String(formData.get("name") || "");
   const company = String(formData.get("company") || "");
+  const jobType = String(formData.get("job_type") || "");
+  const jobTitle = String(formData.get("job_title") || "");
+  const phone = String(formData.get("phone") || "");
   const industry = String(formData.get("industry") || "");
   const connectWith = String(formData.get("connect_with") || "");
   const role = String(formData.get("role") || "participant");
@@ -52,6 +55,9 @@ export async function updateParticipant(
     .update({
       name,
       company,
+      job_type: jobType,
+      job_title: jobTitle,
+      phone,
       industry,
       connect_with: connectWith,
       role,

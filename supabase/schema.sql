@@ -319,3 +319,50 @@ as $$
 $$;
 
 grant execute on function public.get_member_directory() to authenticated;
+
+-- ============================================================
+-- 参加者プロフィール項目の追加(職種・役職・電話番号)
+-- ============================================================
+alter table public.profiles add column if not exists job_type text;
+alter table public.profiles add column if not exists job_title text;
+alter table public.profiles add column if not exists phone text;
+
+-- get_member_directory を職種・役職も返すように再定義(電話番号は含めない)
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
