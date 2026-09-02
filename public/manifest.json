@@ -1,0 +1,24 @@
+{
+  "name": "ARKIVE - アーク起業塾 交流会プラットフォーム",
+  "short_name": "ARKIVE",
+  "description": "アーク起業塾の交流会 参加登録・マッチング・QR受付アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

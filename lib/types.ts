@@ -10,6 +10,15 @@ export interface Profile {
   connect_with: string | null;
   connect_with_tags: string[] | null;
   bio: string | null;
+  ticket_token: string;
+}
+
+export interface AttendanceRow {
+  id: string;
+  event_id: string;
+  participant_id: string;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
 }
 
 export type EventStatus = "upcoming" | "closed" | "past" | "canceled";

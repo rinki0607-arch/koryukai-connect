@@ -242,3 +242,33 @@ $$;
 grant execute on function public.is_admin() to authenticated;
 grant execute on function public.get_event_attendees(uuid) to authenticated;
 grant execute on function public.get_my_matches() to authenticated;
+
+-- ============================================================
+-- QRチェックイン: 個人チケットトークン + 出欠(入場/退場)記録
+-- ============================================================
+alter table public.profiles
+  add column if not exists ticket_token uuid not null default gen_random_uuid();
+
+create unique index if not exists profiles_ticket_token_idx
+  on public.profiles(ticket_token);
+
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  checked_in_at timestamptz,
+  checked_out_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (event_id, participant_id)
+);
+
+alter table public.attendance enable row level security;
+
+drop policy if exists attendance_select_own_or_admin on public.attendance;
+create policy attendance_select_own_or_admin on public.attendance
+  for select using (participant_id = auth.uid() or public.is_admin());
+
+-- 書き込みは運営(受付担当)のみ。QR受付は管理画面から行う
+drop policy if exists attendance_admin_write on public.attendance;
+create policy attendance_admin_write on public.attendance
+  for all using (public.is_admin()) with check (public.is_admin());

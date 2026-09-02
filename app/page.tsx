@@ -27,12 +27,15 @@ export default async function HomePage() {
   return (
     <div className="space-y-10">
       <section className="card bg-gradient-to-br from-primary-light to-white">
-        <h1 className="text-2xl font-bold">交流会コネクト</h1>
+        <h1 className="text-2xl font-bold">ARKIVE</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          アーク起業塾 交流会プラットフォーム
+        </p>
         <p className="mt-2 text-gray-600">
           交流会の参加登録・二次会希望の確認、参加者の業種や繋がりたい人の情報の蓄積、
-          交流会後のマッチングまでを1つのアプリで完結できます。
+          交流会後のマッチング、当日のQR受付までを1つのアプリで完結できます。
         </p>
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/events" className="btn-primary">
             交流会一覧を見る
           </Link>
@@ -41,6 +44,9 @@ export default async function HomePage() {
               ログイン / 新規登録
             </Link>
           )}
+          <Link href="/install" className="btn-secondary">
+            スマホに追加する
+          </Link>
         </div>
       </section>
 

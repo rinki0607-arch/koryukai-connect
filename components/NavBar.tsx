@@ -25,9 +25,9 @@ export default async function NavBar() {
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-lg font-bold text-primary">
-          交流会コネクト
+          ARKIVE
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex flex-wrap items-center gap-4 text-sm">
           <Link href="/events" className="text-gray-600 hover:text-primary">
             交流会一覧
           </Link>
@@ -35,6 +35,12 @@ export default async function NavBar() {
             <>
               <Link href="/mypage" className="text-gray-600 hover:text-primary">
                 マイページ
+              </Link>
+              <Link
+                href="/mypage/ticket"
+                className="text-gray-600 hover:text-primary"
+              >
+                マイQRコード
               </Link>
               <Link
                 href="/mypage/matches"

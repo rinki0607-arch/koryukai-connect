@@ -40,6 +40,12 @@ export default async function AdminLayout({
         >
           参加者データ
         </Link>
+        <Link
+          href="/admin/attendance"
+          className="text-gray-600 hover:text-primary"
+        >
+          参加実績ダッシュボード
+        </Link>
       </div>
       {children}
     </div>
