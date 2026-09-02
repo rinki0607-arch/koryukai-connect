@@ -6,10 +6,18 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#4f46e5",
-          dark: "#4338ca",
-          light: "#eef2ff",
+          DEFAULT: "#10192f",
+          dark: "#0a0f1d",
+          light: "#e9ebf2",
         },
+        accent: {
+          DEFAULT: "#c9a24b",
+          dark: "#a3811f",
+          light: "#f7ecd3",
+        },
+      },
+      fontFamily: {
+        display: ["'Shippori Mincho'", "serif"],
       },
     },
   },

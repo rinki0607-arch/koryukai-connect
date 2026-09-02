@@ -96,8 +96,8 @@ export function buildEventAnnouncementEmail(params: {
   const subject = `【ARKIVE】新しい交流会のお知らせ:${title}`;
 
   const html = `
-    <div style="font-family:sans-serif;line-height:1.7;color:#1a1a2e;max-width:480px;margin:0 auto;">
-      <p style="font-size:12px;color:#4f46e5;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業塾</p>
+    <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
+      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業塾</p>
       <h2 style="margin:8px 0 4px;">新しい交流会のお知らせ</h2>
       <p style="margin:0 0 20px;color:#555;">${eventDateLabel}${
     timeLabel ? ` ${timeLabel}` : ""
@@ -120,7 +120,7 @@ export function buildEventAnnouncementEmail(params: {
           ? `<p style="white-space:pre-wrap;color:#333;font-size:14px;">${description}</p>`
           : ""
       }
-      <a href="${eventUrl}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">参加登録する</a>
+      <a href="${eventUrl}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#c9a24b;color:#1b1305;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">参加登録する</a>
       <p style="margin-top:28px;font-size:12px;color:#999;">このメールはARKIVEにご登録いただいた方に送信しています。</p>
     </div>
   `;

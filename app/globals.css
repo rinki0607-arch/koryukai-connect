@@ -3,12 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #f7f7fb;
+  --color-bg: #f4f5f9;
 }
 
 body {
   background-color: var(--color-bg);
-  color: #1a1a2e;
+  color: #10192f;
+  font-family: "Noto Sans JP", "Zen Kaku Gothic New", sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Shippori Mincho", serif;
 }
 
 .card {
@@ -20,7 +27,7 @@ body {
 }
 
 .btn-primary {
-  @apply btn bg-primary text-white hover:bg-primary-dark disabled:opacity-50;
+  @apply btn bg-accent text-[#1b1305] hover:bg-accent-dark disabled:opacity-50;
 }
 
 .btn-secondary {

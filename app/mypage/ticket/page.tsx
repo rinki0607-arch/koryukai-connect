@@ -23,7 +23,7 @@ export default async function TicketPage() {
   const qrDataUrl = await QRCode.toDataURL(qrValue, {
     margin: 1,
     width: 320,
-    color: { dark: "#1a1a2e", light: "#ffffffff" },
+    color: { dark: "#10192f", light: "#ffffffff" },
   });
 
   return (

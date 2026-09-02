@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#4f46e5",
+  themeColor: "#10192f",
 };
 
 export default function RootLayout({
@@ -29,6 +29,16 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" href="/icons/icon-192.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        />
       </head>
       <body className="min-h-screen">
         <NavBar />

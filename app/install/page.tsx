@@ -8,7 +8,7 @@ export default async function InstallPage() {
   const qrDataUrl = await QRCode.toDataURL(appUrl, {
     margin: 1,
     width: 320,
-    color: { dark: "#1a1a2e", light: "#ffffffff" },
+    color: { dark: "#10192f", light: "#ffffffff" },
   });
 
   return (
