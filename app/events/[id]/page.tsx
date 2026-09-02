@@ -57,6 +57,9 @@ export default async function EventDetailPage({
             {ev.end_time ? `〜${ev.end_time.slice(0, 5)}` : ""}
           </p>
         )}
+        {ev.fee_note && (
+          <p className="mt-1 text-gray-600">参加費: {ev.fee_note}</p>
+        )}
         {ev.description && (
           <p className="mt-4 whitespace-pre-wrap text-gray-700">
             {ev.description}

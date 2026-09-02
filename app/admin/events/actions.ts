@@ -15,6 +15,7 @@ function parseEventForm(formData: FormData) {
     end_time: String(formData.get("end_time") || "") || null,
     venue: String(formData.get("venue") || ""),
     description: String(formData.get("description") || ""),
+    fee_note: String(formData.get("fee_note") || "") || null,
     has_afterparty: formData.get("has_afterparty") === "on",
     status: String(formData.get("status") || "upcoming"),
     capacity: formData.get("capacity")

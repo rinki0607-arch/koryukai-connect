@@ -62,6 +62,7 @@ create table if not exists public.events (
   end_time time,
   venue text,
   description text,
+  fee_note text,
   has_afterparty boolean not null default true,
   status text not null default 'upcoming' check (status in ('upcoming','closed','past','canceled')),
   capacity int,
@@ -604,13 +605,14 @@ returns table(
   event_date date,
   start_time time,
   venue text,
-  description text
+  description text,
+  fee_note text
 )
 language sql
 security definer set search_path = public
 stable
 as $$
-  select title, event_date, start_time, venue, description
+  select title, event_date, start_time, venue, description, fee_note
   from public.events
   where event_date >= current_date
     and status in ('upcoming','closed')

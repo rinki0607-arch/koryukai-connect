@@ -34,6 +34,7 @@ export interface EventRow {
   end_time: string | null;
   venue: string | null;
   description: string | null;
+  fee_note: string | null;
   has_afterparty: boolean;
   status: EventStatus;
   capacity: number | null;

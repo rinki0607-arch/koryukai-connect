@@ -81,6 +81,18 @@ export default function EventForm({
         />
       </div>
       <div>
+        <label className="label">参加費(任意)</label>
+        <input
+          name="fee_note"
+          className="input"
+          placeholder="例: 3,000円(二次会別途) / 無料"
+          defaultValue={event?.fee_note || ""}
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          ここに入力した内容が交流会一覧・詳細ページと、AIチャットボットの回答にそのまま使われます。
+        </p>
+      </div>
+      <div>
         <label className="label">定員(任意)</label>
         <input
           name="capacity"
