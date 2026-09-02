@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { EventRow, Profile, RegistrationRow } from "@/lib/types";
+import { CapitalSummary, EventRow, Profile, RegistrationRow } from "@/lib/types";
 import {
   formatEventDate,
   INDUSTRIES,
@@ -9,6 +9,7 @@ import {
   CONNECT_TAGS,
 } from "@/lib/constants";
 import { updateProfile } from "./actions";
+import CapitalSummaryCard from "@/components/CapitalSummaryCard";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +32,19 @@ export default async function MyPage() {
     .eq("participant_id", user.id)
     .order("created_at", { ascending: false });
 
+  const { data: capitalData } = await supabase.rpc("get_my_capital_summary");
+  const capital = (capitalData as CapitalSummary[] | null)?.[0];
+
   const p = profile as Profile;
 
   return (
     <div className="space-y-10">
+      {capital && (
+        <section>
+          <CapitalSummaryCard summary={capital} />
+        </section>
+      )}
+
       <section>
         <h1 className="mb-4 text-xl font-bold">マイページ</h1>
         <form action={updateProfile} className="card max-w-xl space-y-4">

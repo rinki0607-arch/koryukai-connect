@@ -118,3 +118,12 @@ export interface ConversationPartner {
   industry: string | null;
   connect_with: string | null;
 }
+
+export interface CapitalSummary {
+  events_attended: number;
+  connections_count: number;
+  messages_count: number;
+  first_attended_at: string | null;
+  latest_partner_name: string | null;
+  latest_matched_at: string | null;
+}

@@ -541,3 +541,55 @@ begin
     alter publication supabase_realtime add table public.messages;
   end if;
 end $$;
+
+-- ============================================================
+-- get_my_capital_summary: 参加者向け「あなたの人的資本」ダッシュボード集計
+-- (参加した交流会数・つながった人数・やりとりしたメッセージ数など)
+-- ============================================================
+create or replace function public.get_my_capital_summary()
+returns table(
+  events_attended int,
+  connections_count int,
+  messages_count int,
+  first_attended_at timestamptz,
+  latest_partner_name text,
+  latest_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, min(checked_in_at) as first_at
+    from public.attendance
+    where participant_id = auth.uid() and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id, min(least(a.created_at, b.created_at)) as matched_at
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  latest as (
+    select p.name, c.matched_at
+    from conn c
+    join public.profiles p on p.id = c.partner_id
+    order by c.matched_at desc
+    limit 1
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = auth.uid() or recipient_id = auth.uid()
+  )
+  select
+    coalesce((select c from att), 0),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0),
+    (select first_at from att),
+    (select name from latest),
+    (select matched_at from latest);
+$$;
+
+grant execute on function public.get_my_capital_summary() to authenticated;

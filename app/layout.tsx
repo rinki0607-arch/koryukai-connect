@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { BrandRailLeft, BrandRailRight } from "@/components/BrandRails";
 
 export const metadata: Metadata = {
   title: "ARKIVE",
@@ -41,6 +42,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
+        <BrandRailLeft />
+        <BrandRailRight />
         <NavBar />
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <ServiceWorkerRegister />
