@@ -91,17 +91,20 @@ export default function ChatbotWidget() {
     <div className="chatbot-fab fixed right-4 z-[45] flex flex-col items-end gap-3 lg:right-6">
       {open && (
         <div className="flex h-[70vh] max-h-[560px] w-[92vw] max-w-sm flex-col overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-2xl">
-          <div className="flex items-center justify-between bg-primary px-4 py-3 text-white">
+          <div className="flex items-start justify-between bg-primary px-4 py-3 text-white">
             <div>
               <p className="font-mono text-[10px] font-bold tracking-widest text-accent">
-                24H AUTO RESPONSE
+                AI CONCIERGE · 24H
               </p>
-              <p className="font-display text-base font-bold">ARKIVEサポートAI</p>
+              <p className="font-display text-base font-bold leading-tight">
+                24時間対応自動オペレーター
+              </p>
+              <p className="mt-0.5 text-[11px] text-white/50">ARKIVEサポートAI</p>
             </div>
             <button
               aria-label="閉じる"
               onClick={() => setOpen(false)}
-              className="rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+              className="shrink-0 rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                 <path
@@ -185,37 +188,47 @@ export default function ChatbotWidget() {
         </div>
       )}
 
-      <button
-        aria-label={open ? "チャットを閉じる" : "ARKIVEサポートAIに質問する"}
-        onClick={() => setOpen((v) => !v)}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-accent shadow-lg transition hover:opacity-90"
-      >
+      <div className="flex items-center gap-2.5">
         {!open && (
-          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-accent" />
+          <div className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-2 shadow-[0_4px_16px_rgba(16,25,47,0.12)]">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
+            <p className="whitespace-nowrap text-[11px] font-bold text-primary sm:text-[12px]">
+              24時間対応 自動オペレーター
+            </p>
+          </div>
         )}
-        {open ? (
-          <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M5 5l10 10M15 5L5 15"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-        ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M4 12a8 8 0 1 1 3.2 6.4L4 20l1.2-3.6A7.96 7.96 0 0 1 4 12Z"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinejoin="round"
-            />
-            <circle cx="8.5" cy="12" r="1" fill="currentColor" />
-            <circle cx="12" cy="12" r="1" fill="currentColor" />
-            <circle cx="15.5" cy="12" r="1" fill="currentColor" />
-          </svg>
-        )}
-      </button>
+        <button
+          aria-label={open ? "チャットを閉じる" : "ARKIVEサポートAIに質問する"}
+          onClick={() => setOpen((v) => !v)}
+          className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-accent shadow-lg transition hover:opacity-90"
+        >
+          {!open && (
+            <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-accent" />
+          )}
+          {open ? (
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M5 5l10 10M15 5L5 15"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 12a8 8 0 1 1 3.2 6.4L4 20l1.2-3.6A7.96 7.96 0 0 1 4 12Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+              <circle cx="8.5" cy="12" r="1" fill="currentColor" />
+              <circle cx="12" cy="12" r="1" fill="currentColor" />
+              <circle cx="15.5" cy="12" r="1" fill="currentColor" />
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

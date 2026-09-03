@@ -32,7 +32,12 @@ export default async function HomePage() {
         <p className="relative font-mono text-[11px] font-bold tracking-[0.25em] text-accent">
           ARC ENTREPRENEUR NETWORK
         </p>
-        <h1 className="relative mt-1 font-display text-3xl font-bold">ARKIVE</h1>
+        <h1
+          className="relative mt-1 text-3xl font-bold"
+          style={{ fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.05em" }}
+        >
+          ARKIVE
+        </h1>
         <p className="relative mt-1 text-sm text-white/60">
           アーク起業塾 交流会プラットフォーム
         </p>

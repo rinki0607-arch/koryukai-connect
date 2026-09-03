@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Message } from "@/lib/types";
 import { sendMessage, markConversationRead } from "@/app/mypage/matches/[partnerId]/actions";
+import Avatar from "@/components/Avatar";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("ja-JP", {
@@ -24,13 +25,25 @@ function formatDayLabel(iso: string) {
   });
 }
 
+function formatMatchedDate(iso: string) {
+  return new Date(iso).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function ChatThread({
   currentUserId,
   partnerId,
+  partnerName,
+  matchedAt,
   initialMessages,
 }: {
   currentUserId: string;
   partnerId: string;
+  partnerName?: string | null;
+  matchedAt?: string | null;
   initialMessages: Message[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -90,6 +103,17 @@ export default function ChatThread({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="flex-1 space-y-1.5 overflow-y-auto py-3 pr-1">
+        {matchedAt && (
+          <div className="mb-2 flex flex-col items-center gap-2 py-4 text-center">
+            <Avatar name={partnerName} size={56} />
+            <p className="text-sm font-semibold">
+              {partnerName || "(名前未設定)"}さんとマッチしました
+            </p>
+            <p className="text-[11px] text-gray-400">
+              {formatMatchedDate(matchedAt)}にマッチ成立
+            </p>
+          </div>
+        )}
         {messages.length === 0 && (
           <p className="mt-8 text-center text-sm text-gray-400">
             まだメッセージはありません。最初のメッセージを送ってみましょう。
@@ -101,8 +125,13 @@ export default function ChatThread({
           lastDay = day;
           const isMine = m.sender_id === currentUserId;
           const prev = messages[i - 1];
+          const next = messages[i + 1];
           const grouped =
-            !showDay && prev && prev.sender_id === m.sender_id;
+            !showDay && !!prev && prev.sender_id === m.sender_id;
+          const isLastInGroup =
+            !next ||
+            next.sender_id !== m.sender_id ||
+            formatDayLabel(next.created_at) !== day;
           return (
             <div key={m.id}>
               {showDay && (
@@ -111,12 +140,17 @@ export default function ChatThread({
                 </p>
               )}
               <div
-                className={`flex ${isMine ? "justify-end" : "justify-start"} ${
-                  grouped ? "mt-0.5" : "mt-2.5"
-                }`}
+                className={`flex items-end gap-2 ${
+                  isMine ? "justify-end" : "justify-start"
+                } ${grouped ? "mt-0.5" : "mt-2.5"}`}
               >
+                {!isMine && (
+                  <div className="h-6 w-6 shrink-0">
+                    {isLastInGroup && <Avatar name={partnerName} size={24} />}
+                  </div>
+                )}
                 <div
-                  className={`max-w-[78%] px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_4px_rgba(16,25,47,0.06)] ${
+                  className={`max-w-[75%] px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_4px_rgba(16,25,47,0.06)] ${
                     isMine
                       ? "rounded-[18px] rounded-br-[4px] bg-primary text-white"
                       : "rounded-[18px] rounded-bl-[4px] border border-gray-100 bg-white text-gray-800"

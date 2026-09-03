@@ -432,6 +432,7 @@ $$;
 grant execute on function public.mark_conversation_read(uuid) to authenticated;
 
 -- チャット相手のプロフィール(マッチしている場合のみ返す。profiles は本人のみ閲覧可のため専用RPCが必要)
+-- matched_at: いつマッチが成立したか(Pairs風のチャット冒頭「〇月〇日にマッチしました」表示用)
 create or replace function public.get_conversation_partner(partner uuid)
 returns table(
   participant_id uuid,
@@ -439,13 +440,29 @@ returns table(
   company text,
   job_title text,
   industry text,
-  connect_with text
+  connect_with text,
+  matched_at timestamptz
 )
 language sql
 security definer set search_path = public
 stable
 as $$
-  select p.id, p.name, p.company, p.job_title, p.industry, p.connect_with
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at
   from public.profiles p
   where p.id = partner
     and public.is_matched_with(partner);

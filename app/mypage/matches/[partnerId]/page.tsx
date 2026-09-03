@@ -78,6 +78,8 @@ export default async function ConversationPage({
         <ChatThread
           currentUserId={user.id}
           partnerId={partnerId}
+          partnerName={partner.name}
+          matchedAt={partner.matched_at}
           initialMessages={(messagesData as Message[]) || []}
         />
       </div>

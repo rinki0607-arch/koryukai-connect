@@ -118,6 +118,7 @@ export interface ConversationPartner {
   job_title: string | null;
   industry: string | null;
   connect_with: string | null;
+  matched_at: string | null;
 }
 
 export type SupportInquiryKind = "report" | "contact";

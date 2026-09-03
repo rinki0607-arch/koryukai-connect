@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
 import BottomTabBar from "@/components/BottomTabBar";
+import Logo from "@/components/Logo";
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -29,12 +30,14 @@ export default async function NavBar() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link
             href="/"
-            className="flex items-center gap-2 font-display text-lg font-bold text-primary"
+            className="flex items-center gap-2 text-lg font-bold text-primary"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-primary text-sm font-bold text-accent">
-              A
+            <Logo size={34} />
+            <span
+              style={{ fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.06em" }}
+            >
+              ARKIVE
             </span>
-            ARKIVE
           </Link>
 
           {/* デスクトップ幅ではフルナビ、モバイル幅は下部タブバーに任せてシンプルに */}

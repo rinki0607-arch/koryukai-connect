@@ -1,4 +1,5 @@
 import { signIn, signUp } from "./actions";
+import Logo from "@/components/Logo";
 
 export default async function LoginPage({
   searchParams,
@@ -17,8 +18,8 @@ export default async function LoginPage({
   return (
     <div className="mx-auto max-w-sm">
       <div className="mb-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary font-display text-xl font-bold text-accent shadow-[0_6px_18px_rgba(16,25,47,0.25)]">
-          A
+        <div className="mx-auto">
+          <Logo size={64} />
         </div>
         <h1 className="mt-4 text-xl font-bold">
           {isSignup ? "新規登録" : "おかえりなさい"}

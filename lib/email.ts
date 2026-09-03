@@ -151,7 +151,7 @@ export function buildSupportInquiryEmail(params: {
   const subject = `【ARKIVE】${kindLabel}が届きました`;
   const urgencyLabel = isBusinessHours
     ? "営業時間内に届いています。速やかな確認をお願いします。"
-    : "営業時間外に届きました。次の営業日(平日9:00〜18:00)以降で構いませんので確認をお願いします。";
+    : "営業時間外に届きました。次の営業日(平日9:00〜21:00)以降で構いませんので確認をお願いします。";
 
   const html = `
     <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
