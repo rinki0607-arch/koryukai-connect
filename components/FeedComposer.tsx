@@ -38,6 +38,20 @@ export default function FeedComposer({ name }: { name: string | null }) {
           onChange={(e) => setContent(e.target.value)}
         />
       </div>
+      {content.length === 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5 pl-[52px]">
+          {PROMPTS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setContent(p)}
+              className="chip !border-gray-200 !py-1.5 !text-[12px] text-gray-500"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between">
         <p className="text-xs text-gray-400">{content.length}/1000</p>
         <button

@@ -14,13 +14,19 @@ import {
   JOB_TYPES,
   CONNECT_TAGS,
 } from "@/lib/constants";
+import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import { updateProfile } from "./actions";
 import CapitalSummaryCard from "@/components/CapitalSummaryCard";
 import Avatar from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
-export default async function MyPage() {
+export default async function MyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ feedback?: string }>;
+}) {
+  const { feedback } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,6 +57,12 @@ export default async function MyPage() {
 
   return (
     <div className="space-y-10">
+      {feedback === "done" && (
+        <div className="card border-green-200 bg-green-50 text-sm font-semibold text-green-700">
+          ✅ アンケートへのご協力ありがとうございました。今後の交流会運営に役立てます。
+        </div>
+      )}
+
       {pendingFeedback.length > 0 && (
         <section>
           <div className="card border-accent/40 bg-accent/8">
@@ -231,29 +243,60 @@ export default async function MyPage() {
         ) : (
           <div className="space-y-3">
             {(registrations as (RegistrationRow & { events: EventRow })[]).map(
-              (r) => (
-                <Link
-                  key={r.id}
-                  href={`/events/${r.event_id}`}
-                  className="card flex items-center justify-between hover:border-primary"
-                >
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      {formatEventDate(r.events.event_date)}
-                    </p>
-                    <p className="font-semibold">{r.events.title}</p>
-                  </div>
-                  <span
-                    className={`badge ${
-                      r.attending
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+              (r) => {
+                const isUpcoming =
+                  r.events.event_date >= new Date().toISOString().slice(0, 10);
+                return (
+                  <div
+                    key={r.id}
+                    className="card flex items-center justify-between gap-3 hover:border-primary"
                   >
-                    {r.attending ? "参加予定" : "不参加"}
-                  </span>
-                </Link>
-              )
+                    <Link
+                      href={`/events/${r.event_id}`}
+                      className="min-w-0 flex-1"
+                    >
+                      <p className="text-xs text-gray-500">
+                        {formatEventDate(r.events.event_date)}
+                      </p>
+                      <p className="truncate font-semibold">{r.events.title}</p>
+                    </Link>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {r.attending && isUpcoming && (
+                        <a
+                          href={buildGoogleCalendarUrl({
+                            id: r.events.id,
+                            title: r.events.title,
+                            eventDate: r.events.event_date,
+                            startTime: r.events.start_time,
+                            endTime: r.events.end_time,
+                            venue: r.events.venue,
+                            description: r.events.description,
+                            appUrl:
+                              process.env.NEXT_PUBLIC_APP_URL ||
+                              "https://koryukai-connect.vercel.app",
+                          })}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label="Googleカレンダーに追加"
+                          title="Googleカレンダーに追加"
+                          className="btn-ghost !min-h-0 px-2 py-1.5"
+                        >
+                          📅
+                        </a>
+                      )}
+                      <span
+                        className={`badge ${
+                          r.attending
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {r.attending ? "参加予定" : "不参加"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
             )}
           </div>
         )}

@@ -15,7 +15,7 @@ export default function DormantMembersPanel({
   members: DormantMember[];
 }) {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{ text: string; ok: boolean } | null>(null);
 
   if (members.length === 0) return null;
 
@@ -34,25 +34,46 @@ export default function DormantMembersPanel({
         </div>
         <button
           disabled={pending || emailable.length === 0}
-          onClick={() =>
+          onClick={() => {
+            if (
+              !window.confirm(
+                `休眠会員${emailable.length}名に再エンゲージメールを送信します。よろしいですか?`
+              )
+            )
+              return;
             startTransition(async () => {
               setResult(null);
               const r = await sendReEngagementEmails(
                 emailable.map((m) => m.participant_id)
               );
               if (!r.configured) {
-                setResult(r.error || "メール送信は未設定のためスキップされました。");
+                setResult({
+                  text: r.error || "メール送信は未設定のためスキップされました。",
+                  ok: false,
+                });
               } else {
-                setResult(`${r.sent}件送信しました${r.failed ? `(${r.failed}件失敗)` : ""}。`);
+                setResult({
+                  text: `${r.sent}件送信しました${r.failed ? `(${r.failed}件失敗)` : ""}。`,
+                  ok: r.failed === 0,
+                });
               }
-            })
-          }
+            });
+          }}
           className="btn-primary shrink-0 disabled:opacity-40"
         >
           {pending ? "送信中..." : `再エンゲージメールを送る(${emailable.length}件)`}
         </button>
       </div>
-      {result && <p className="mt-3 text-sm text-gray-700">{result}</p>}
+      {result && (
+        <p
+          className={`mt-3 text-sm font-medium ${
+            result.ok ? "text-green-700" : "text-amber-700"
+          }`}
+        >
+          {result.ok ? "✅ " : "⚠️ "}
+          {result.text}
+        </p>
+      )}
     </div>
   );
 }

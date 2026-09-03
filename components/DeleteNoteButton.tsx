@@ -15,7 +15,10 @@ export default function DeleteNoteButton({
   return (
     <button
       disabled={pending}
-      onClick={() => startTransition(() => deleteAdminNote(noteId, participantId))}
+      onClick={() => {
+        if (!window.confirm("このメモを削除しますか?元に戻せません。")) return;
+        startTransition(() => deleteAdminNote(noteId, participantId));
+      }}
       className="shrink-0 text-xs text-gray-400 hover:text-red-500 disabled:opacity-40"
     >
       削除

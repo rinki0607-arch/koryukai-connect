@@ -71,7 +71,10 @@ export default function PostCard({
             {isOwn && (
               <button
                 disabled={pending}
-                onClick={() => startTransition(() => deletePost(post.post_id))}
+                onClick={() => {
+                  if (!window.confirm("この投稿を削除しますか?元に戻せません。")) return;
+                  startTransition(() => deletePost(post.post_id));
+                }}
                 className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-40"
               >
                 削除

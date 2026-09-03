@@ -36,11 +36,16 @@ export default function CardScanner() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [fields, setFields] = useState<ExtractedCard>(EMPTY);
   const [showForm, setShowForm] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function handleFile(file: File) {
     setScanning(true);
     setScanError(null);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(file);
+    });
     try {
       const { mediaType, data } = await fileToBase64(file);
       const res = await fetch("/api/business-cards/ocr", {
@@ -106,6 +111,10 @@ export default function CardScanner() {
             onClick={() => {
               setFields(EMPTY);
               setScanError(null);
+              setPreviewUrl((current) => {
+                if (current) URL.revokeObjectURL(current);
+                return null;
+              });
               setShowForm(true);
             }}
             className="btn-secondary"
@@ -126,13 +135,27 @@ export default function CardScanner() {
               await saveBusinessCard(formData);
               setShowForm(false);
               setFields(EMPTY);
+              setPreviewUrl((current) => {
+                if (current) URL.revokeObjectURL(current);
+                return null;
+              });
             })
           }
           className="mt-4 space-y-3 border-t border-gray-100 pt-4"
         >
-          <p className="text-xs text-gray-400">
-            内容を確認・修正してから保存してください。
-          </p>
+          <div className="flex items-start gap-3">
+            {previewUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt="スキャンした名刺のプレビュー"
+                className="h-20 w-28 shrink-0 rounded-lg border border-gray-200 object-cover"
+              />
+            )}
+            <p className="text-xs text-gray-400">
+              内容を確認・修正してから保存してください。画像はこの確認中のみ表示され、保存されません。
+            </p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">氏名</label>
@@ -190,7 +213,13 @@ export default function CardScanner() {
             </button>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setPreviewUrl((current) => {
+                  if (current) URL.revokeObjectURL(current);
+                  return null;
+                });
+              }}
               className="btn-ghost"
             >
               キャンセル
