@@ -75,6 +75,22 @@ export function formatMonthLabel(dateStr: string) {
   return d.toLocaleDateString("ja-JP", { year: "numeric", month: "long" });
 }
 
+// AIチャットボットの「スタッフ対応(通報・問い合わせの折り返し)」時間帯。
+// AIチャットボット自体は24時間応答するが、通報・問い合わせの折り返しはこの時間帯に限られる。
+export function isStaffBusinessHours(): boolean {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    weekday: "short",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const weekday = parts.find((p) => p.type === "weekday")?.value || "";
+  let hour = parseInt(parts.find((p) => p.type === "hour")?.value || "0", 10);
+  if (hour === 24) hour = 0;
+  const isWeekday = weekday !== "Sat" && weekday !== "Sun";
+  return isWeekday && hour >= 9 && hour < 21;
+}
+
 export function formatRelativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);

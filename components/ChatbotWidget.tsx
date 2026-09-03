@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { isStaffBusinessHours, formatEventDate } from "@/lib/constants";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+interface UpcomingEventPreview {
+  title: string;
+  event_date: string;
 }
 
 const GREETING: ChatMessage = {
@@ -45,11 +53,32 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [nextEvent, setNextEvent] = useState<UpcomingEventPreview | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const isBusinessHours = isStaffBusinessHours();
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length, open, pending]);
+
+  useEffect(() => {
+    if (!open || nextEvent) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await createClient().rpc("get_upcoming_events_public");
+        const events = data as UpcomingEventPreview[] | null;
+        if (!cancelled && Array.isArray(events) && events.length > 0) {
+          setNextEvent({ title: events[0].title, event_date: events[0].event_date });
+        }
+      } catch {
+        // 取得できなくてもチャットボット自体の利用は継続できるため無視する
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, nextEvent]);
 
   const handleSend = async (override?: string) => {
     const content = (override ?? draft).trim();
@@ -117,6 +146,23 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
+          <div
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold ${
+              isBusinessHours
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                isBusinessHours ? "animate-pulse bg-emerald-500" : "bg-gray-400"
+              }`}
+            />
+            {isBusinessHours
+              ? "スタッフ対応時間内です(平日9:00〜21:00)"
+              : "営業時間外です。折り返しは次の営業日以降になります"}
+          </div>
+
           <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 px-3 py-4">
             {messages.map((m, i) => (
               <div
@@ -140,6 +186,21 @@ export default function ChatbotWidget() {
                   <TypingDots />
                 </div>
               </div>
+            )}
+            {messages.length <= 1 && !pending && nextEvent && (
+              <Link
+                href="/events"
+                className="card-tap flex items-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-3 py-2.5 text-[12px] font-semibold text-primary"
+              >
+                <span className="text-base">📅</span>
+                <span className="min-w-0 flex-1">
+                  次回交流会: {nextEvent.title}
+                  <span className="block font-normal text-primary/60">
+                    {formatEventDate(nextEvent.event_date)}
+                  </span>
+                </span>
+                <span className="shrink-0 text-primary/40">→</span>
+              </Link>
             )}
             {messages.length <= 1 && !pending && (
               <div className="flex flex-wrap gap-2 pl-0.5">
