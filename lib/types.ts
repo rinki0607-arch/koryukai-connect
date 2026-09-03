@@ -35,6 +35,7 @@ export interface EventRow {
   venue: string | null;
   description: string | null;
   fee_note: string | null;
+  fee_amount: number | null;
   has_afterparty: boolean;
   status: EventStatus;
   capacity: number | null;
@@ -42,6 +43,8 @@ export interface EventRow {
   notified_at: string | null;
   notified_count: number | null;
 }
+
+export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded";
 
 export interface RegistrationRow {
   id: string;
@@ -53,6 +56,41 @@ export interface RegistrationRow {
   connect_with: string | null;
   connect_with_tags: string[] | null;
   created_at: string;
+  wants_receipt: boolean;
+  receipt_name: string | null;
+  payment_status: PaymentStatus;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  paid_amount: number | null;
+  paid_at: string | null;
+  receipt_url: string | null;
+}
+
+export interface AdminRevenueSummary {
+  event_id: string;
+  title: string;
+  event_date: string;
+  fee_amount: number | null;
+  attending_count: number;
+  paid_count: number;
+  unpaid_count: number;
+  pending_count: number;
+  refunded_count: number;
+  total_revenue: number;
+}
+
+export interface EventPaymentDetail {
+  registration_id: string;
+  participant_id: string;
+  name: string | null;
+  company: string | null;
+  attending: boolean;
+  payment_status: PaymentStatus;
+  paid_amount: number | null;
+  paid_at: string | null;
+  wants_receipt: boolean;
+  receipt_name: string | null;
+  receipt_url: string | null;
 }
 
 export interface AttendeeCandidate {

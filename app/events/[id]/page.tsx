@@ -10,10 +10,13 @@ export const dynamic = "force-dynamic";
 
 export default async function EventDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }) {
   const { id } = await params;
+  const { payment } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,6 +52,16 @@ export default async function EventDetailPage({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div>
+        {payment === "success" && (
+          <div className="card mb-4 border-green-200 bg-green-50 text-sm text-green-800">
+            ✅ お支払いが完了しました。ご登録ありがとうございます。
+          </div>
+        )}
+        {payment === "canceled" && (
+          <div className="card mb-4 border-amber-200 bg-amber-50 text-sm text-amber-800">
+            決済がキャンセルされました。引き続き参加登録フォームから決済に進めます。
+          </div>
+        )}
         <p className="text-sm text-gray-500">{formatEventDate(ev.event_date)}</p>
         <h1 className="mt-1 text-xl font-bold">{ev.title}</h1>
         {ev.venue && <p className="mt-2 text-gray-600">会場: {ev.venue}</p>}
@@ -58,8 +71,14 @@ export default async function EventDetailPage({
             {ev.end_time ? `〜${ev.end_time.slice(0, 5)}` : ""}
           </p>
         )}
-        {ev.fee_note && (
-          <p className="mt-1 text-gray-600">参加費: {ev.fee_note}</p>
+        {(ev.fee_note || ev.fee_amount) && (
+          <p className="mt-1 text-gray-600">
+            参加費:{" "}
+            {ev.fee_amount ? `${ev.fee_amount.toLocaleString()}円` : ""}
+            {ev.fee_amount && ev.fee_note ? "(" : ""}
+            {ev.fee_note}
+            {ev.fee_amount && ev.fee_note ? ")" : ""}
+          </p>
         )}
         {ev.description && (
           <p className="mt-4 whitespace-pre-wrap text-gray-700">

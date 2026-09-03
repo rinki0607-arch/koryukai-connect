@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { submitRegistration } from "@/app/events/[id]/actions";
 import { INDUSTRIES, CONNECT_TAGS } from "@/lib/constants";
 import { EventRow, Profile, RegistrationRow } from "@/lib/types";
@@ -22,8 +22,13 @@ export default function RegistrationForm({
       ? registration.connect_with_tags
       : profile?.connect_with_tags || []
   );
+  const [wantsReceipt, setWantsReceipt] = useState<boolean>(
+    registration?.wants_receipt ?? false
+  );
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   function toggleTag(tag: string) {
     setTags((prev) =>
@@ -31,11 +36,42 @@ export default function RegistrationForm({
     );
   }
 
+  const paymentStatus = registration?.payment_status || "unpaid";
+  const canPay = attending && !!event.fee_amount && event.fee_amount > 0;
+
+  function handlePayment() {
+    if (!formRef.current) return;
+    setPaymentError(null);
+    const fd = new FormData(formRef.current);
+    startTransition(async () => {
+      try {
+        await submitRegistration(fd);
+        const res = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ event_id: event.id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.url) {
+          window.location.href = data.url;
+        } else {
+          setPaymentError(
+            data?.error || "決済ページの作成に失敗しました。しばらくしてから再度お試しください。"
+          );
+        }
+      } catch {
+        setPaymentError("通信エラーが発生しました。しばらくしてから再度お試しください。");
+      }
+    });
+  }
+
   return (
     <form
+      ref={formRef}
       className="card space-y-5"
       action={(formData) => {
         setDone(false);
+        setPaymentError(null);
         startTransition(async () => {
           await submitRegistration(formData);
           setDone(true);
@@ -167,6 +203,31 @@ export default function RegistrationForm({
             <input type="checkbox" name="save_as_default" defaultChecked />
             この内容を次回以降のデフォルトプロフィールとして保存する
           </label>
+
+          {!!event.fee_amount && event.fee_amount > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  name="wants_receipt"
+                  checked={wantsReceipt}
+                  onChange={(e) => setWantsReceipt(e.target.checked)}
+                />
+                領収書の発行を希望する
+              </label>
+              {wantsReceipt && (
+                <input
+                  name="receipt_name"
+                  className="input mt-2"
+                  placeholder="宛名(任意・未入力の場合はお名前を使用します)"
+                  defaultValue={registration?.receipt_name || ""}
+                />
+              )}
+              <p className="mt-1.5 text-xs text-gray-400">
+                オンライン決済完了後、Stripeより発行される領収書のリンクがマイページ・下記に表示されます。
+              </p>
+            </div>
+          )}
         </>
       )}
 
@@ -176,6 +237,55 @@ export default function RegistrationForm({
 
       {done && (
         <p className="text-sm text-green-700">登録内容を保存しました。</p>
+      )}
+
+      {canPay && (
+        <div className="border-t border-gray-100 pt-4">
+          <p className="label">参加費のお支払い</p>
+          {paymentStatus === "paid" ? (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              ✅ お支払い済みです
+              {registration?.paid_amount
+                ? `(${registration.paid_amount.toLocaleString()}円)`
+                : ""}
+              。
+              {registration?.receipt_url && (
+                <>
+                  {" "}
+                  <a
+                    href={registration.receipt_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold underline"
+                  >
+                    領収書を表示
+                  </a>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="mb-2 text-xs text-gray-500">
+                {paymentStatus === "pending"
+                  ? "決済手続き中です。未完了の場合は再度お進みください。"
+                  : "Stripeの決済ページで、クレジットカード等によりオンラインでお支払いいただけます。"}
+              </p>
+              <button
+                type="button"
+                onClick={handlePayment}
+                disabled={pending}
+                className="btn-dark w-full"
+              >
+                {pending
+                  ? "処理中..."
+                  : `オンライン決済へ進む(${event.fee_amount!.toLocaleString()}円)`}
+              </button>
+            </>
+          )}
+          {paymentError && (
+            <p className="mt-2 text-sm text-red-600">{paymentError}</p>
+          )}
+        </div>
       )}
     </form>
   );

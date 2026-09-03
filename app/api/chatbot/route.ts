@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildSupportInquiryEmail, sendBatchEmails } from "@/lib/email";
+import { buildSupportInquirySlackMessage, sendSlackMessage } from "@/lib/slack";
 import { isStaffBusinessHours } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -395,6 +396,23 @@ export async function POST(req: NextRequest) {
             }
           } catch {
             // メール送信の失敗はユーザー体験をブロックしない(DB保存は成功しているため)
+          }
+
+          try {
+            const appUrl =
+              process.env.NEXT_PUBLIC_APP_URL || "https://koryukai-connect.vercel.app";
+            const slackText = buildSupportInquirySlackMessage({
+              kind,
+              summary,
+              details,
+              contactName,
+              contactEmail,
+              isBusinessHours,
+              adminUrl: `${appUrl}/admin/inquiries`,
+            });
+            await sendSlackMessage(slackText);
+          } catch {
+            // Slack通知の失敗もユーザー体験をブロックしない(DB保存・メールは別経路で成功しているため)
           }
         }
 

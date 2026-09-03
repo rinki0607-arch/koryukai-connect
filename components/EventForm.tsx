@@ -81,11 +81,26 @@ export default function EventForm({
         />
       </div>
       <div>
-        <label className="label">参加費(任意)</label>
+        <label className="label">参加費・金額(円、任意)</label>
+        <input
+          name="fee_amount"
+          type="number"
+          min={0}
+          step={1}
+          className="input"
+          placeholder="例: 3000"
+          defaultValue={event?.fee_amount ?? ""}
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          入力すると、参加登録フォームにStripeでのオンライン決済ボタンが表示されます。空欄の場合はオンライン決済は表示されません。
+        </p>
+      </div>
+      <div>
+        <label className="label">参加費・補足(任意)</label>
         <input
           name="fee_note"
           className="input"
-          placeholder="例: 3,000円(二次会別途) / 無料"
+          placeholder="例: 二次会費は別途会場でお支払い / 現金のみ など"
           defaultValue={event?.fee_note || ""}
         />
         <p className="mt-1 text-xs text-gray-400">

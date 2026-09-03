@@ -11,6 +11,8 @@ export async function submitRegistration(formData: FormData) {
   const connectWith = String(formData.get("connect_with") || "");
   const tags = formData.getAll("connect_with_tags").map(String);
   const saveAsDefault = formData.get("save_as_default") === "on";
+  const wantsReceipt = formData.get("wants_receipt") === "on";
+  const receiptName = String(formData.get("receipt_name") || "").trim() || null;
 
   const supabase = await createClient();
   const {
@@ -30,6 +32,8 @@ export async function submitRegistration(formData: FormData) {
       industry,
       connect_with: connectWith,
       connect_with_tags: tags,
+      wants_receipt: attending ? wantsReceipt : false,
+      receipt_name: attending ? receiptName : null,
     },
     { onConflict: "event_id,participant_id" }
   );
