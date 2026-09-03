@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DirectoryEntry } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 export default function MemberDirectory({
   entries,
@@ -69,14 +70,19 @@ export default function MemberDirectory({
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((e) => (
             <div key={e.participant_id} className="card">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold">{e.name || "(名前未設定)"}</p>
-                  {(e.job_title || e.company) && (
-                    <p className="text-sm text-gray-500">
-                      {[e.job_title, e.company].filter(Boolean).join(" / ")}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <Avatar name={e.name} />
+                  <div>
+                    <p className="font-semibold leading-tight">
+                      {e.name || "(名前未設定)"}
                     </p>
-                  )}
+                    {(e.job_title || e.company) && (
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {[e.job_title, e.company].filter(Boolean).join(" / ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {e.events_attended > 0 && (
                   <span className="badge shrink-0 bg-primary-light text-primary">

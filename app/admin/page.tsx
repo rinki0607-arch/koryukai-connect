@@ -10,26 +10,34 @@ export default async function AdminDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ count: totalParticipants }, { count: upcomingCount }, { data: nextEvents }] =
-    await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .gte("event_date", today)
-        .neq("status", "canceled"),
-      supabase
-        .from("events")
-        .select("*")
-        .gte("event_date", today)
-        .neq("status", "canceled")
-        .order("event_date", { ascending: true })
-        .limit(5),
-    ]);
+  const [
+    { count: totalParticipants },
+    { count: upcomingCount },
+    { count: openInquiryCount },
+    { data: nextEvents },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .gte("event_date", today)
+      .neq("status", "canceled"),
+    supabase
+      .from("support_inquiries")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "resolved"),
+    supabase
+      .from("events")
+      .select("*")
+      .gte("event_date", today)
+      .neq("status", "canceled")
+      .order("event_date", { ascending: true })
+      .limit(5),
+  ]);
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="card">
           <p className="text-sm text-gray-500">登録ユーザー数</p>
           <p className="mt-1 text-3xl font-bold">{totalParticipants ?? 0}</p>
@@ -38,6 +46,21 @@ export default async function AdminDashboard() {
           <p className="text-sm text-gray-500">今後の交流会数</p>
           <p className="mt-1 text-3xl font-bold">{upcomingCount ?? 0}</p>
         </div>
+        <Link
+          href="/admin/inquiries"
+          className={`card-tap card block ${
+            (openInquiryCount ?? 0) > 0 ? "border-red-200" : ""
+          }`}
+        >
+          <p className="text-sm text-gray-500">未対応の通報・問い合わせ</p>
+          <p
+            className={`mt-1 text-3xl font-bold ${
+              (openInquiryCount ?? 0) > 0 ? "text-red-600" : ""
+            }`}
+          >
+            {openInquiryCount ?? 0}
+          </p>
+        </Link>
       </div>
 
       <div>

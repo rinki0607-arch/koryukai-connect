@@ -46,24 +46,32 @@ export default function RegistrationForm({
 
       <div>
         <p className="label">この交流会に参加しますか?</p>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm">
+        <div className="segment">
+          <label
+            className={`segment-option ${attending ? "is-active" : ""}`}
+            onClick={() => setAttending(true)}
+          >
             <input
               type="radio"
               name="attending"
               value="yes"
               checked={attending}
               onChange={() => setAttending(true)}
+              className="sr-only"
             />
             参加する
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label
+            className={`segment-option ${!attending ? "is-active" : ""}`}
+            onClick={() => setAttending(false)}
+          >
             <input
               type="radio"
               name="attending"
               value="no"
               checked={!attending}
               onChange={() => setAttending(false)}
+              className="sr-only"
             />
             参加しない
           </label>
@@ -73,22 +81,24 @@ export default function RegistrationForm({
       {attending && event.has_afterparty && (
         <div>
           <p className="label">二次会に参加希望しますか?</p>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm">
+          <div className="segment">
+            <label className="segment-option has-[:checked]:bg-white has-[:checked]:text-primary has-[:checked]:shadow-[0_1px_6px_rgba(16,25,47,0.12)]">
               <input
                 type="radio"
                 name="afterparty"
                 value="yes"
                 defaultChecked={registration?.afterparty ?? false}
+                className="sr-only"
               />
               参加希望する
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="segment-option has-[:checked]:bg-white has-[:checked]:text-primary has-[:checked]:shadow-[0_1px_6px_rgba(16,25,47,0.12)]">
               <input
                 type="radio"
                 name="afterparty"
                 value="no"
                 defaultChecked={!(registration?.afterparty ?? false)}
+                className="sr-only"
               />
               参加希望しない
             </label>
@@ -122,11 +132,7 @@ export default function RegistrationForm({
               {CONNECT_TAGS.map((tag) => (
                 <label
                   key={tag}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
-                    tags.includes(tag)
-                      ? "border-primary bg-primary-light text-primary"
-                      : "border-gray-300 text-gray-600"
-                  }`}
+                  className={`chip ${tags.includes(tag) ? "is-active" : ""}`}
                 >
                   <input
                     type="checkbox"

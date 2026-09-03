@@ -59,46 +59,62 @@ export default async function EventsPage() {
         <div className="space-y-8">
           {Array.from(grouped.entries()).map(([month, list]) => (
             <div key={month}>
-              <h2 className="mb-3 text-sm font-semibold text-gray-500">
+              <h2 className="mb-3 px-1 text-sm font-bold text-gray-400">
                 {month}
               </h2>
               <div className="space-y-3">
-                {list.map((ev) => (
-                  <Link
-                    key={ev.id}
-                    href={`/events/${ev.id}`}
-                    className="card flex items-center justify-between gap-4 hover:border-primary"
-                  >
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {formatEventDate(ev.event_date)}
-                        {ev.start_time ? ` ${ev.start_time.slice(0, 5)}〜` : ""}
-                      </p>
-                      <p className="mt-1 font-semibold">{ev.title}</p>
-                      {ev.venue && (
-                        <p className="mt-1 text-sm text-gray-500">
-                          {ev.venue}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className={`badge ${STATUS_COLOR[ev.status]}`}>
-                        {STATUS_LABEL[ev.status]}
-                      </span>
-                      {registeredEventIds.has(ev.id) && (
-                        <span className="badge bg-primary-light text-primary">
-                          参加登録済み
+                {list.map((ev) => {
+                  const d = new Date(ev.event_date + "T00:00:00");
+                  return (
+                    <Link
+                      key={ev.id}
+                      href={`/events/${ev.id}`}
+                      className="card-tap flex items-stretch gap-4 overflow-hidden rounded-[20px] border border-gray-100 bg-white p-0 shadow-[0_2px_10px_rgba(16,25,47,0.06)] active:shadow-none"
+                    >
+                      <div className="flex w-16 shrink-0 flex-col items-center justify-center bg-primary-light py-4 text-primary">
+                        <span className="text-[11px] font-bold">
+                          {d.toLocaleDateString("ja-JP", { month: "short" })}
                         </span>
-                      )}
-                      {ev.status === "upcoming" &&
-                        !registeredEventIds.has(ev.id) && (
-                          <span className="text-xs text-primary">
-                            申し込む &gt;
+                        <span className="font-display text-2xl font-bold leading-none">
+                          {d.getDate()}
+                        </span>
+                        <span className="text-[10px] text-primary/60">
+                          {d.toLocaleDateString("ja-JP", { weekday: "short" })}
+                        </span>
+                      </div>
+                      <div className="flex flex-1 items-center justify-between gap-3 py-4 pr-4">
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">
+                            {formatEventDate(ev.event_date)}
+                            {ev.start_time ? ` ${ev.start_time.slice(0, 5)}〜` : ""}
+                          </p>
+                          <p className="mt-1 truncate font-semibold">{ev.title}</p>
+                          {ev.venue && (
+                            <p className="mt-1 truncate text-sm text-gray-500">
+                              {ev.venue}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1.5">
+                          <span className={`badge ${STATUS_COLOR[ev.status]}`}>
+                            {STATUS_LABEL[ev.status]}
                           </span>
-                        )}
-                    </div>
-                  </Link>
-                ))}
+                          {registeredEventIds.has(ev.id) && (
+                            <span className="badge bg-primary-light text-primary">
+                              参加登録済み
+                            </span>
+                          )}
+                          {ev.status === "upcoming" &&
+                            !registeredEventIds.has(ev.id) && (
+                              <span className="text-xs font-bold text-accent-dark">
+                                申し込む &gt;
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}

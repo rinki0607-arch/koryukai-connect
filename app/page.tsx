@@ -26,25 +26,36 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-10">
-      <section className="card bg-gradient-to-br from-primary-light to-white">
-        <h1 className="text-2xl font-bold">ARKIVE</h1>
-        <p className="mt-1 text-sm text-gray-500">
+      <section className="relative overflow-hidden rounded-[24px] bg-primary px-6 py-8 text-white shadow-[0_8px_28px_rgba(16,25,47,0.28)]">
+        <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-accent/20 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/10 blur-2xl" />
+        <p className="relative font-mono text-[11px] font-bold tracking-[0.25em] text-accent">
+          ARC ENTREPRENEUR NETWORK
+        </p>
+        <h1 className="relative mt-1 font-display text-3xl font-bold">ARKIVE</h1>
+        <p className="relative mt-1 text-sm text-white/60">
           アーク起業塾 交流会プラットフォーム
         </p>
-        <p className="mt-2 text-gray-600">
+        <p className="relative mt-3 text-[15px] leading-relaxed text-white/80">
           交流会の参加登録・二次会希望の確認、参加者の業種や繋がりたい人の情報の蓄積、
           交流会後のマッチング、当日のQR受付までを1つのアプリで完結できます。
         </p>
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="relative mt-5 flex flex-wrap gap-3">
           <Link href="/events" className="btn-primary">
             交流会一覧を見る
           </Link>
           {!user && (
-            <Link href="/login" className="btn-secondary">
+            <Link
+              href="/login"
+              className="btn min-h-[46px] border-[1.5px] border-white/30 bg-white/10 text-white hover:bg-white/20"
+            >
               ログイン / 新規登録
             </Link>
           )}
-          <Link href="/install" className="btn-secondary">
+          <Link
+            href="/install"
+            className="btn min-h-[46px] border-[1.5px] border-white/30 bg-white/10 text-white hover:bg-white/20"
+          >
             スマホに追加する
           </Link>
         </div>
@@ -63,9 +74,9 @@ export default async function HomePage() {
                 <Link
                   key={ev.id}
                   href={`/events/${ev.id}`}
-                  className="card block hover:border-primary"
+                  className="card-tap card block"
                 >
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs font-semibold text-accent-dark">
                     {formatEventDate(ev.event_date)}
                   </p>
                   <p className="mt-1 font-semibold">{ev.title}</p>

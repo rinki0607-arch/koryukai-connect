@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ConversationRow } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -49,12 +50,10 @@ export default async function MatchesPage() {
             <Link
               key={c.partner_id}
               href={`/mypage/matches/${c.partner_id}`}
-              className="card flex items-center justify-between gap-4 hover:border-primary"
+              className="card-tap flex items-center justify-between gap-4"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-light font-display text-base font-bold text-primary">
-                  {(c.name || "?").slice(0, 1)}
-                </div>
+                <Avatar name={c.name} size={44} />
                 <div className="min-w-0">
                   <p className="truncate font-semibold">
                     {c.name || "(名前未設定)"}

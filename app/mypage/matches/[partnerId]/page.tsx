@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ConversationPartner, Message } from "@/lib/types";
 import ChatThread from "@/components/ChatThread";
+import Avatar from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -50,17 +51,16 @@ export default async function ConversationPage({
   await supabase.rpc("mark_conversation_read", { partner: partnerId });
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[480px] flex-col">
-      <div className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-4">
+    <div className="-mx-4 flex h-[calc(100vh-140px)] min-h-[480px] flex-col sm:mx-0">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white/95 px-4 pb-4 pt-1 backdrop-blur sm:rounded-t-[20px] sm:px-1">
         <Link
           href="/mypage/matches"
-          className="shrink-0 text-lg text-gray-400 hover:text-primary"
+          aria-label="メッセージ一覧へ戻る"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg text-gray-400 transition active:scale-90 hover:bg-gray-100 hover:text-primary"
         >
           &larr;
         </Link>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light font-display text-base font-bold text-primary">
-          {(partner.name || "?").slice(0, 1)}
-        </div>
+        <Avatar name={partner.name} size={40} />
         <div className="min-w-0">
           <p className="truncate font-semibold">
             {partner.name || "(名前未設定)"}
@@ -74,11 +74,13 @@ export default async function ConversationPage({
         </div>
       </div>
 
-      <ChatThread
-        currentUserId={user.id}
-        partnerId={partnerId}
-        initialMessages={(messagesData as Message[]) || []}
-      />
+      <div className="min-h-0 flex-1 px-4 sm:px-1">
+        <ChatThread
+          currentUserId={user.id}
+          partnerId={partnerId}
+          initialMessages={(messagesData as Message[]) || []}
+        />
+      </div>
     </div>
   );
 }

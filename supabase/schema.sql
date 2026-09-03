@@ -621,3 +621,68 @@ as $$
 $$;
 
 grant execute on function public.get_upcoming_events_public() to anon, authenticated;
+
+-- ============================================================
+-- support_inquiries: AIチャットボット経由の「通報」「運営への問い合わせ」
+-- 未ログイン(anon)の来場者でも送信できるよう、insert は anon にも許可する。
+-- 閲覧・更新(対応状況の変更)は運営(admin)のみ。本人は自分が送った分だけ閲覧可。
+-- ============================================================
+create table if not exists public.support_inquiries (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('report','contact')),
+  participant_id uuid references public.profiles(id) on delete set null,
+  contact_name text,
+  contact_email text,
+  summary text not null,
+  details text,
+  is_business_hours boolean,
+  status text not null default 'open' check (status in ('open','in_progress','resolved')),
+  created_at timestamptz not null default now(),
+  resolved_at timestamptz,
+  resolved_by uuid references public.profiles(id) on delete set null
+);
+
+create index if not exists support_inquiries_status_created_idx
+  on public.support_inquiries (status, created_at desc);
+
+alter table public.support_inquiries enable row level security;
+
+-- insert: 誰でも送信可(anon含む)。ログイン中は自分の participant_id のみ指定可能。
+drop policy if exists support_inquiries_insert_any on public.support_inquiries;
+create policy support_inquiries_insert_any on public.support_inquiries
+  for insert to anon, authenticated
+  with check (participant_id is null or participant_id = auth.uid());
+
+-- select: 運営は全件、本人は自分が送信した分のみ
+drop policy if exists support_inquiries_select_own_or_admin on public.support_inquiries;
+create policy support_inquiries_select_own_or_admin on public.support_inquiries
+  for select using (
+    public.is_admin()
+    or (participant_id is not null and participant_id = auth.uid())
+  );
+
+-- update: 対応状況の変更は運営のみ
+drop policy if exists support_inquiries_update_admin on public.support_inquiries;
+create policy support_inquiries_update_admin on public.support_inquiries
+  for update using (public.is_admin()) with check (public.is_admin());
+
+grant insert on public.support_inquiries to anon, authenticated;
+grant select, update on public.support_inquiries to authenticated;
+
+-- 運営向け: 対応済みにする
+create or replace function public.resolve_support_inquiry(inquiry_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'admin only';
+  end if;
+  update public.support_inquiries
+  set status = 'resolved', resolved_at = now(), resolved_by = auth.uid()
+  where id = inquiry_id;
+end;
+$$;
+
+grant execute on function public.resolve_support_inquiry(uuid) to authenticated;

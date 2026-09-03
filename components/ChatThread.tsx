@@ -88,31 +88,38 @@ export default function ChatThread({
   let lastDay = "";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 space-y-1 overflow-y-auto pr-1">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="flex-1 space-y-1.5 overflow-y-auto py-3 pr-1">
         {messages.length === 0 && (
           <p className="mt-8 text-center text-sm text-gray-400">
             まだメッセージはありません。最初のメッセージを送ってみましょう。
           </p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, i) => {
           const day = formatDayLabel(m.created_at);
           const showDay = day !== lastDay;
           lastDay = day;
           const isMine = m.sender_id === currentUserId;
+          const prev = messages[i - 1];
+          const grouped =
+            !showDay && prev && prev.sender_id === m.sender_id;
           return (
             <div key={m.id}>
               {showDay && (
-                <p className="my-3 text-center text-xs text-gray-400">{day}</p>
+                <p className="my-4 text-center text-[11px] font-semibold text-gray-400">
+                  {day}
+                </p>
               )}
               <div
-                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                className={`flex ${isMine ? "justify-end" : "justify-start"} ${
+                  grouped ? "mt-0.5" : "mt-2.5"
+                }`}
               >
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                  className={`max-w-[78%] px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_4px_rgba(16,25,47,0.06)] ${
                     isMine
-                      ? "bg-primary text-white"
-                      : "border border-gray-200 bg-white text-gray-800"
+                      ? "rounded-[18px] rounded-br-[4px] bg-primary text-white"
+                      : "rounded-[18px] rounded-bl-[4px] border border-gray-100 bg-white text-gray-800"
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
@@ -131,11 +138,11 @@ export default function ChatThread({
         <div ref={bottomRef} />
       </div>
 
-      <div className="mt-3 flex items-end gap-2 border-t border-gray-200 pt-3">
+      <div className="flex items-end gap-2 border-t border-gray-100 bg-white pb-2 pt-3">
         <textarea
-          className="input min-h-[44px] resize-none"
+          className="input min-h-[44px] flex-1 resize-none rounded-3xl"
           rows={1}
-          placeholder="メッセージを入力(Enterで送信・Shift+Enterで改行)"
+          placeholder="メッセージを入力"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -146,11 +153,20 @@ export default function ChatThread({
           }}
         />
         <button
-          className="btn-primary shrink-0"
+          aria-label="送信"
           disabled={pending || !draft.trim()}
           onClick={handleSend}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)] transition-all duration-150 active:scale-90 disabled:pointer-events-none disabled:opacity-40"
         >
-          送信
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 12h15M13 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       </div>
     </div>

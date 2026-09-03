@@ -46,7 +46,7 @@ export default function RootLayout({
         <BrandRailLeft />
         <BrandRailRight />
         <NavBar />
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <main className="pb-tabbar mx-auto max-w-5xl px-4 py-8">{children}</main>
         <ChatbotWidget />
         <ServiceWorkerRegister />
       </body>

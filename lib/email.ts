@@ -127,3 +127,54 @@ export function buildEventAnnouncementEmail(params: {
 
   return { subject, html };
 }
+
+export function buildSupportInquiryEmail(params: {
+  kind: "report" | "contact";
+  summary: string;
+  details: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  isBusinessHours: boolean;
+  adminUrl: string;
+}) {
+  const {
+    kind,
+    summary,
+    details,
+    contactName,
+    contactEmail,
+    isBusinessHours,
+    adminUrl,
+  } = params;
+
+  const kindLabel = kind === "report" ? "【通報】交流会に関する通報" : "【問い合わせ】運営への問い合わせ";
+  const subject = `【ARKIVE】${kindLabel}が届きました`;
+  const urgencyLabel = isBusinessHours
+    ? "営業時間内に届いています。速やかな確認をお願いします。"
+    : "営業時間外に届きました。次の営業日(平日9:00〜18:00)以降で構いませんので確認をお願いします。";
+
+  const html = `
+    <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
+      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / チャットボット経由の受付</p>
+      <h2 style="margin:8px 0 4px;">${kindLabel}</h2>
+      <p style="margin:0 0 20px;padding:10px 14px;border-radius:8px;background:${
+        isBusinessHours ? "#eef6ee" : "#fdf5e6"
+      };color:#333;font-size:13px;">${urgencyLabel}</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top;white-space:nowrap;">要約</td><td style="padding:6px 0;font-size:13px;">${summary}</td></tr>
+        ${
+          details
+            ? `<tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top;white-space:nowrap;">詳細</td><td style="padding:6px 0;font-size:13px;white-space:pre-wrap;">${details}</td></tr>`
+            : ""
+        }
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top;white-space:nowrap;">連絡先</td><td style="padding:6px 0;font-size:13px;">${
+          contactName || "(未取得)"
+        } ${contactEmail ? `/ ${contactEmail}` : "/ (メールアドレス未取得)"}</td></tr>
+      </table>
+      <a href="${adminUrl}" style="display:inline-block;margin-top:4px;padding:12px 24px;background:#c9a24b;color:#1b1305;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">管理画面で確認する</a>
+      <p style="margin-top:28px;font-size:12px;color:#999;">このメールはARKIVEのAIチャットボットが自動送信しています。</p>
+    </div>
+  `;
+
+  return { subject, html };
+}

@@ -10,8 +10,21 @@ interface ChatMessage {
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "こんにちは。ARKIVEサポートAIです。アーク起業塾の交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。個人の登録状況やパスワードなど個別のお問い合わせは、運営スタッフへ直接ご連絡ください。",
+    "こんにちは。ARKIVEサポートAIです。アーク起業塾の交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。交流会での通報や運営への問い合わせも、下のボタンまたはメッセージからそのまま受け付けられます。",
 };
+
+const QUICK_ACTIONS: { label: string; icon: string; message: string }[] = [
+  {
+    label: "通報する",
+    icon: "🚨",
+    message: "交流会で困ったことがあったので、運営に通報したいです。",
+  },
+  {
+    label: "運営に問い合わせる",
+    icon: "💬",
+    message: "運営担当者に問い合わせたいことがあります。",
+  },
+];
 
 function TypingDots() {
   return (
@@ -38,8 +51,8 @@ export default function ChatbotWidget() {
     if (open) bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length, open, pending]);
 
-  const handleSend = async () => {
-    const content = draft.trim();
+  const handleSend = async (override?: string) => {
+    const content = (override ?? draft).trim();
     if (!content || pending) return;
 
     const next = [...messages, { role: "user", content } as ChatMessage];
@@ -75,9 +88,9 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="chatbot-fab fixed right-4 z-[45] flex flex-col items-end gap-3 lg:right-6">
       {open && (
-        <div className="flex h-[70vh] max-h-[560px] w-[92vw] max-w-sm flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex h-[70vh] max-h-[560px] w-[92vw] max-w-sm flex-col overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-primary px-4 py-3 text-white">
             <div>
               <p className="font-mono text-[10px] font-bold tracking-widest text-accent">
@@ -125,6 +138,20 @@ export default function ChatbotWidget() {
                 </div>
               </div>
             )}
+            {messages.length <= 1 && !pending && (
+              <div className="flex flex-wrap gap-2 pl-0.5">
+                {QUICK_ACTIONS.map((action) => (
+                  <button
+                    key={action.label}
+                    onClick={() => handleSend(action.message)}
+                    className="flex items-center gap-1.5 rounded-full border-[1.5px] border-gray-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-gray-600 transition-all duration-150 active:scale-95 hover:border-primary/30 hover:bg-primary-light/50"
+                  >
+                    <span>{action.icon}</span>
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
@@ -146,7 +173,7 @@ export default function ChatbotWidget() {
               <button
                 className="btn-primary shrink-0 px-3 py-2 text-sm"
                 disabled={pending || !draft.trim()}
-                onClick={handleSend}
+                onClick={() => handleSend()}
               >
                 送信
               </button>

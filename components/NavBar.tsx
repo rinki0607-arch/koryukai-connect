@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
+import BottomTabBar from "@/components/BottomTabBar";
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -10,71 +11,100 @@ export default async function NavBar() {
 
   let isAdmin = false;
   let displayName: string | null = null;
+  let unreadCount = 0;
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, name, email")
-      .eq("id", user.id)
-      .single();
+    const [{ data: profile }, { data: unread }] = await Promise.all([
+      supabase.from("profiles").select("role, name, email").eq("id", user.id).single(),
+      supabase.rpc("get_unread_message_count"),
+    ]);
     isAdmin = profile?.role === "admin";
     displayName = profile?.name || profile?.email || user.email || null;
+    unreadCount = typeof unread === "number" ? unread : 0;
   }
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link
-          href="/"
-          className="font-display text-lg font-bold text-primary"
-        >
-          ARKIVE
-        </Link>
-        <nav className="flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/events" className="text-gray-600 hover:text-primary">
-            交流会一覧
+    <>
+      <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/90 backdrop-blur-lg">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-display text-lg font-bold text-primary"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-primary text-sm font-bold text-accent">
+              A
+            </span>
+            ARKIVE
           </Link>
-          {user && (
-            <>
-              <Link href="/mypage" className="text-gray-600 hover:text-primary">
-                マイページ
-              </Link>
-              <Link href="/members" className="text-gray-600 hover:text-primary">
-                参加者名簿
-              </Link>
-              <Link
-                href="/mypage/ticket"
-                className="text-gray-600 hover:text-primary"
-              >
-                マイQRコード
-              </Link>
-              <Link
-                href="/mypage/matches"
-                className="text-gray-600 hover:text-primary"
-              >
-                メッセージ
-              </Link>
-            </>
-          )}
-          {isAdmin && (
-            <Link href="/admin" className="text-gray-600 hover:text-primary">
-              管理画面
+
+          {/* デスクトップ幅ではフルナビ、モバイル幅は下部タブバーに任せてシンプルに */}
+          <nav className="hidden items-center gap-5 text-sm lg:flex">
+            <Link href="/events" className="text-gray-600 transition hover:text-primary">
+              交流会一覧
             </Link>
-          )}
-          {user ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden text-gray-500 sm:inline">
-                {displayName}
-              </span>
+            {user && (
+              <>
+                <Link href="/mypage" className="text-gray-600 transition hover:text-primary">
+                  マイページ
+                </Link>
+                <Link href="/members" className="text-gray-600 transition hover:text-primary">
+                  参加者名簿
+                </Link>
+                <Link href="/mypage/ticket" className="text-gray-600 transition hover:text-primary">
+                  マイQRコード
+                </Link>
+                <Link
+                  href="/mypage/matches"
+                  className="relative text-gray-600 transition hover:text-primary"
+                >
+                  メッセージ
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-3 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-[#241a03]">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              </>
+            )}
+            {isAdmin && (
+              <Link href="/admin" className="text-gray-600 transition hover:text-primary">
+                管理画面
+              </Link>
+            )}
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-gray-500">{displayName}</span>
+                <LogoutButton />
+              </div>
+            ) : (
+              <Link href="/login" className="btn-primary">
+                ログイン
+              </Link>
+            )}
+          </nav>
+
+          {/* モバイル幅: 管理者リンクとログアウトだけ右上に出す(それ以外は下部タブバー) */}
+          <div className="flex items-center gap-3 lg:hidden">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-xs font-semibold text-gray-500 hover:text-primary"
+              >
+                管理画面
+              </Link>
+            )}
+            {user ? (
               <LogoutButton />
-            </div>
-          ) : (
-            <Link href="/login" className="btn-primary">
-              ログイン
-            </Link>
-          )}
-        </nav>
-      </div>
-    </header>
+            ) : (
+              <Link href="/login" className="btn-primary !min-h-0 px-4 py-2 text-xs">
+                ログイン
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <BottomTabBar loggedIn={!!user} unreadCount={unreadCount} />
+    </>
   );
 }

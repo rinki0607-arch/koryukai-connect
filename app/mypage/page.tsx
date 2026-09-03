@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants";
 import { updateProfile } from "./actions";
 import CapitalSummaryCard from "@/components/CapitalSummaryCard";
+import Avatar from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,13 @@ export default async function MyPage() {
       )}
 
       <section>
-        <h1 className="mb-4 text-xl font-bold">マイページ</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <Avatar name={p?.name} size={52} />
+          <div>
+            <h1 className="text-xl font-bold">マイページ</h1>
+            <p className="text-sm text-gray-500">{p?.name || "お名前未設定"}</p>
+          </div>
+        </div>
         <form action={updateProfile} className="card max-w-xl space-y-4">
           <p className="text-sm text-gray-500">
             ここで設定した内容は、次回以降の交流会申込フォームの初期値として使われます。
@@ -125,13 +132,14 @@ export default async function MyPage() {
               {CONNECT_TAGS.map((tag) => (
                 <label
                   key={tag}
-                  className="flex items-center gap-1 text-xs text-gray-600"
+                  className="chip has-[:checked]:border-primary has-[:checked]:bg-primary has-[:checked]:text-white border-gray-200 text-gray-500"
                 >
                   <input
                     type="checkbox"
                     name="connect_with_tags"
                     value={tag}
                     defaultChecked={p?.connect_with_tags?.includes(tag)}
+                    className="hidden"
                   />
                   {tag}
                 </label>

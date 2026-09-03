@@ -26,26 +26,40 @@ export default async function InstallPage() {
         />
       </div>
 
-      <div className="mt-8 space-y-6 text-left">
+      <div className="mt-8 space-y-4 text-left">
         <div className="card">
-          <p className="mb-2 font-semibold">Androidの方(Chrome)</p>
-          <ol className="list-inside list-decimal space-y-1 text-sm text-gray-600">
-            <li>QRコードを読み取ってARKIVEを開く</li>
-            <li>
-              画面下部(または右上メニュー)に出る「ホーム画面に追加」をタップ
-            </li>
-            <li>ホーム画面にARKIVEのアイコンが追加されます</li>
+          <p className="mb-3 font-semibold">Androidの方(Chrome)</p>
+          <ol className="space-y-2.5">
+            {[
+              "QRコードを読み取ってARKIVEを開く",
+              "画面下部(または右上メニュー)に出る「ホーム画面に追加」をタップ",
+              "ホーム画面にARKIVEのアイコンが追加されます",
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-light text-[11px] font-bold text-primary">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5">{step}</span>
+              </li>
+            ))}
           </ol>
         </div>
         <div className="card">
-          <p className="mb-2 font-semibold">iPhoneの方(Safari)</p>
-          <ol className="list-inside list-decimal space-y-1 text-sm text-gray-600">
-            <li>QRコードを読み取ってARKIVEを開く(Safariで開いてください)</li>
-            <li>画面下部の共有ボタン(□に↑)をタップ</li>
-            <li>
-              「ホーム画面に追加」を選び、右上の「追加」をタップ
-            </li>
-            <li>ホーム画面にARKIVEのアイコンが追加されます</li>
+          <p className="mb-3 font-semibold">iPhoneの方(Safari)</p>
+          <ol className="space-y-2.5">
+            {[
+              "QRコードを読み取ってARKIVEを開く(Safariで開いてください)",
+              "画面下部の共有ボタン(□に↑)をタップ",
+              "「ホーム画面に追加」を選び、右上の「追加」をタップ",
+              "ホーム画面にARKIVEのアイコンが追加されます",
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-light text-[11px] font-bold text-primary">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5">{step}</span>
+              </li>
+            ))}
           </ol>
         </div>
       </div>

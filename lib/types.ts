@@ -120,6 +120,24 @@ export interface ConversationPartner {
   connect_with: string | null;
 }
 
+export type SupportInquiryKind = "report" | "contact";
+export type SupportInquiryStatus = "open" | "in_progress" | "resolved";
+
+export interface SupportInquiryRow {
+  id: string;
+  kind: SupportInquiryKind;
+  participant_id: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  summary: string;
+  details: string | null;
+  is_business_hours: boolean | null;
+  status: SupportInquiryStatus;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+}
+
 export interface CapitalSummary {
   events_attended: number;
   connections_count: number;

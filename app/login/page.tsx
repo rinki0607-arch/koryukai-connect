@@ -16,17 +16,27 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto max-w-sm">
-      <h1 className="mb-6 text-xl font-bold">
-        {isSignup ? "新規登録" : "ログイン"}
-      </h1>
+      <div className="mb-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary font-display text-xl font-bold text-accent shadow-[0_6px_18px_rgba(16,25,47,0.25)]">
+          A
+        </div>
+        <h1 className="mt-4 text-xl font-bold">
+          {isSignup ? "新規登録" : "おかえりなさい"}
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {isSignup
+            ? "ARKIVEでアーク起業塾の交流会に参加登録"
+            : "ARKIVEにログインして続ける"}
+        </p>
+      </div>
 
       {params.message && (
-        <p className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        <p className="mb-4 rounded-2xl bg-green-50 p-3 text-center text-sm font-medium text-green-700">
           {params.message}
         </p>
       )}
       {params.error && (
-        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p className="mb-4 rounded-2xl bg-red-50 p-3 text-center text-sm font-medium text-red-700">
           {params.error}
         </p>
       )}
@@ -68,12 +78,12 @@ export default async function LoginPage({
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-gray-500">
+      <p className="mt-5 text-center text-sm text-gray-500">
         {isSignup ? (
           <>
             すでにアカウントをお持ちですか?{" "}
             <a
-              className="text-primary hover:underline"
+              className="font-semibold text-primary hover:underline"
               href={`/login?next=${encodeURIComponent(next)}`}
             >
               ログイン
@@ -83,7 +93,7 @@ export default async function LoginPage({
           <>
             アカウントをお持ちでないですか?{" "}
             <a
-              className="text-primary hover:underline"
+              className="font-semibold text-primary hover:underline"
               href={`/login?mode=signup&next=${encodeURIComponent(next)}`}
             >
               新規登録

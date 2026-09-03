@@ -55,6 +55,12 @@ export default async function AdminLayout({
         <Link href="/admin/team" className="text-gray-600 hover:text-primary">
           運営メンバー
         </Link>
+        <Link
+          href="/admin/inquiries"
+          className="text-gray-600 hover:text-primary"
+        >
+          通報・問い合わせ
+        </Link>
       </div>
       {children}
     </div>
