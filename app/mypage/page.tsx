@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CapitalSummary, EventRow, Profile, RegistrationRow } from "@/lib/types";
+import {
+  CapitalSummary,
+  EventRow,
+  PendingFeedbackEvent,
+  Profile,
+  RegistrationRow,
+} from "@/lib/types";
 import {
   formatEventDate,
   INDUSTRIES,
@@ -36,10 +42,47 @@ export default async function MyPage() {
   const { data: capitalData } = await supabase.rpc("get_my_capital_summary");
   const capital = (capitalData as CapitalSummary[] | null)?.[0];
 
+  const { data: pendingFeedbackData } = await supabase.rpc(
+    "get_pending_feedback_events"
+  );
+  const pendingFeedback = (pendingFeedbackData as PendingFeedbackEvent[]) || [];
+
   const p = profile as Profile;
 
   return (
     <div className="space-y-10">
+      {pendingFeedback.length > 0 && (
+        <section>
+          <div className="card border-accent/40 bg-accent/8">
+            <p className="font-semibold text-primary">
+              📝 参加後アンケートにご協力ください
+            </p>
+            <p className="mt-1 text-sm text-gray-600">
+              交流会の感想をぜひお聞かせください。1分程度で回答できます。
+            </p>
+            <div className="mt-3 space-y-2">
+              {pendingFeedback.map((ev) => (
+                <Link
+                  key={ev.event_id}
+                  href={`/mypage/feedback/${ev.event_id}`}
+                  className="card-tap card flex items-center justify-between bg-white"
+                >
+                  <div>
+                    <p className="text-xs text-gray-500">
+                      {formatEventDate(ev.event_date)}
+                    </p>
+                    <p className="font-semibold">{ev.title}</p>
+                  </div>
+                  <span className="btn-primary min-h-0 px-4 py-2 text-xs">
+                    回答する
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {capital && (
         <section>
           <CapitalSummaryCard summary={capital} />
@@ -53,6 +96,14 @@ export default async function MyPage() {
             <h1 className="text-xl font-bold">マイページ</h1>
             <p className="text-sm text-gray-500">{p?.name || "お名前未設定"}</p>
           </div>
+        </div>
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Link href="/mypage/ticket" className="btn-secondary">
+            🎫 マイQRコード
+          </Link>
+          <Link href="/mypage/cards" className="btn-secondary">
+            📇 マイ名刺
+          </Link>
         </div>
         <form action={updateProfile} className="card max-w-xl space-y-4">
           <p className="text-sm text-gray-500">

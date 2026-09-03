@@ -62,6 +62,8 @@ export interface AttendeeCandidate {
   industry: string | null;
   connect_with: string | null;
   already_liked: boolean;
+  match_score: number;
+  shared_tags: string[];
 }
 
 export interface DirectoryEntry {
@@ -146,4 +148,69 @@ export interface CapitalSummary {
   first_attended_at: string | null;
   latest_partner_name: string | null;
   latest_matched_at: string | null;
+}
+
+export type RecommendAnswer = "yes" | "neutral" | "no";
+
+export interface PendingFeedbackEvent {
+  event_id: string;
+  title: string;
+  event_date: string;
+}
+
+export interface EventFeedbackSummary {
+  event_id: string;
+  title: string;
+  event_date: string;
+  response_count: number;
+  avg_rating: number;
+  promoters: number;
+  neutrals: number;
+  detractors: number;
+  nps: number;
+}
+
+export interface AdminNote {
+  id: string;
+  participant_id: string;
+  author_id: string | null;
+  note: string;
+  created_at: string;
+  author_name?: string | null;
+}
+
+export interface ParticipantAdminSummary {
+  events_attended: number;
+  last_attended_at: string | null;
+  matches_count: number;
+  messages_count: number;
+}
+
+export interface ParticipantActivity {
+  participant_id: string;
+  last_attended_at: string | null;
+  events_attended: number;
+}
+
+export interface FeedPost {
+  post_id: string;
+  content: string;
+  created_at: string;
+  author_id: string;
+  author_name: string | null;
+  author_company: string | null;
+  like_count: number;
+  liked_by_me: boolean;
+}
+
+export interface BusinessCard {
+  id: string;
+  owner_id: string;
+  name: string | null;
+  company: string | null;
+  job_title: string | null;
+  phone: string | null;
+  email: string | null;
+  note: string | null;
+  created_at: string;
 }

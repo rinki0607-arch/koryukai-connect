@@ -85,6 +85,32 @@ function ChatIcon() {
   );
 }
 
+function FeedIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <rect
+        x="4"
+        y="4.5"
+        width="16"
+        height="6"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <rect
+        x="4"
+        y="13.5"
+        width="16"
+        height="6"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path d="M7.5 7.5h4M7.5 16.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function PersonIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -111,6 +137,7 @@ export default function BottomTabBar({
         { href: "/", label: "ホーム", icon: <HomeIcon /> },
         { href: "/events", label: "交流会", icon: <CalendarIcon /> },
         { href: "/members", label: "名簿", icon: <PeopleIcon /> },
+        { href: "/feed", label: "フィード", icon: <FeedIcon /> },
         {
           href: "/mypage/matches",
           label: "メッセージ",

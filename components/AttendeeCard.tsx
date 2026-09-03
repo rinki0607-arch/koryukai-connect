@@ -27,11 +27,19 @@ export default function AttendeeCard({
 }) {
   const [pending, startTransition] = useTransition();
 
+  const shared = attendee.shared_tags || [];
+  const isRecommended = (attendee.match_score || 0) >= 15;
+
   return (
-    <div className="card flex items-center gap-3">
+    <div className="card relative flex items-center gap-3 overflow-hidden">
+      {isRecommended && (
+        <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent-dark">
+          ✨ おすすめ
+        </span>
+      )}
       <Avatar name={attendee.name} size={48} />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold">
+        <p className="truncate pr-16 font-semibold">
           {attendee.name || "(名前未設定)"}
           {attendee.company ? `(${attendee.company})` : ""}
         </p>
@@ -44,6 +52,18 @@ export default function AttendeeCard({
           <p className="mt-1 truncate text-sm text-gray-600">
             繋がりたい人: {attendee.connect_with}
           </p>
+        )}
+        {shared.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {shared.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-primary/8 px-2 py-0.5 text-[11px] font-medium text-primary"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
         )}
       </div>
       <button

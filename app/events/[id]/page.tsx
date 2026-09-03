@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventRow, Profile, RegistrationRow } from "@/lib/types";
 import { formatEventDate } from "@/lib/constants";
+import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import RegistrationForm from "@/components/RegistrationForm";
 
 export const dynamic = "force-dynamic";
@@ -71,12 +72,36 @@ export default async function EventDetailPage({
             <p className="text-sm text-gray-700">
               参加登録済みです。当日は他の参加者とのマッチングもお楽しみください。
             </p>
-            <Link
-              href={`/mypage/matching/${ev.id}`}
-              className="btn-primary mt-3 inline-flex"
-            >
-              参加者とマッチングする
-            </Link>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={`/mypage/matching/${ev.id}`}
+                className="btn-primary"
+              >
+                参加者とマッチングする
+              </Link>
+              <a
+                href={buildGoogleCalendarUrl({
+                  id: ev.id,
+                  title: ev.title,
+                  eventDate: ev.event_date,
+                  startTime: ev.start_time,
+                  endTime: ev.end_time,
+                  venue: ev.venue,
+                  description: ev.description,
+                  appUrl:
+                    process.env.NEXT_PUBLIC_APP_URL ||
+                    "https://koryukai-connect.vercel.app",
+                })}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+              >
+                📅 Googleカレンダーに追加
+              </a>
+              <a href={`/api/events/${ev.id}/ics`} className="btn-ghost">
+                他のカレンダー(.ics)
+              </a>
+            </div>
           </div>
         )}
       </div>

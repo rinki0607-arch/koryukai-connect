@@ -53,8 +53,14 @@ export default async function NavBar() {
                 <Link href="/members" className="text-gray-600 transition hover:text-primary">
                   参加者名簿
                 </Link>
+                <Link href="/feed" className="text-gray-600 transition hover:text-primary">
+                  コミュニティ
+                </Link>
                 <Link href="/mypage/ticket" className="text-gray-600 transition hover:text-primary">
                   マイQRコード
+                </Link>
+                <Link href="/mypage/cards" className="text-gray-600 transition hover:text-primary">
+                  マイ名刺
                 </Link>
                 <Link
                   href="/mypage/matches"

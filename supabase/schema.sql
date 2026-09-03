@@ -166,12 +166,23 @@ returns table(
   company text,
   industry text,
   connect_with text,
-  already_liked boolean
+  already_liked boolean,
+  match_score int,
+  shared_tags text[]
 )
 language sql
 security definer set search_path = public
 stable
 as $$
+  with mine as (
+    select
+      coalesce(nullif(mine_r.connect_with_tags, '{}'::text[]), mine_p.connect_with_tags, '{}'::text[]) as tags,
+      mine_p.industry as industry
+    from public.profiles mine_p
+    left join public.registrations mine_r
+      on mine_r.event_id = p_event_id and mine_r.participant_id = auth.uid()
+    where mine_p.id = auth.uid()
+  )
   select
     r.participant_id,
     p.name,
@@ -183,19 +194,39 @@ as $$
       where l.event_id = p_event_id
         and l.from_id = auth.uid()
         and l.to_id = r.participant_id
-    ) as already_liked
+    ) as already_liked,
+    (
+      cardinality(
+        array(
+          select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+          intersect
+          select unnest((select tags from mine))
+        )
+      ) * 10
+      + case
+          when (select industry from mine) is not null
+           and coalesce(nullif(r.industry, ''), p.industry) is not null
+           and (select industry from mine) = coalesce(nullif(r.industry, ''), p.industry)
+          then 5 else 0
+        end
+    )::int as match_score,
+    array(
+      select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+      intersect
+      select unnest((select tags from mine))
+    ) as shared_tags
   from public.registrations r
   join public.profiles p on p.id = r.participant_id
   where r.event_id = p_event_id
     and r.attending = true
     and r.participant_id <> auth.uid()
     and exists (
-      select 1 from public.registrations mine
-      where mine.event_id = p_event_id
-        and mine.participant_id = auth.uid()
-        and mine.attending = true
+      select 1 from public.registrations mine2
+      where mine2.event_id = p_event_id
+        and mine2.participant_id = auth.uid()
+        and mine2.attending = true
     )
-  order by p.name nulls last;
+  order by match_score desc, p.name nulls last;
 $$;
 
 -- ============================================================
@@ -703,3 +734,325 @@ end;
 $$;
 
 grant execute on function public.resolve_support_inquiry(uuid) to authenticated;
+
+-- ============================================================
+-- event_feedback: 参加後アンケート(満足度・NPS・自由記述)
+-- ============================================================
+create table if not exists public.event_feedback (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  rating int not null check (rating between 1 and 5),
+  would_recommend text not null check (would_recommend in ('yes', 'neutral', 'no')),
+  comment text,
+  created_at timestamptz not null default now(),
+  unique (event_id, participant_id)
+);
+
+create index if not exists event_feedback_event_idx on public.event_feedback(event_id);
+
+alter table public.event_feedback enable row level security;
+
+drop policy if exists event_feedback_insert_own on public.event_feedback;
+create policy event_feedback_insert_own on public.event_feedback
+  for insert to authenticated
+  with check (participant_id = auth.uid());
+
+drop policy if exists event_feedback_update_own on public.event_feedback;
+create policy event_feedback_update_own on public.event_feedback
+  for update to authenticated
+  using (participant_id = auth.uid())
+  with check (participant_id = auth.uid());
+
+drop policy if exists event_feedback_select_own_or_admin on public.event_feedback;
+create policy event_feedback_select_own_or_admin on public.event_feedback
+  for select using (participant_id = auth.uid() or public.is_admin());
+
+grant insert, update, select on public.event_feedback to authenticated;
+
+-- get_pending_feedback_events: 自分が参加した(開催日が過ぎた)、まだアンケート未回答の交流会
+create or replace function public.get_pending_feedback_events()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select e.id, e.title, e.event_date
+  from public.events e
+  join public.registrations r on r.event_id = e.id
+  where r.participant_id = auth.uid()
+    and r.attending = true
+    and e.event_date < current_date
+    and not exists (
+      select 1 from public.event_feedback f
+      where f.event_id = e.id and f.participant_id = auth.uid()
+    )
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_pending_feedback_events() to authenticated;
+
+-- submit_event_feedback: アンケート送信/更新
+create or replace function public.submit_event_feedback(
+  p_event_id uuid,
+  p_rating int,
+  p_would_recommend text,
+  p_comment text
+)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.event_feedback (event_id, participant_id, rating, would_recommend, comment)
+  values (p_event_id, auth.uid(), p_rating, p_would_recommend, nullif(p_comment, ''))
+  on conflict (event_id, participant_id)
+  do update set
+    rating = excluded.rating,
+    would_recommend = excluded.would_recommend,
+    comment = excluded.comment;
+end;
+$$;
+
+grant execute on function public.submit_event_feedback(uuid, int, text, text) to authenticated;
+
+-- get_event_feedback_summary: 運営向け集計(イベントごとの平均評価・NPS内訳)
+create or replace function public.get_event_feedback_summary()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date,
+  response_count int,
+  avg_rating numeric,
+  promoters int,
+  neutrals int,
+  detractors int,
+  nps int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    e.id,
+    e.title,
+    e.event_date,
+    count(f.id)::int as response_count,
+    round(avg(f.rating)::numeric, 1) as avg_rating,
+    count(*) filter (where f.would_recommend = 'yes')::int as promoters,
+    count(*) filter (where f.would_recommend = 'neutral')::int as neutrals,
+    count(*) filter (where f.would_recommend = 'no')::int as detractors,
+    case when count(f.id) = 0 then 0
+      else round(
+        (count(*) filter (where f.would_recommend = 'yes')::numeric
+         - count(*) filter (where f.would_recommend = 'no')::numeric)
+        / count(f.id) * 100
+      )::int
+    end as nps
+  from public.events e
+  left join public.event_feedback f on f.event_id = e.id
+  where public.is_admin()
+  group by e.id, e.title, e.event_date
+  having count(f.id) > 0
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_event_feedback_summary() to authenticated;
+
+-- ============================================================
+-- admin_notes: 運営メンバーが参加者に残すメモ・フォローアップ
+-- ============================================================
+create table if not exists public.admin_notes (
+  id uuid primary key default gen_random_uuid(),
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  author_id uuid references public.profiles(id) on delete set null,
+  note text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists admin_notes_participant_idx on public.admin_notes(participant_id, created_at desc);
+
+alter table public.admin_notes enable row level security;
+
+drop policy if exists admin_notes_admin_all on public.admin_notes;
+create policy admin_notes_admin_all on public.admin_notes
+  for all using (public.is_admin()) with check (public.is_admin());
+
+grant select, insert, delete on public.admin_notes to authenticated;
+
+-- get_participant_admin_summary: 運営向け、特定参加者の参加実績サマリ
+create or replace function public.get_participant_admin_summary(p_participant_id uuid)
+returns table(
+  events_attended int,
+  last_attended_at timestamptz,
+  matches_count int,
+  messages_count int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, max(checked_in_at) as last_at
+    from public.attendance
+    where participant_id = p_participant_id and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    where a.from_id = p_participant_id
+    group by a.to_id
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = p_participant_id or recipient_id = p_participant_id
+  )
+  select
+    coalesce((select c from att), 0),
+    (select last_at from att),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0)
+  where public.is_admin();
+$$;
+
+grant execute on function public.get_participant_admin_summary(uuid) to authenticated;
+
+-- get_participant_activity: 運営向け、全参加者の最終参加日・累計参加回数(一覧の休眠判定に使う)
+create or replace function public.get_participant_activity()
+returns table(
+  participant_id uuid,
+  last_attended_at timestamptz,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    a.participant_id,
+    max(a.checked_in_at) as last_attended_at,
+    count(a.id)::int as events_attended
+  from public.attendance a
+  where public.is_admin() and a.checked_in_at is not null
+  group by a.participant_id;
+$$;
+
+grant execute on function public.get_participant_activity() to authenticated;
+
+-- ============================================================
+-- business_cards: 名刺のデジタル化(OCR抽出結果の保存。画像そのものは保存しない)
+-- ============================================================
+create table if not exists public.business_cards (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  name text,
+  company text,
+  job_title text,
+  phone text,
+  email text,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists business_cards_owner_idx on public.business_cards(owner_id, created_at desc);
+
+alter table public.business_cards enable row level security;
+
+drop policy if exists business_cards_owner_all on public.business_cards;
+create policy business_cards_owner_all on public.business_cards
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+grant select, insert, update, delete on public.business_cards to authenticated;
+
+-- ============================================================
+-- posts / post_likes: 交流会の合間を埋めるコミュニティフィード
+-- ============================================================
+create table if not exists public.posts (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists posts_created_idx on public.posts(created_at desc);
+
+alter table public.posts enable row level security;
+
+drop policy if exists posts_select_authenticated on public.posts;
+create policy posts_select_authenticated on public.posts
+  for select to authenticated using (true);
+
+drop policy if exists posts_insert_own on public.posts;
+create policy posts_insert_own on public.posts
+  for insert to authenticated with check (author_id = auth.uid());
+
+drop policy if exists posts_delete_own_or_admin on public.posts;
+create policy posts_delete_own_or_admin on public.posts
+  for delete using (author_id = auth.uid() or public.is_admin());
+
+grant select, insert, delete on public.posts to authenticated;
+
+create table if not exists public.post_likes (
+  post_id uuid not null references public.posts(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, participant_id)
+);
+
+alter table public.post_likes enable row level security;
+
+drop policy if exists post_likes_select_authenticated on public.post_likes;
+create policy post_likes_select_authenticated on public.post_likes
+  for select to authenticated using (true);
+
+drop policy if exists post_likes_insert_own on public.post_likes;
+create policy post_likes_insert_own on public.post_likes
+  for insert to authenticated with check (participant_id = auth.uid());
+
+drop policy if exists post_likes_delete_own on public.post_likes;
+create policy post_likes_delete_own on public.post_likes
+  for delete using (participant_id = auth.uid());
+
+grant select, insert, delete on public.post_likes to authenticated;
+
+-- get_feed_posts: フィード一覧(著者情報・いいね数・自分がいいね済みか)
+create or replace function public.get_feed_posts(p_limit int default 50)
+returns table(
+  post_id uuid,
+  content text,
+  created_at timestamptz,
+  author_id uuid,
+  author_name text,
+  author_company text,
+  like_count int,
+  liked_by_me boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.content,
+    p.created_at,
+    p.author_id,
+    prof.name,
+    prof.company,
+    (select count(*)::int from public.post_likes l where l.post_id = p.id) as like_count,
+    exists(
+      select 1 from public.post_likes l2
+      where l2.post_id = p.id and l2.participant_id = auth.uid()
+    ) as liked_by_me
+  from public.posts p
+  join public.profiles prof on prof.id = p.author_id
+  order by p.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_feed_posts(int) to authenticated;

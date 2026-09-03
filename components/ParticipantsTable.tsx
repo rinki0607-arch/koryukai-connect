@@ -18,6 +18,19 @@ export interface ParticipantRow {
   connect_with_tags: string[] | null;
   attending: boolean;
   afterparty: boolean;
+  last_attended_at?: string | null;
+  events_attended?: number;
+}
+
+const DORMANT_MS = 1000 * 60 * 60 * 24 * 90;
+
+function formatLastAttended(iso?: string | null) {
+  if (!iso) return "参加実績なし";
+  return new Date(iso).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export default function ParticipantsTable({
@@ -157,6 +170,7 @@ export default function ParticipantsTable({
                 "繋がりたい人",
                 "参加",
                 "二次会",
+                "最終参加日",
                 "",
               ].map((h) => (
                 <th
@@ -182,6 +196,26 @@ export default function ParticipantsTable({
                 </td>
                 <td className="px-3 py-2">
                   {r.afterparty ? "希望" : ""}
+                </td>
+                <td className="px-3 py-2">
+                  <span
+                    className={
+                      r.last_attended_at &&
+                      Date.now() - new Date(r.last_attended_at).getTime() >
+                        DORMANT_MS
+                        ? "text-gray-400"
+                        : ""
+                    }
+                  >
+                    {formatLastAttended(r.last_attended_at)}
+                  </span>
+                  {r.last_attended_at &&
+                    Date.now() - new Date(r.last_attended_at).getTime() >
+                      DORMANT_MS && (
+                      <span className="badge ml-1.5 bg-gray-100 text-gray-500">
+                        🌙休眠
+                      </span>
+                    )}
                 </td>
                 <td className="px-3 py-2">
                   <Link

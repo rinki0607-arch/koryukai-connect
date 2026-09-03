@@ -33,7 +33,13 @@ export default async function MatchingPage({
   return (
     <div>
       <h1 className="mb-1 text-xl font-bold">参加者マッチング</h1>
-      <p className="mb-6 text-sm text-gray-500">{event?.title}</p>
+      <p className="text-sm text-gray-500">{event?.title}</p>
+      {!error && attendees.length > 0 && (
+        <p className="mb-6 mt-1 text-xs text-gray-400">
+          共通のタグ・業種をもとに相性が高い順に並んでいます
+        </p>
+      )}
+      {(error || attendees.length === 0) && <div className="mb-6" />}
 
       {error && (
         <p className="card text-sm text-red-600">

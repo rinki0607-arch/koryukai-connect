@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { formatMonthLabel } from "@/lib/constants";
+import { formatMonthLabel, formatEventDate } from "@/lib/constants";
+import { EventFeedbackSummary } from "@/lib/types";
 import BarList from "@/components/BarList";
 
 export const dynamic = "force-dynamic";
@@ -22,15 +23,19 @@ function topEntries(counts: Map<string, number>, limit = 8) {
 export default async function AdminAnalyticsPage() {
   const supabase = await createClient();
 
-  const [{ data, error }, { data: attendanceData }] = await Promise.all([
-    supabase
-      .from("registrations")
-      .select("attending, afterparty, industry, connect_with_tags, events(event_date)"),
-    supabase
-      .from("attendance")
-      .select("participant_id, checked_in_at")
-      .not("checked_in_at", "is", null),
-  ]);
+  const [{ data, error }, { data: attendanceData }, { data: feedbackData }] =
+    await Promise.all([
+      supabase
+        .from("registrations")
+        .select("attending, afterparty, industry, connect_with_tags, events(event_date)"),
+      supabase
+        .from("attendance")
+        .select("participant_id, checked_in_at")
+        .not("checked_in_at", "is", null),
+      supabase.rpc("get_event_feedback_summary"),
+    ]);
+
+  const feedbackSummary = (feedbackData as EventFeedbackSummary[]) || [];
 
   const rows = (data as unknown as RegRow[]) || [];
   const attendingRows = rows.filter((r) => r.attending);
@@ -105,6 +110,75 @@ export default async function AdminAnalyticsPage() {
           <p className="mt-1 text-3xl font-bold">{industryCounts.size}</p>
         </div>
       </div>
+
+      {feedbackSummary.length > 0 && (
+        <section>
+          <div className="mb-3">
+            <h2 className="text-lg font-semibold">参加後アンケート・NPS</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              各回の満足度アンケート回答をもとにした、開催回ごとのNPS(推奨度)と平均満足度です。
+            </p>
+          </div>
+          <div className="space-y-3">
+            {feedbackSummary.map((f) => (
+              <div key={f.event_id} className="card">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">
+                      {formatEventDate(f.event_date)}
+                    </p>
+                    <p className="font-semibold">{f.title}</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      回答数 {f.response_count}件 / 平均満足度 {f.avg_rating}
+                      <span className="text-accent-dark"> ★</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">NPS</p>
+                    <p
+                      className={`text-2xl font-bold ${
+                        f.nps >= 0 ? "text-primary" : "text-red-500"
+                      }`}
+                    >
+                      {f.nps > 0 ? `+${f.nps}` : f.nps}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-1.5 overflow-hidden rounded-full">
+                  {f.promoters > 0 && (
+                    <div
+                      className="h-2 bg-primary"
+                      style={{
+                        width: `${(f.promoters / f.response_count) * 100}%`,
+                      }}
+                    />
+                  )}
+                  {f.neutrals > 0 && (
+                    <div
+                      className="h-2 bg-gray-200"
+                      style={{
+                        width: `${(f.neutrals / f.response_count) * 100}%`,
+                      }}
+                    />
+                  )}
+                  {f.detractors > 0 && (
+                    <div
+                      className="h-2 bg-red-300"
+                      style={{
+                        width: `${(f.detractors / f.response_count) * 100}%`,
+                      }}
+                    />
+                  )}
+                </div>
+                <p className="mt-1.5 text-[11px] text-gray-400">
+                  また来たい {f.promoters} / どちらとも {f.neutrals} / あまり{" "}
+                  {f.detractors}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <div className="mb-3">

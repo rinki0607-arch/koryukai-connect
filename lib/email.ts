@@ -128,6 +128,27 @@ export function buildEventAnnouncementEmail(params: {
   return { subject, html };
 }
 
+export function buildReEngagementEmail(params: { name: string | null; appUrl: string }) {
+  const { name, appUrl } = params;
+  const subject = "【ARKIVE】お久しぶりです、最近の交流会もぜひ";
+
+  const html = `
+    <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
+      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業塾</p>
+      <h2 style="margin:8px 0 4px;">${name ? `${name}様、` : ""}お久しぶりです</h2>
+      <p style="margin:0 0 20px;color:#555;font-size:14px;">
+        しばらく交流会にお越しいただけていないようで、少し寂しく思いご連絡しました。
+        新しい出会いや繋がりが、また皆様の事業のヒントになれば幸いです。
+        直近の開催予定をぜひチェックしてみてください。
+      </p>
+      <a href="${appUrl}/events" style="display:inline-block;margin-top:4px;padding:12px 24px;background:#c9a24b;color:#1b1305;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">開催予定を見る</a>
+      <p style="margin-top:28px;font-size:12px;color:#999;">このメールはARKIVEにご登録いただいた方に送信しています。</p>
+    </div>
+  `;
+
+  return { subject, html };
+}
+
 export function buildSupportInquiryEmail(params: {
   kind: "report" | "contact";
   summary: string;
