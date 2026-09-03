@@ -12,6 +12,7 @@ import {
 import Avatar from "@/components/Avatar";
 import { addAdminNote } from "../actions";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
+import ParticipantEditForm from "@/components/ParticipantEditForm";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,9 @@ export default async function ParticipantDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
   const [{ data: profile }, { data: summaryData }, { data: registrations }, { data: notesData }] =
     await Promise.all([
@@ -113,34 +117,22 @@ export default async function ParticipantDetailPage({
         </div>
       </div>
 
-      <div className="card">
-        <h2 className="mb-3 font-semibold">プロフィール</h2>
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <h2 className="mb-3 font-semibold">プロフィール編集・権限変更</h2>
+        <p className="mb-3 text-xs text-gray-400">
+          メールアドレス・自己紹介はここでは編集できません(本人のマイページで設定されます)。権限を「運営(管理者)」に変更すると、このアカウントは管理画面にアクセスできるようになります。
+        </p>
+        <dl className="mb-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-gray-400">メール</dt>
             <dd>{p.email || "-"}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-400">電話番号</dt>
-            <dd>{p.phone || "-"}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-400">業種</dt>
-            <dd>{p.industry || "-"}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-400">職種</dt>
-            <dd>{p.job_type || "-"}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-gray-400">繋がりたい人</dt>
-            <dd>{p.connect_with || "-"}</dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-gray-400">自己紹介</dt>
             <dd className="whitespace-pre-wrap">{p.bio || "-"}</dd>
           </div>
         </dl>
+        <ParticipantEditForm profile={p} isSelf={currentUser?.id === p.id} />
       </div>
 
       <div>
