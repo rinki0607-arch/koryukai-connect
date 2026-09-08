@@ -79,6 +79,17 @@ export default async function LoginPage({
         </button>
       </form>
 
+      {!isSignup && (
+        <p className="mt-4 text-center text-sm">
+          <a
+            className="text-gray-400 hover:text-primary hover:underline"
+            href={`/forgot-password?next=${encodeURIComponent(next)}`}
+          >
+            パスワードをお忘れですか?
+          </a>
+        </p>
+      )}
+
       <p className="mt-5 text-center text-sm text-gray-500">
         {isSignup ? (
           <>

@@ -1391,3 +1391,27 @@ as $$
 $$;
 
 grant execute on function public.get_feed_posts(int) to authenticated;
+
+-- ============================================================
+-- アカウント自己管理: メールアドレス変更をprofilesへ同期
+-- ============================================================
+-- 本人がマイページからメールアドレスを変更すると、Supabase Authの確認フローを経て
+-- auth.users.email が実際に更新されたタイミングでこのトリガーが発火し、
+-- 表示用に複製している public.profiles.email も追随させる。
+create or replace function public.handle_user_email_change()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.email is distinct from old.email then
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_email_updated on auth.users;
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute procedure public.handle_user_email_change();

@@ -123,6 +123,9 @@ export default async function MyPage({
           <Link href="/mypage/cards" className="btn-secondary">
             📇 マイ名刺
           </Link>
+          <Link href="/mypage/account" className="btn-secondary">
+            🔐 アカウント設定
+          </Link>
         </div>
         <form action={updateProfile} className="card max-w-xl space-y-4">
           <p className="text-sm text-gray-500">
