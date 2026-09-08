@@ -17,7 +17,8 @@ import {
 import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import { updateProfile } from "./actions";
 import CapitalSummaryCard from "@/components/CapitalSummaryCard";
-import Avatar from "@/components/Avatar";
+import AvatarUploader from "@/components/AvatarUploader";
+import StaffCodeForm from "@/components/StaffCodeForm";
 
 export const dynamic = "force-dynamic";
 
@@ -102,12 +103,18 @@ export default async function MyPage({
       )}
 
       <section>
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name={p?.name} size={52} />
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold">マイページ</h1>
             <p className="text-sm text-gray-500">{p?.name || "お名前未設定"}</p>
           </div>
+        </div>
+        <div className="mb-6">
+          <AvatarUploader
+            userId={user.id}
+            name={p?.name}
+            avatarUrl={p?.avatar_url ?? null}
+          />
         </div>
         <div className="mb-6 flex flex-wrap gap-2">
           <Link href="/mypage/ticket" className="btn-secondary">
@@ -301,6 +308,12 @@ export default async function MyPage({
           </div>
         )}
       </section>
+
+      {p?.role !== "admin" && (
+        <section>
+          <StaffCodeForm />
+        </section>
+      )}
     </div>
   );
 }

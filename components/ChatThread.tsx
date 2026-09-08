@@ -37,12 +37,14 @@ export default function ChatThread({
   currentUserId,
   partnerId,
   partnerName,
+  partnerAvatarUrl,
   matchedAt,
   initialMessages,
 }: {
   currentUserId: string;
   partnerId: string;
   partnerName?: string | null;
+  partnerAvatarUrl?: string | null;
   matchedAt?: string | null;
   initialMessages: Message[];
 }) {
@@ -105,7 +107,7 @@ export default function ChatThread({
       <div className="flex-1 space-y-1.5 overflow-y-auto py-3 pr-1">
         {matchedAt && (
           <div className="mb-2 flex flex-col items-center gap-2 py-4 text-center">
-            <Avatar name={partnerName} size={56} />
+            <Avatar name={partnerName} avatarUrl={partnerAvatarUrl} size={56} />
             <p className="text-sm font-semibold">
               {partnerName || "(名前未設定)"}さんとマッチしました
             </p>
@@ -146,7 +148,9 @@ export default function ChatThread({
               >
                 {!isMine && (
                   <div className="h-6 w-6 shrink-0">
-                    {isLastInGroup && <Avatar name={partnerName} size={24} />}
+                    {isLastInGroup && (
+                      <Avatar name={partnerName} avatarUrl={partnerAvatarUrl} size={24} />
+                    )}
                   </div>
                 )}
                 <div

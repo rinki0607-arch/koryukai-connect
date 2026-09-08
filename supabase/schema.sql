@@ -1056,3 +1056,338 @@ as $$
 $$;
 
 grant execute on function public.get_feed_posts(int) to authenticated;
+
+-- ============================================================
+-- 運営コード(共通コード)による管理者自己昇格 + プロフィール画像 (2026-09)
+-- ============================================================
+
+-- profiles.role を不正な直接更新から保護する。
+-- これまでは profiles_update_own_or_admin ポリシーに列単位の制限がなく、
+-- 認証済みユーザーが自分自身の role を直接 'admin' に書き換えられてしまう
+-- 隙間があったため、トリガーで塞ぐ。
+-- 許可されるのは (a) 管理者自身によるUI経由の更新 (is_admin()) と
+-- (b) サーバー側の service_role クライアント経由の更新
+-- (運営コードによる自己昇格・Stripe/Slack等のサーバー処理) のみ。
+create or replace function public.protect_profile_role_field()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if auth.role() = 'service_role' or public.is_admin() then
+    return new;
+  end if;
+  new.role := old.role;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_role_field_trigger on public.profiles;
+create trigger protect_profile_role_field_trigger
+  before update on public.profiles
+  for each row execute procedure public.protect_profile_role_field();
+
+-- プロフィール画像
+alter table public.profiles
+  add column if not exists avatar_url text;
+
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists avatars_public_read on storage.objects;
+create policy avatars_public_read on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists avatars_insert_own on storage.objects;
+create policy avatars_insert_own on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_update_own on storage.objects;
+create policy avatars_update_own on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_delete_own on storage.objects;
+create policy avatars_delete_own on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- 以下、プロフィール画像をアプリ内の各所(マッチング・名簿・チャット・フィード)に
+-- 表示するため、既存のプロフィール参照RPCを avatar_url 込みで再定義する。
+-- 戻り値の列構成(RETURNS TABLE)が変わるため、create or replace の前に
+-- 一度 drop function する必要がある(Postgresの制約: 戻り値型は置き換え不可)。
+
+drop function if exists public.get_event_attendees(uuid);
+create or replace function public.get_event_attendees(p_event_id uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  already_liked boolean,
+  match_score int,
+  shared_tags text[],
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mine as (
+    select
+      coalesce(nullif(mine_r.connect_with_tags, '{}'::text[]), mine_p.connect_with_tags, '{}'::text[]) as tags,
+      mine_p.industry as industry
+    from public.profiles mine_p
+    left join public.registrations mine_r
+      on mine_r.event_id = p_event_id and mine_r.participant_id = auth.uid()
+    where mine_p.id = auth.uid()
+  )
+  select
+    r.participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    exists(
+      select 1 from public.likes l
+      where l.event_id = p_event_id
+        and l.from_id = auth.uid()
+        and l.to_id = r.participant_id
+    ) as already_liked,
+    (
+      cardinality(
+        array(
+          select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+          intersect
+          select unnest((select tags from mine))
+        )
+      ) * 10
+      + case
+          when (select industry from mine) is not null
+           and coalesce(nullif(r.industry, ''), p.industry) is not null
+           and (select industry from mine) = coalesce(nullif(r.industry, ''), p.industry)
+          then 5 else 0
+        end
+    )::int as match_score,
+    array(
+      select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+      intersect
+      select unnest((select tags from mine))
+    ) as shared_tags,
+    p.avatar_url
+  from public.registrations r
+  join public.profiles p on p.id = r.participant_id
+  where r.event_id = p_event_id
+    and r.attending = true
+    and r.participant_id <> auth.uid()
+    and exists (
+      select 1 from public.registrations mine2
+      where mine2.event_id = p_event_id
+        and mine2.participant_id = auth.uid()
+        and mine2.attending = true
+    )
+  order by match_score desc, p.name nulls last;
+$$;
+
+grant execute on function public.get_event_attendees(uuid) to authenticated;
+
+drop function if exists public.get_member_directory();
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
+
+drop function if exists public.get_conversation_partner(uuid);
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text,
+  matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at,
+    p.avatar_url
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
+
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
+
+drop function if exists public.get_my_conversations();
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at,
+    p.avatar_url
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
+
+grant execute on function public.get_my_conversations() to authenticated;
+
+drop function if exists public.get_feed_posts(int);
+create or replace function public.get_feed_posts(p_limit int default 50)
+returns table(
+  post_id uuid,
+  content text,
+  created_at timestamptz,
+  author_id uuid,
+  author_name text,
+  author_company text,
+  like_count int,
+  liked_by_me boolean,
+  author_avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.content,
+    p.created_at,
+    p.author_id,
+    prof.name,
+    prof.company,
+    (select count(*)::int from public.post_likes l where l.post_id = p.id) as like_count,
+    exists(
+      select 1 from public.post_likes l2
+      where l2.post_id = p.id and l2.participant_id = auth.uid()
+    ) as liked_by_me,
+    prof.avatar_url
+  from public.posts p
+  join public.profiles prof on prof.id = p.author_id
+  order by p.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_feed_posts(int) to authenticated;

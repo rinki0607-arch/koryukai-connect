@@ -60,7 +60,7 @@ export default async function ConversationPage({
         >
           &larr;
         </Link>
-        <Avatar name={partner.name} size={40} />
+        <Avatar name={partner.name} avatarUrl={partner.avatar_url} size={40} />
         <div className="min-w-0">
           <p className="truncate font-semibold">
             {partner.name || "(名前未設定)"}
@@ -79,6 +79,7 @@ export default async function ConversationPage({
           currentUserId={user.id}
           partnerId={partnerId}
           partnerName={partner.name}
+          partnerAvatarUrl={partner.avatar_url}
           matchedAt={partner.matched_at}
           initialMessages={(messagesData as Message[]) || []}
         />

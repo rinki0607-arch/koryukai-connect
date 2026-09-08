@@ -10,7 +10,13 @@ const PROMPTS = [
   "今週こんなことがありました",
 ];
 
-export default function FeedComposer({ name }: { name: string | null }) {
+export default function FeedComposer({
+  name,
+  avatarUrl,
+}: {
+  name: string | null;
+  avatarUrl?: string | null;
+}) {
   const [content, setContent] = useState("");
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
@@ -27,7 +33,7 @@ export default function FeedComposer({ name }: { name: string | null }) {
       className="card mb-6"
     >
       <div className="flex gap-3">
-        <Avatar name={name} size={40} />
+        <Avatar name={name} avatarUrl={avatarUrl} size={40} />
         <textarea
           name="content"
           className="input flex-1"

@@ -62,7 +62,7 @@ export default async function MatchesPage() {
               >
                 <div className="relative">
                   <div className="rounded-full ring-2 ring-accent ring-offset-2 ring-offset-white">
-                    <Avatar name={c.name} size={56} />
+                    <Avatar name={c.name} avatarUrl={c.avatar_url} size={56} />
                   </div>
                   <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-[#241a03] shadow-sm">
                     NEW
@@ -92,7 +92,7 @@ export default async function MatchesPage() {
                 className="card-tap flex items-center justify-between gap-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <Avatar name={c.name} size={52} />
+                  <Avatar name={c.name} avatarUrl={c.avatar_url} size={52} />
                   <div className="min-w-0">
                     <p className="truncate font-semibold">
                       {c.name || "(名前未設定)"}

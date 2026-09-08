@@ -37,7 +37,7 @@ export default function AttendeeCard({
           ✨ おすすめ
         </span>
       )}
-      <Avatar name={attendee.name} size={48} />
+      <Avatar name={attendee.name} avatarUrl={attendee.avatar_url} size={48} />
       <div className="min-w-0 flex-1">
         <p className="truncate pr-16 font-semibold">
           {attendee.name || "(名前未設定)"}

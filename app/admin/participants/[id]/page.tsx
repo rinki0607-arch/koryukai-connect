@@ -77,7 +77,7 @@ export default async function ParticipantDetailPage({
       </div>
 
       <div className="flex items-center gap-3">
-        <Avatar name={p.name} size={56} />
+        <Avatar name={p.name} avatarUrl={p.avatar_url} size={56} />
         <div>
           <h1 className="text-xl font-bold">{p.name || "(名前未設定)"}</h1>
           <p className="text-sm text-gray-500">

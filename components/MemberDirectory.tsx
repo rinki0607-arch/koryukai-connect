@@ -72,7 +72,7 @@ export default function MemberDirectory({
             <div key={e.participant_id} className="card">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <Avatar name={e.name} />
+                  <Avatar name={e.name} avatarUrl={e.avatar_url} />
                   <div>
                     <p className="font-semibold leading-tight">
                       {e.name || "(名前未設定)"}

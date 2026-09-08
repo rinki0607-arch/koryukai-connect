@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -38,4 +39,57 @@ export async function updateProfile(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mypage");
+}
+
+// プロフィール画像のURLを保存する(アップロード自体はブラウザからSupabase Storageへ直接行う)
+export async function updateAvatarUrl(url: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("ログインが必要です");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: url })
+    .eq("id", user.id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/mypage");
+}
+
+// 運営コード(共通コード)による管理者への自己昇格
+// STAFF_ADMIN_CODE が未設定の間は「準備中」として弾く(他の外部連携キーと同じ段階的デグレードのパターン)。
+// 一致した場合のみ、サービスロールクライアント経由でroleを更新する
+// (通常のクライアント更新はDBトリガーでrole列がリセットされ、直接の自己昇格はできない)。
+export async function redeemStaffAdminCode(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("ログインが必要です");
+
+  const configuredCode = process.env.STAFF_ADMIN_CODE;
+  if (!configuredCode) {
+    throw new Error(
+      "この機能は現在準備中です。運営スタッフにお問い合わせください。"
+    );
+  }
+
+  const code = String(formData.get("code") || "").trim();
+  if (!code || code !== configuredCode) {
+    throw new Error("運営コードが正しくありません。");
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ role: "admin" })
+    .eq("id", user.id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/mypage");
+  revalidatePath("/admin");
 }

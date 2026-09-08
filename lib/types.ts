@@ -14,6 +14,7 @@ export interface Profile {
   connect_with_tags: string[] | null;
   bio: string | null;
   ticket_token: string;
+  avatar_url: string | null;
 }
 
 export interface AttendanceRow {
@@ -102,6 +103,7 @@ export interface AttendeeCandidate {
   already_liked: boolean;
   match_score: number;
   shared_tags: string[];
+  avatar_url: string | null;
 }
 
 export interface DirectoryEntry {
@@ -115,6 +117,7 @@ export interface DirectoryEntry {
   connect_with_tags: string[] | null;
   bio: string | null;
   events_attended: number;
+  avatar_url: string | null;
 }
 
 export interface MatchRow {
@@ -149,6 +152,7 @@ export interface ConversationRow {
   unread_count: number;
   matched_events: string[] | null;
   first_matched_at: string;
+  avatar_url: string | null;
 }
 
 export interface ConversationPartner {
@@ -159,6 +163,7 @@ export interface ConversationPartner {
   industry: string | null;
   connect_with: string | null;
   matched_at: string | null;
+  avatar_url: string | null;
 }
 
 export type SupportInquiryKind = "report" | "contact";
@@ -239,6 +244,7 @@ export interface FeedPost {
   author_company: string | null;
   like_count: number;
   liked_by_me: boolean;
+  author_avatar_url: string | null;
 }
 
 export interface BusinessCard {
