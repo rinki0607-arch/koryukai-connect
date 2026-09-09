@@ -312,11 +312,9 @@ export default async function MyPage({
         )}
       </section>
 
-      {p?.role !== "admin" && (
-        <section>
-          <StaffCodeForm />
-        </section>
-      )}
+      <section>
+        <StaffCodeForm />
+      </section>
     </div>
   );
 }
