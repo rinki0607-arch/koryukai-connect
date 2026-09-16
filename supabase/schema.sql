@@ -1871,3 +1871,214 @@ as $$
 $$;
 
 grant execute on function public.get_member_profile(uuid) to authenticated;
+
+-- ============================================================
+-- 通知機能(コミュニティのいいね・マッチ成立・新着交流会) (2026-09-16 v2)
+-- ============================================================
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null,
+  title text not null,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_created_idx
+  on public.notifications(user_id, created_at desc);
+
+alter table public.notifications enable row level security;
+
+-- 挿入は下記のセキュリティ定義関数/トリガー経由のみ(なりすまし防止のため
+-- authenticated ロールへの insert ポリシーはあえて用意しない)
+drop policy if exists notifications_owner_select on public.notifications;
+create policy notifications_owner_select on public.notifications
+  for select using (user_id = auth.uid());
+
+drop policy if exists notifications_owner_update on public.notifications;
+create policy notifications_owner_update on public.notifications
+  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists notifications_owner_delete on public.notifications;
+create policy notifications_owner_delete on public.notifications
+  for delete using (user_id = auth.uid());
+
+grant select, update, delete on public.notifications to authenticated;
+
+create or replace function public.get_my_notifications(p_limit int default 30)
+returns table(
+  id uuid,
+  type text,
+  title text,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select n.id, n.type, n.title, n.body, n.link, n.read_at, n.created_at
+  from public.notifications n
+  where n.user_id = auth.uid()
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_my_notifications(int) to authenticated;
+
+create or replace function public.get_unread_notification_count()
+returns int
+language sql
+security definer set search_path = public
+stable
+as $$
+  select count(*)::int from public.notifications
+  where user_id = auth.uid() and read_at is null;
+$$;
+
+grant execute on function public.get_unread_notification_count() to authenticated;
+
+create or replace function public.mark_notification_read(p_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.notifications
+  set read_at = now()
+  where id = p_id and user_id = auth.uid() and read_at is null;
+end;
+$$;
+
+grant execute on function public.mark_notification_read(uuid) to authenticated;
+
+create or replace function public.mark_all_notifications_read()
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.notifications
+  set read_at = now()
+  where user_id = auth.uid() and read_at is null;
+end;
+$$;
+
+grant execute on function public.mark_all_notifications_read() to authenticated;
+
+-- コミュニティ投稿にいいねが付いたら投稿者に通知
+create or replace function public.notify_on_post_like()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_author uuid;
+  v_liker_name text;
+begin
+  select author_id into v_author from public.posts where id = new.post_id;
+  if v_author is null or v_author = new.participant_id then
+    return new;
+  end if;
+
+  select coalesce(name, 'メンバー') into v_liker_name
+  from public.profiles where id = new.participant_id;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  values (
+    v_author,
+    'post_like',
+    '投稿にいいねがつきました',
+    v_liker_name || 'さんがあなたの投稿にいいねしました',
+    '/feed'
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_on_post_like_trigger on public.post_likes;
+create trigger notify_on_post_like_trigger
+  after insert on public.post_likes
+  for each row execute procedure public.notify_on_post_like();
+
+-- 相互に「話してみたい」が成立(マッチ)したら双方に通知
+-- (2件目のlikeが入った瞬間だけ発火するので通知は1組につき1回だけ)
+create or replace function public.notify_on_match()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_reciprocal boolean;
+  v_from_name text;
+  v_to_name text;
+begin
+  select exists(
+    select 1 from public.likes b
+    where b.from_id = new.to_id
+      and b.to_id = new.from_id
+      and b.event_id is not distinct from new.event_id
+  ) into v_reciprocal;
+
+  if not v_reciprocal then
+    return new;
+  end if;
+
+  select coalesce(name, 'メンバー') into v_from_name from public.profiles where id = new.from_id;
+  select coalesce(name, 'メンバー') into v_to_name from public.profiles where id = new.to_id;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  values
+    (new.from_id, 'match', '🎉 マッチが成立しました', v_to_name || 'さんとマッチしました。メッセージを送ってみましょう。', '/mypage/matches/' || new.to_id::text),
+    (new.to_id, 'match', '🎉 マッチが成立しました', v_from_name || 'さんとマッチしました。メッセージを送ってみましょう。', '/mypage/matches/' || new.from_id::text);
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_on_match_trigger on public.likes;
+create trigger notify_on_match_trigger
+  after insert on public.likes
+  for each row execute procedure public.notify_on_match();
+
+-- 新しい交流会が公開されたら参加者全員に通知(運営が「参加者に通知」を押したとき)
+create or replace function public.notify_new_event(p_event_id uuid)
+returns int
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_title text;
+  v_count int;
+begin
+  if not public.is_admin() then
+    raise exception '権限がありません';
+  end if;
+
+  select title into v_title from public.events where id = p_event_id;
+  if v_title is null then
+    raise exception '交流会が見つかりません';
+  end if;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  select p.id, 'event', '📅 新しい交流会が公開されました', v_title, '/events/' || p_event_id::text
+  from public.profiles p
+  where p.role = 'participant';
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+grant execute on function public.notify_new_event(uuid) to authenticated;
+
+-- PostgREST のスキーマキャッシュを即時リロード
+-- (SQL Editor から直接DDLを実行した際、新しく追加したRPCがすぐに反映されない
+-- ことがあるため、念のためここで明示的にリロードを通知する)
+select pg_notify('pgrst', 'reload schema');
