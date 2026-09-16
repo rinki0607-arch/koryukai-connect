@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { DirectoryEntry } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import MemberActions from "@/components/MemberActions";
 
 export default function MemberDirectory({
   entries,
@@ -11,6 +13,7 @@ export default function MemberDirectory({
 }) {
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
+  const [savedOnly, setSavedOnly] = useState(false);
 
   const industries = useMemo(
     () =>
@@ -21,6 +24,7 @@ export default function MemberDirectory({
   );
 
   const filtered = entries.filter((e) => {
+    if (savedOnly && !e.is_saved) return false;
     if (industryFilter && e.industry !== industryFilter) return false;
     if (search) {
       const haystack = `${e.name || ""} ${e.company || ""} ${
@@ -58,6 +62,15 @@ export default function MemberDirectory({
             ))}
           </select>
         </div>
+        <label className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={savedOnly}
+            onChange={(e) => setSavedOnly(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 accent-accent"
+          />
+          ⭐ 保存済みのみ表示
+        </label>
       </div>
 
       <p className="mb-3 text-sm text-gray-500">{filtered.length} 名</p>
@@ -71,10 +84,13 @@ export default function MemberDirectory({
           {filtered.map((e) => (
             <div key={e.participant_id} className="card">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
+                <Link
+                  href={`/members/${e.participant_id}`}
+                  className="flex items-start gap-3"
+                >
                   <Avatar name={e.name} avatarUrl={e.avatar_url} />
                   <div>
-                    <p className="font-semibold leading-tight">
+                    <p className="font-semibold leading-tight hover:text-primary">
                       {e.name || "(名前未設定)"}
                     </p>
                     {(e.job_title || e.company) && (
@@ -83,12 +99,19 @@ export default function MemberDirectory({
                       </p>
                     )}
                   </div>
+                </Link>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  {e.events_attended > 0 && (
+                    <span className="badge bg-primary-light text-primary">
+                      参加{e.events_attended}回
+                    </span>
+                  )}
+                  {e.is_matched && (
+                    <span className="badge bg-green-100 text-green-700">
+                      マッチ済み
+                    </span>
+                  )}
                 </div>
-                {e.events_attended > 0 && (
-                  <span className="badge shrink-0 bg-primary-light text-primary">
-                    参加{e.events_attended}回
-                  </span>
-                )}
               </div>
 
               {(e.job_type || e.industry) && (
@@ -121,6 +144,13 @@ export default function MemberDirectory({
                   {e.bio}
                 </p>
               )}
+
+              <MemberActions
+                participantId={e.participant_id}
+                isSaved={e.is_saved}
+                alreadyLiked={e.already_liked}
+                isMatched={e.is_matched}
+              />
             </div>
           ))}
         </div>
