@@ -118,11 +118,14 @@ export interface DirectoryEntry {
   bio: string | null;
   events_attended: number;
   avatar_url: string | null;
+  is_saved: boolean;
+  already_liked: boolean;
+  is_matched: boolean;
 }
 
 export interface MatchRow {
-  event_id: string;
-  event_title: string;
+  event_id: string | null;
+  event_title: string | null;
   participant_id: string;
   name: string | null;
   company: string | null;
