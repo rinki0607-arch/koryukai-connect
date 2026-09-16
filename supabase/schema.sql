@@ -1415,3 +1415,459 @@ drop trigger if exists on_auth_user_email_updated on auth.users;
 create trigger on_auth_user_email_updated
   after update of email on auth.users
   for each row execute procedure public.handle_user_email_change();
+
+-- ============================================================
+-- 名簿からの一般マッチング(交流会をまたがない「話してみたい」)
+-- + プロフィール保存(ブックマーク)機能 (2026-09-16)
+--
+-- これまで likes は特定の交流会(event_id)に紐づく相手にしか送れなかったため、
+-- 参加者名簿(/members)からは「気になる人」に話してみたいを送れなかった。
+-- event_id を NULL 許容にして「一般リクエスト」を表現できるようにし、
+-- 既存のマッチング・メッセージまわりの関数を、この一般リクエストも
+-- 正しく集計できるように再定義する(関数の戻り値の列構成は変えていないものは
+-- create or replace のみ、列を追加するものだけ drop してから再作成する)。
+-- ============================================================
+
+-- likes.event_id を NULL 許容にする(NULL = 交流会をまたがない一般リクエスト)
+alter table public.likes alter column event_id drop not null;
+
+-- 通常の unique (event_id, from_id, to_id) は event_id が NULL の行同士を
+-- 区別してしまう(SQLの標準仕様でNULL同士は重複とみなされない)ため、
+-- 一般リクエストの重複防止は部分ユニークインデックスで別途担保する。
+create unique index if not exists likes_general_unique_idx
+  on public.likes (from_id, to_id) where event_id is null;
+
+-- is_matched_with: event_id が両方NULLの一般リクエスト同士も
+-- 相互マッチとして検出できるよう、結合条件を "=" から
+-- "is not distinct from" に変更(NULL同士も一致とみなす)。
+create or replace function public.is_matched_with(other_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists(
+    select 1 from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = auth.uid() and a.to_id = other_id
+  );
+$$;
+
+-- get_my_matches: 一般マッチ(event_id が null)も一覧に含める。
+-- event_title は一般マッチの場合 null を返す。
+create or replace function public.get_my_matches()
+returns table(
+  event_id uuid,
+  event_title text,
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  email text,
+  matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    a.event_id,
+    e.title as event_title,
+    a.to_id as participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    p.email,
+    greatest(a.created_at, b.created_at) as matched_at
+  from public.likes a
+  join public.likes b
+    on a.from_id = b.to_id
+   and a.to_id = b.from_id
+   and a.event_id is not distinct from b.event_id
+  join public.profiles p on p.id = a.to_id
+  left join public.events e on e.id = a.event_id
+  left join public.registrations r
+    on r.event_id = a.event_id and r.participant_id = a.to_id
+  where a.from_id = auth.uid()
+  order by matched_at desc;
+$$;
+
+-- get_conversation_partner: 一般マッチの matched_at も取得できるようにする
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text,
+  matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.from_id = b.to_id
+       and a.to_id = b.from_id
+       and a.event_id is not distinct from b.event_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at,
+    p.avatar_url
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
+
+-- get_my_conversations: 一般マッチも会話一覧に含める(matched_events は
+-- 一般マッチ分を除いた交流会名のみ集計。イベント名がひとつも無ければ null)
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) filter (where e.title is not null) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    left join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at,
+    p.avatar_url
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
+
+-- get_my_capital_summary: 「つながった人数」に一般マッチも含める
+create or replace function public.get_my_capital_summary()
+returns table(
+  events_attended int,
+  connections_count int,
+  messages_count int,
+  first_attended_at timestamptz,
+  latest_partner_name text,
+  latest_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, min(checked_in_at) as first_at
+    from public.attendance
+    where participant_id = auth.uid() and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id, min(least(a.created_at, b.created_at)) as matched_at
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  latest as (
+    select p.name, c.matched_at
+    from conn c
+    join public.profiles p on p.id = c.partner_id
+    order by c.matched_at desc
+    limit 1
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = auth.uid() or recipient_id = auth.uid()
+  )
+  select
+    coalesce((select c from att), 0),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0),
+    (select first_at from att),
+    (select name from latest),
+    (select matched_at from latest);
+$$;
+
+-- get_participant_admin_summary: 運営向けサマリの「マッチ数」にも一般マッチを含める
+create or replace function public.get_participant_admin_summary(p_participant_id uuid)
+returns table(
+  events_attended int,
+  last_attended_at timestamptz,
+  matches_count int,
+  messages_count int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, max(checked_in_at) as last_at
+    from public.attendance
+    where participant_id = p_participant_id and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = p_participant_id
+    group by a.to_id
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = p_participant_id or recipient_id = p_participant_id
+  )
+  select
+    coalesce((select c from att), 0),
+    (select last_at from att),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0)
+  where public.is_admin();
+$$;
+
+grant execute on function public.is_matched_with(uuid) to authenticated;
+grant execute on function public.get_my_matches() to authenticated;
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
+grant execute on function public.get_my_conversations() to authenticated;
+grant execute on function public.get_my_capital_summary() to authenticated;
+grant execute on function public.get_participant_admin_summary(uuid) to authenticated;
+
+-- ============================================================
+-- saved_profiles: 名簿から気になる参加者を保存(ブックマーク)する
+-- ============================================================
+create table if not exists public.saved_profiles (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  saved_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (owner_id, saved_id),
+  check (owner_id <> saved_id)
+);
+
+alter table public.saved_profiles enable row level security;
+
+drop policy if exists saved_profiles_owner_all on public.saved_profiles;
+create policy saved_profiles_owner_all on public.saved_profiles
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+grant select, insert, delete on public.saved_profiles to authenticated;
+
+-- toggle_saved_profile: 保存する/解除する
+create or replace function public.toggle_saved_profile(p_target uuid, p_save boolean)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if p_save then
+    insert into public.saved_profiles (owner_id, saved_id)
+    values (auth.uid(), p_target)
+    on conflict (owner_id, saved_id) do nothing;
+  else
+    delete from public.saved_profiles
+    where owner_id = auth.uid() and saved_id = p_target;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_saved_profile(uuid, boolean) to authenticated;
+
+-- toggle_general_like: 名簿からの「話してみたい」を送る/取り消す(交流会をまたがない一般リクエスト)
+create or replace function public.toggle_general_like(p_target uuid, p_like boolean)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if p_target = auth.uid() then
+    raise exception '自分自身にはリクエストできません';
+  end if;
+  if p_like then
+    insert into public.likes (event_id, from_id, to_id)
+    values (null, auth.uid(), p_target)
+    on conflict (from_id, to_id) where event_id is null do nothing;
+  else
+    delete from public.likes
+    where from_id = auth.uid() and to_id = p_target and event_id is null;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_general_like(uuid, boolean) to authenticated;
+
+-- get_member_directory: 保存済みか・話してみたい送信済みか・マッチ済みかを追加で返す
+drop function if exists public.get_member_directory();
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text,
+  is_saved boolean,
+  already_liked boolean,
+  is_matched boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url,
+    exists(
+      select 1 from public.saved_profiles s
+      where s.owner_id = auth.uid() and s.saved_id = p.id
+    ) as is_saved,
+    exists(
+      select 1 from public.likes l
+      where l.from_id = auth.uid() and l.to_id = p.id and l.event_id is null
+    ) as already_liked,
+    public.is_matched_with(p.id) as is_matched
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
+
+-- get_member_profile: 名簿の1人分のプロフィール詳細(/members/[id] 用)
+create or replace function public.get_member_profile(p_id uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text,
+  is_saved boolean,
+  already_liked boolean,
+  is_matched boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url,
+    exists(
+      select 1 from public.saved_profiles s
+      where s.owner_id = auth.uid() and s.saved_id = p.id
+    ) as is_saved,
+    exists(
+      select 1 from public.likes l
+      where l.from_id = auth.uid() and l.to_id = p.id and l.event_id is null
+    ) as already_liked,
+    public.is_matched_with(p.id) as is_matched
+  from public.profiles p
+  where p.id = p_id
+    and p.role = 'participant';
+$$;
+
+grant execute on function public.get_member_profile(uuid) to authenticated;
