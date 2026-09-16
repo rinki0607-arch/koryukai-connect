@@ -110,6 +110,17 @@ export async function notifyEventParticipants(
 
   const ev = event as EventRow;
 
+  // アプリ内のお知らせ(🔔)にも通知を作成する。
+  // メール送信の設定有無に関わらず、常にこちらは試みる。
+  let inAppCount = 0;
+  const { data: notifyData, error: notifyError } = await supabase.rpc(
+    "notify_new_event",
+    { p_event_id: eventId }
+  );
+  if (!notifyError && typeof notifyData === "number") {
+    inAppCount = notifyData;
+  }
+
   const { data: participants } = await supabase
     .from("profiles")
     .select("email")
@@ -125,7 +136,10 @@ export async function notifyEventParticipants(
       ok: true,
       configured: true,
       sent: 0,
-      message: "通知先の参加者がいませんでした。",
+      message:
+        inAppCount > 0
+          ? `アプリ内のお知らせを${inAppCount}名に送信しました(メール送信先の参加者はいませんでした)。`
+          : "通知先の参加者がいませんでした。",
     };
   }
 
@@ -150,11 +164,13 @@ export async function notifyEventParticipants(
 
   if (!result.configured) {
     return {
-      ok: false,
+      ok: inAppCount > 0,
       configured: false,
       sent: 0,
       message:
-        "メール送信が未設定です(RESEND_API_KEYが未設定)。運営にご確認ください。",
+        inAppCount > 0
+          ? `アプリ内のお知らせを${inAppCount}名に送信しました。メール送信は未設定です(RESEND_API_KEYが未設定)。`
+          : "メール送信が未設定です(RESEND_API_KEYが未設定)。運営にご確認ください。",
     };
   }
 
@@ -168,13 +184,15 @@ export async function notifyEventParticipants(
 
   revalidatePath(`/admin/events/${eventId}`);
 
+  const inAppNote = inAppCount > 0 ? ` / アプリ内お知らせ${inAppCount}件` : "";
+
   return {
     ok: result.failed === 0,
     configured: true,
     sent: result.sent,
     message:
       result.failed > 0
-        ? `${result.sent}件送信、${result.failed}件失敗しました。`
-        : `${result.sent}名の参加者にメールを送信しました。`,
+        ? `${result.sent}件送信、${result.failed}件失敗しました。${inAppNote}`
+        : `${result.sent}名の参加者にメールを送信しました。${inAppNote}`,
   };
 }
