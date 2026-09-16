@@ -13,15 +13,23 @@ export default async function NavBar() {
   let isAdmin = false;
   let displayName: string | null = null;
   let unreadCount = 0;
+  let notifCount = 0;
 
   if (user) {
-    const [{ data: profile }, { data: unread }] = await Promise.all([
-      supabase.from("profiles").select("role, name, email").eq("id", user.id).single(),
-      supabase.rpc("get_unread_message_count"),
-    ]);
+    const [{ data: profile }, { data: unread }, { data: notif }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("role, name, email")
+          .eq("id", user.id)
+          .single(),
+        supabase.rpc("get_unread_message_count"),
+        supabase.rpc("get_unread_notification_count"),
+      ]);
     isAdmin = profile?.role === "admin";
     displayName = profile?.name || profile?.email || user.email || null;
     unreadCount = typeof unread === "number" ? unread : 0;
+    notifCount = typeof notif === "number" ? notif : 0;
   }
 
   return (
@@ -73,6 +81,18 @@ export default async function NavBar() {
                     </span>
                   )}
                 </Link>
+                <Link
+                  href="/notifications"
+                  aria-label="お知らせ"
+                  className="relative text-gray-600 transition hover:text-primary"
+                >
+                  🔔
+                  {notifCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                      {notifCount > 9 ? "9+" : notifCount}
+                    </span>
+                  )}
+                </Link>
               </>
             )}
             {isAdmin && (
@@ -92,8 +112,22 @@ export default async function NavBar() {
             )}
           </nav>
 
-          {/* モバイル幅: 管理者リンクとログアウトだけ右上に出す(それ以外は下部タブバー) */}
+          {/* モバイル幅: お知らせ・管理者リンク・ログアウトだけ右上に出す(それ以外は下部タブバー) */}
           <div className="flex items-center gap-3 lg:hidden">
+            {user && (
+              <Link
+                href="/notifications"
+                aria-label="お知らせ"
+                className="relative text-gray-500 hover:text-primary"
+              >
+                🔔
+                {notifCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href="/admin"
