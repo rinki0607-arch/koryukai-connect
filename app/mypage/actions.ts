@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,6 +40,7 @@ export async function updateProfile(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mypage");
+  redirect("/mypage?saved=1");
 }
 
 // プロフィール画像のURLを保存する(アップロード自体はブラウザからSupabase Storageへ直接行う)
