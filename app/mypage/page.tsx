@@ -25,9 +25,9 @@ export const dynamic = "force-dynamic";
 export default async function MyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ feedback?: string }>;
+  searchParams: Promise<{ feedback?: string; saved?: string }>;
 }) {
-  const { feedback } = await searchParams;
+  const { feedback, saved } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -58,6 +58,12 @@ export default async function MyPage({
 
   return (
     <div className="space-y-10">
+      {saved === "1" && (
+        <div className="card border-green-200 bg-green-50 text-sm font-semibold text-green-700">
+          ✅ プロフィールを保存しました。
+        </div>
+      )}
+
       {feedback === "done" && (
         <div className="card border-green-200 bg-green-50 text-sm font-semibold text-green-700">
           ✅ アンケートへのご協力ありがとうございました。今後の交流会運営に役立てます。
