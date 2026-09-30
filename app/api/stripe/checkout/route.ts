@@ -9,7 +9,7 @@ const NOT_CONFIGURED_MESSAGE =
   "オンライン決済は現在準備中です。参加費のお支払い方法は運営にお問い合わせください。";
 
 export async function POST(req: NextRequest) {
-  if (!isStripeConfigured()) {
+  if (!(await isStripeConfigured())) {
     return NextResponse.json({ error: NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  const stripe = getStripeClient();
+  const stripe = await getStripeClient();
   if (!stripe) {
     return NextResponse.json({ error: NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
