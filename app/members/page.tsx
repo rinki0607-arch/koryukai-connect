@@ -17,10 +17,13 @@ export default async function MembersPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-xl font-bold">参加者名簿</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        これまでARKIVEにご登録いただいた参加者のプロフィールです。気になる方は⭐で保存したり、プロフィールを覗いて「話してみたい」を送ってみましょう。お互いに送り合うとマッチが成立し、メッセージでやりとりできるようになります。交流会での「話してみたい」の意思表示は、各交流会のマッチングページからも行えます。
-      </p>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold">参加者名簿</h1>
+        <div className="mt-2 h-1 w-14 rounded-full bg-gradient-to-r from-accent to-accent-dark" />
+        <p className="mt-3 text-sm text-gray-500">
+          これまでARKIVEにご登録いただいた参加者のプロフィールです。気になる方は⭐で保存したり、プロフィールを覗いて「話してみたい」を送ってみましょう。お互いに送り合うとマッチが成立し、メッセージでやりとりできるようになります。交流会での「話してみたい」の意思表示は、各交流会のマッチングページからも行えます。
+        </p>
+      </div>
 
       {error && (
         <p className="card text-sm text-red-600">
