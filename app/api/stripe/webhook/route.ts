@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getStripeClient } from "@/lib/stripe";
+import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const stripe = getStripeClient();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripe = await getStripeClient();
+  const webhookSecret = await getStripeWebhookSecret();
 
   if (!stripe || !webhookSecret) {
     return NextResponse.json({ error: "Stripe webhook is not configured" }, { status: 400 });
