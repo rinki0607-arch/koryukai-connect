@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatEventDate } from "@/lib/constants";
 import { AdminRevenueSummary } from "@/lib/types";
+import { isStripeConfigured } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function AdminRevenuePage() {
   const { data, error } = await supabase.rpc("get_admin_revenue_summary");
   const rows = (data as AdminRevenueSummary[]) || [];
 
-  const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
+  const stripeConfigured = await isStripeConfigured();
 
   const totalRevenue = rows.reduce((sum, r) => sum + (r.total_revenue || 0), 0);
   const totalPaid = rows.reduce((sum, r) => sum + (r.paid_count || 0), 0);
@@ -34,7 +35,10 @@ export default async function AdminRevenuePage() {
 
       {!stripeConfigured && (
         <div className="card mb-6 border-amber-200 bg-amber-50 text-sm text-amber-800">
-          ⚠️ Stripeのオンライン決済が未設定です(STRIPE_SECRET_KEY未設定)。設定が完了するまで、参加者側にも決済ボタンは表示されません。
+          ⚠️ Stripeのオンライン決済が未設定です。設定が完了するまで、参加者側にも決済ボタンは表示されません。{" "}
+          <Link href="/admin/settings/payments" className="font-semibold underline">
+            決済設定ページから設定する →
+          </Link>
         </div>
       )}
 
