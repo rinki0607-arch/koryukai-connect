@@ -1722,6 +1722,7 @@ create policy saved_profiles_owner_all on public.saved_profiles
 grant select, insert, delete on public.saved_profiles to authenticated;
 
 -- toggle_saved_profile: 保存する/解除する
+drop function if exists public.toggle_saved_profile(uuid, boolean);
 create or replace function public.toggle_saved_profile(p_target uuid, p_save boolean)
 returns void
 language plpgsql
@@ -1742,6 +1743,7 @@ $$;
 grant execute on function public.toggle_saved_profile(uuid, boolean) to authenticated;
 
 -- toggle_general_like: 名簿からの「話してみたい」を送る/取り消す(交流会をまたがない一般リクエスト)
+drop function if exists public.toggle_general_like(uuid, boolean);
 create or replace function public.toggle_general_like(p_target uuid, p_like boolean)
 returns void
 language plpgsql
@@ -1820,6 +1822,7 @@ $$;
 grant execute on function public.get_member_directory() to authenticated;
 
 -- get_member_profile: 名簿の1人分のプロフィール詳細(/members/[id] 用)
+drop function if exists public.get_member_profile(uuid);
 create or replace function public.get_member_profile(p_id uuid)
 returns table(
   participant_id uuid,
@@ -1908,6 +1911,7 @@ create policy notifications_owner_delete on public.notifications
 
 grant select, update, delete on public.notifications to authenticated;
 
+drop function if exists public.get_my_notifications(int);
 create or replace function public.get_my_notifications(p_limit int default 30)
 returns table(
   id uuid,
@@ -1931,6 +1935,7 @@ $$;
 
 grant execute on function public.get_my_notifications(int) to authenticated;
 
+drop function if exists public.get_unread_notification_count();
 create or replace function public.get_unread_notification_count()
 returns int
 language sql
@@ -1943,6 +1948,7 @@ $$;
 
 grant execute on function public.get_unread_notification_count() to authenticated;
 
+drop function if exists public.mark_notification_read(uuid);
 create or replace function public.mark_notification_read(p_id uuid)
 returns void
 language plpgsql
@@ -1957,6 +1963,7 @@ $$;
 
 grant execute on function public.mark_notification_read(uuid) to authenticated;
 
+drop function if exists public.mark_all_notifications_read();
 create or replace function public.mark_all_notifications_read()
 returns void
 language plpgsql
@@ -2048,6 +2055,7 @@ create trigger notify_on_match_trigger
   for each row execute procedure public.notify_on_match();
 
 -- 新しい交流会が公開されたら参加者全員に通知(運営が「参加者に通知」を押したとき)
+drop function if exists public.notify_new_event(uuid);
 create or replace function public.notify_new_event(p_event_id uuid)
 returns int
 language plpgsql
