@@ -27,7 +27,7 @@ export default async function AdminLayout({
 
   return (
     <div>
-      <div className="mb-6 flex gap-4 border-b border-gray-200 pb-3 text-sm">
+      <div className="mb-6 flex flex-wrap gap-4 border-b border-gray-200 pb-3 text-sm">
         <Link href="/admin" className="text-gray-600 hover:text-primary">
           ダッシュボード
         </Link>
@@ -51,6 +51,12 @@ export default async function AdminLayout({
           className="text-gray-600 hover:text-primary"
         >
           決済・売上
+        </Link>
+        <Link
+          href="/admin/settings/payments"
+          className="text-gray-600 hover:text-primary"
+        >
+          決済設定
         </Link>
         <Link
           href="/admin/analytics"
