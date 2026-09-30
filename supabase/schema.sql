@@ -2086,6 +2086,28 @@ $$;
 
 grant execute on function public.notify_new_event(uuid) to authenticated;
 
+-- ============================================================
+-- 決済設定(Stripe)を事務局が管理画面から設定できるようにする (2026-09-30)
+-- 稟貴さん(運営代表)自身は決済のAPIキー設定には関与せず、事務局担当者が
+-- Vercelの環境変数を一切触らずに /admin/settings/payments 画面から
+-- Stripeのシークレットキー・Webhook署名シークレットを登録できるようにする。
+-- このテーブルは RLS を有効にしたうえで authenticated 向けのポリシーを
+-- 一切作成しないため、通常のクライアントからは一切読み書きできない。
+-- アプリ側は必ず service_role クライアント(lib/supabase/admin.ts)経由でのみ
+-- アクセスし、その手前で管理者権限チェックを行う(lib/payment-settings.ts)。
+-- ============================================================
+create table if not exists public.payment_settings (
+  id boolean primary key default true,
+  stripe_secret_key text,
+  stripe_webhook_secret text,
+  updated_by uuid references public.profiles(id),
+  updated_at timestamptz not null default now(),
+  constraint payment_settings_singleton check (id)
+);
+
+alter table public.payment_settings enable row level security;
+-- 意図的に authenticated 向けのポリシーを作成しない(service_roleのみアクセス可能にする)
+
 -- PostgREST のスキーマキャッシュを即時リロード
 -- (SQL Editor から直接DDLを実行した際、新しく追加したRPCがすぐに反映されない
 -- ことがあるため、念のためここで明示的にリロードを通知する)
