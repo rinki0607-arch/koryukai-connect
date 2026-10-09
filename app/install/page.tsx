@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import InstallButton from "@/components/InstallButton";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,18 @@ export default async function InstallPage() {
     <div className="mx-auto max-w-md text-center">
       <h1 className="mb-2 text-xl font-bold">ARKIVEをスマホに追加</h1>
       <p className="mb-6 text-sm text-gray-500">
-        このQRコードをスマホのカメラで読み取ってください。アプリストアを経由せず、その場でホーム画面に追加できます。
+        この端末でこのページを開いている場合は、下のボタンをタップするだけで追加できます。
       </p>
+
+      <InstallButton
+        className="btn-primary w-full"
+        label="📲 ホーム画面に追加する"
+      />
+
+      <p className="my-6 text-xs text-gray-400">
+        他の人に共有する場合は、下のQRコードを読み取ってもらってください
+      </p>
+
       <div className="card">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

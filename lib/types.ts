@@ -15,6 +15,7 @@ export interface Profile {
   bio: string | null;
   ticket_token: string;
   avatar_url: string | null;
+  onboarding_completed: boolean;
 }
 
 export interface AttendanceRow {
