@@ -5,7 +5,7 @@ create extension if not exists "pgcrypto";
 
 -- ============================================================
 -- profiles: å‚åŠ è€…ãƒ»é‹å–¶å…±é€šã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«(auth.users ã¨1:1)
--- ===========================================================
+-- ============================================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   role text not null default 'participant' check (role in ('participant','admin')),
@@ -39,7 +39,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- ç¨¡ç†è€…åˆ¤å®š(RLSåå¸°ã‚’é¿ã‘ã‚‹ãŸã‚ security definer)
+-- ç®¡ç†è€…åˆ¤å®š(RLSå†å¸°ã‚’é¿ã‘ã‚‹ãŸã‚ security definer)
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -53,7 +53,7 @@ $$;
 
 -- ============================================================
 -- events: äº¤æµä¼š
--- =============================================================
+-- ============================================================
 create table if not exists public.events (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -88,8 +88,8 @@ create table if not exists public.registrations (
   unique (event_id, participant_id)
 );
 
--- ===========================================================
--- likes: ã€Œè©±±ã—ã¦ã¿ãŸã„ã€ã®æ„æ€è¡¨ç¤º(åŒæ–¹ãŒæŠ¼ã™ã¨ãƒãƒƒãƒæˆç«‹)
+-- ============================================================
+-- likes: ã€Œè©±ã—ã¦ã¿ãŸã„ã€ã®æ„æ€è¡¨ç¤º(åŒæ–¹ãŒæŠ¼ã™ã¨ãƒãƒƒãƒæˆç«‹)
 -- ============================================================
 create table if not exists public.likes (
   id uuid primary key default gen_random_uuid(),
@@ -142,246 +142,2080 @@ create policy registrations_update_own_or_admin on public.registrations
   for update using (participant_id = auth.uid() or public.is_admin())
   with check (participant_id = auth.uid() or public.is_admin());
 
--- likes ãƒãƒªã‚·ãƒ¼: è‡ªåˆ†ãŒé€ã£ãgøà#8àa8àa8àkxà#xàh8àdz)¢øàb8à¢Ëùaî¸àføà¢Ê9æî9¢bøàbøà¢xàk¸àa8àa8àkxàkú)¢øàb8àj¸àaxàåxà©øà¨¸àj¸àç¸ààøààxàìøà¬
-B™›ÜÛXŞHYˆ^\İÈZÙ\×ÜÙ[XİÛİÛ—ÛÜ—ØYZ[ˆÛˆX›XË›ZÙ\ÎÂ˜Ü™X]HÛXŞHZÙ\×ÜÙ[XİÛİÛ—ÛÜ—ØYZ[ˆÛˆX›XË›ZÙ\Âˆ›ÜˆÙ[Xİ\Ú[™È
-œ›ÛWÚYH]]ZY
+-- likes ãƒãƒªã‚·ãƒ¼: è‡ªåˆ†ãŒé€ã£ãŸã€Œã„ã„ã­ã€ã ã‘è¦‹ãˆã‚‹/å‡ºã›ã‚‹(ç›¸æ‰‹ã‹ã‚‰ã®ã„ã„ã­ã¯è¦‹ãˆãªã„=ãƒ•ã‚§ã‚¢ãªãƒãƒƒãƒãƒ³ã‚°)
+drop policy if exists likes_select_own_or_admin on public.likes;
+create policy likes_select_own_or_admin on public.likes
+  for select using (from_id = auth.uid() or public.is_admin());
 
-HÜˆX›XËš\×ØYZ[Š
-JNÂ‚™›ÜÛXŞHYˆ^\İÈZÙ\×Ú[œÙ\ÛİÛˆÛˆX›XË›ZÙ\ÎÂ˜Ü™X]HÛXŞHZÙ\×Ú[œÙ\ÛİÛˆÛˆX›XË›ZÙ\Âˆ›Üˆ[œÙ\Ú]ÚXÚÈ
-œ›ÛWÚYH]]ZY
+drop policy if exists likes_insert_own on public.likes;
+create policy likes_insert_own on public.likes
+  for insert with check (from_id = auth.uid());
 
-JNÂ‚™›ÜÛXŞHYˆ^\İÈZÙ\×Ù[]WÛİÛˆÛˆX›XË›ZÙ\ÎÂ˜Ü™X]HÛXŞHZÙ\×Ù[]WÛİÛˆÛˆX›XË›ZÙ\Âˆ›Üˆ[]H\Ú[™È
-œ›ÛWÚYH]]ZY
+drop policy if exists likes_delete_own on public.likes;
+create policy likes_delete_own on public.likes
+  for delete using (from_id = auth.uid());
 
-JNÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHÙ]Ù]™[Ø][™Y\Îˆ:!ê¹b!¸àj9d#8àf9.©9­`y/&¸àjøà#9cà¹b¨8àfxà¢øà#xàiùænúc,¸àeøàgù.å¸àk¹cà¹b¨: !y. :)©Â‹KH
-:!ê¹b!º!êº.ªøà ¸àgxàk¹.©9­`y/&¸àjÈ][™[™Ï]YH8àiùænúc,¸àeøài¸àa8à¢øàdøàj8àc9§hy.íŠB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]Ù]™[Ø][™Y\ÊÙ]™[ÚY]ZY
-Bœ™]\›œÈX›Jˆ\XÚ\[ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ[™\İH^ˆÛÛ›™XİİÚ]^ˆ[™XYWÛZÙY›ÛÛX[‹ˆX]ÚÜØÛÜ™H[ˆÚ\™YİYÜÈ^×BŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÚ]Z[™H\È
-ˆÙ[XİˆÛØ[\ØÙJ[YŠZ[™WÜ‹˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JKZ[™WÜ˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JH\ÈYÜËˆZ[™WÜš[™\İH\È[™\İBˆœ›ÛHX›XËœ›Ùš[\ÈZ[™WÜˆY›Ú[ˆX›XËœ™YÚ\İ˜][ÛœÈZ[™WÜ‚ˆÛˆZ[™WÜ‹™]™[ÚYHÙ]™[ÚY[™Z[™WÜ‹œ\XÚ\[ÚYH]]ZY
+-- ============================================================
+-- get_event_attendees: è‡ªåˆ†ã¨åŒã˜äº¤æµä¼šã«ã€Œå‚åŠ ã™ã‚‹ã€ã§ç™»éŒ²ã—ãŸä»–ã®å‚åŠ è€…ä¸€è¦§
+-- (è‡ªåˆ†è‡ªèº«ã‚‚ãã®äº¤æµä¼šã« attending=true ã§ç™»éŒ²ã—ã¦ã„ã‚‹ã“ã¨ãŒæ¡ä»¶)
+-- ============================================================
+create or replace function public.get_event_attendees(p_event_id uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  already_liked boolean,
+  match_score int,
+  shared_tags text[]
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mine as (
+    select
+      coalesce(nullif(mine_r.connect_with_tags, '{}'::text[]), mine_p.connect_with_tags, '{}'::text[]) as tags,
+      mine_p.industry as industry
+    from public.profiles mine_p
+    left join public.registrations mine_r
+      on mine_r.event_id = p_event_id and mine_r.participant_id = auth.uid()
+    where mine_p.id = auth.uid()
+  )
+  select
+    r.participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    exists(
+      select 1 from public.likes l
+      where l.event_id = p_event_id
+        and l.from_id = auth.uid()
+        and l.to_id = r.participant_id
+    ) as already_liked,
+    (
+      cardinality(
+        array(
+          select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+          intersect
+          select unnest((select tags from mine))
+        )
+      ) * 10
+      + case
+          when (select industry from mine) is not null
+           and coalesce(nullif(r.industry, ''), p.industry) is not null
+           and (select industry from mine) = coalesce(nullif(r.industry, ''), p.industry)
+          then 5 else 0
+        end
+    )::int as match_score,
+    array(
+      select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+      intersect
+      select unnest((select tags from mine))
+    ) as shared_tags
+  from public.registrations r
+  join public.profiles p on p.id = r.participant_id
+  where r.event_id = p_event_id
+    and r.attending = true
+    and r.participant_id <> auth.uid()
+    and exists (
+      select 1 from public.registrations mine2
+      where mine2.event_id = p_event_id
+        and mine2.participant_id = auth.uid()
+        and mine2.attending = true
+    )
+  order by match_score desc, p.name nulls last;
+$$;
 
-BˆÚ\™HZ[™WÜšYH]]ZY
+-- ============================================================
+-- get_my_matches: ç›¸äº’ã«ã€Œè©±ã—ã¦ã¿ãŸã„ã€ãŒæˆç«‹ã—ãŸç›¸æ‰‹ã®ä¸€è¦§(é€£çµ¡å…ˆã‚’é–‹ç¤º)
+-- ============================================================
+create or replace function public.get_my_matches()
+returns table(
+  event_id uuid,
+  event_title text,
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  email text,
+  matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    a.event_id,
+    e.title as event_title,
+    a.to_id as participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    p.email,
+    greatest(a.created_at, b.created_at) as matched_at
+  from public.likes a
+  join public.likes b
+    on a.event_id = b.event_id
+   and a.from_id = b.to_id
+   and a.to_id = b.from_id
+  join public.profiles p on p.id = a.to_id
+  join public.events e on e.id = a.event_id
+  left join public.registrations r
+    on r.event_id = a.event_id and r.participant_id = a.to_id
+  where a.from_id = auth.uid()
+  order by matched_at desc;
+$$;
 
-Bˆ
-BˆÙ[Xİˆ‹œ\XÚ\[ÚYˆ›˜[YKˆ˜ÛÛ\[KˆÛØ[\ØÙJ[YŠ‹š[™\İK	ÉÊKš[™\İJH\È[™\İKˆÛØ[\ØÙJ[YŠ‹˜ÛÛ›™XİİÚ]	ÉÊK˜ÛÛ›™XİİÚ]
-H\ÈÛÛ›™XİİÚ]ˆ^\İÊˆÙ[XİHœ›ÛHX›XË›ZÙ\ÈˆÚ\™H™]™[ÚYHÙ]™[ÚYˆ[™™œ›ÛWÚYH]]ZY
+grant execute on function public.is_admin() to authenticated;
+grant execute on function public.get_event_attendees(uuid) to authenticated;
+grant execute on function public.get_my_matches() to authenticated;
 
-Bˆ[™×ÚYH‹œ\XÚ\[ÚYˆ
-H\È[™XYWÛZÙYˆ
-ˆØ\™[˜[]Jˆ\œ˜^JˆÙ[Xİ[›™\İ
-ÛØ[\ØÙJ[YŠ‹˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JK˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JJBˆ[\œÙXİˆÙ[Xİ[›™\İ
+-- ============================================================
+-- QRãƒã‚§ãƒƒã‚¯ã‚¤ãƒ³: å€‹äººãƒã‚±ãƒƒãƒˆãƒˆãƒ¼ã‚¯ãƒ³ + å‡ºæ¬ (å…¥å ´/é€€å ´)è¨˜éŒ²
+-- ============================================================
+alter table public.profiles
+  add column if not exists ticket_token uuid not null default gen_random_uuid();
 
-Ù[XİYÜÈœ›ÛHZ[™JJBˆ
-Bˆ
-H
-ˆLˆ
-ÈØ\ÙBˆÚ[ˆ
-Ù[Xİ[™\İHœ›ÛHZ[™JH\È›İ[ˆ[™ÛØ[\ØÙJ[YŠ‹š[™\İK	ÉÊKš[™\İJH\È›İ[ˆ[™
-Ù[Xİ[™\İHœ›ÛHZ[™JHHÛØ[\ØÙJ[YŠ‹š[™\İK	ÉÊKš[™\İJBˆ[ˆH[ÙHˆ[™ˆ
-Nš[\ÈX]ÚÜØÛÜ™Kˆ\œ˜^JˆÙ[Xİ[›™\İ
-ÛØ[\ØÙJ[YŠ‹˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JK˜ÛÛ›™XİİÚ]İYÜË	ŞßIÎ^×JJBˆ[\œÙXİˆÙ[Xİ[›™\İ
+create unique index if not exists profiles_ticket_token_idx
+  on public.profiles(ticket_token);
 
-Ù[XİYÜÈœ›ÛHZ[™JJBˆ
-H\ÈÚ\™YİYÜÂˆœ›ÛHX›XËœ™YÚ\İ˜][ÛœÈ‚ˆ›Ú[ˆX›XËœ›Ùš[\ÈÛˆšYH‹œ\XÚ\[ÚYˆÚ\™H‹™]™[ÚYHÙ]™[ÚYˆ[™‹˜][™[™ÈHYBˆ[™‹œ\XÚ\[ÚYˆ]]ZY
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  checked_in_at timestamptz,
+  checked_out_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (event_id, participant_id)
+);
 
-Bˆ[™^\İÈ
-ˆÙ[XİHœ›ÛHX›XËœ™YÚ\İ˜][ÛœÈZ[™L‚ˆÚ\™HZ[™L‹™]™[ÚYHÙ]™[ÚYˆ[™Z[™L‹œ\XÚ\[ÚYH]]ZY
+alter table public.attendance enable row level security;
 
-Bˆ[™Z[™L‹˜][™[™ÈHYBˆ
-BˆÜ™\ˆHX]ÚÜØÛÜ™H\ØË›˜[YH[È\İÂ‰	Â‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHÙ]Û^WÛX]Ú\Îˆ9æî9.¤¸àjøà#:*lxàeøài¸àoøàgøàa8à#xàc9¢$9êâøàeøàgùæî9¢bøàk¹. :)©Ê:`(ùíhyab8à¤ºe¢ùé.ŠB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]Û^WÛX]Ú\Ê
-Bœ™]\›œÈX›Jˆ]™[ÚY]ZYˆ]™[İ]H^ˆ\XÚ\[ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ[™\İH^ˆÛÛ›™XİİÚ]^ˆ[XZ[^ˆX]ÚYØ][Y\İ[\‚ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİˆK™]™[ÚYˆK]H\È]™[İ]KˆK×ÚY\È\XÚ\[ÚYˆ›˜[YKˆ˜ÛÛ\[KˆÛØ[\ØÙJ[YŠ‹š[™\İK	ÉÊKš[™\İJH\È[™\İKˆÛØ[\ØÙJ[YŠ‹˜ÛÛ›™XİİÚ]	ÉÊK˜ÛÛ›™XİİÚ]
-H\ÈÛÛ›™XİİÚ]ˆ™[XZ[ˆÜ™X]\İ
-K˜Ü™X]YØ]‹˜Ü™X]YØ]
-H\ÈX]ÚYØ]ˆœ›ÛHX›XË›ZÙ\ÈBˆ›Ú[ˆX›XË›ZÙ\È‚ˆÛˆK™]™[ÚYH‹™]™[ÚYˆ[™K™œ›ÛWÚYH‹×ÚYˆ[™K×ÚYH‹™œ›ÛWÚYˆ›Ú[ˆX›XËœ›Ùš[\ÈÛˆšYHK×ÚYˆ›Ú[ˆX›XË™]™[ÈHÛˆKšYHK™]™[ÚYˆY›Ú[ˆX›XËœ™YÚ\İ˜][ÛœÈ‚ˆÛˆ‹™]™[ÚYHK™]™[ÚY[™‹œ\XÚ\[ÚYHK×ÚYˆÚ\™HK™œ›ÛWÚYH]]ZY
+drop policy if exists attendance_select_own_or_admin on public.attendance;
+create policy attendance_select_own_or_admin on public.attendance
+  for select using (participant_id = auth.uid() or public.is_admin());
 
-BˆÜ™\ˆHX]ÚYØ]\ØÎÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XËš\×ØYZ[Š
-HÈ]][XØ]YÂ™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]Ù]™[Ø][™Y\Ê]ZY
-HÈ]][XØ]YÂ™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]Û^WÛX]Ú\Ê
-HÈ]][XØ]YÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHT¸ààxà©øààøà«øà©8àìÎˆ9`"ù.®¸ààxà¬xààøàâ8àâ8àï8à«øàìÈ
-È9aî¹«(
-9aiyh-ú` 9h-
-z*&:c,‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜[\ˆX›HX›XËœ›Ùš[\ÂˆYÛÛ[[ˆYˆ›İ^\İÈXÚÙ]İÚÙ[ˆ]ZY›İ[Y˜][Ù[—Ü˜[™ÛWİ]ZY
+-- æ›¸ãè¾¼ã¿ã¯é‹å–¶(å—ä»˜æ‹…å½“)ã®ã¿ã€‚QRå—ä»˜ã¯ç®¡ç†ç”»é¢ã‹ã‚‰è¡Œã†
+drop policy if exists attendance_admin_write on public.attendance;
+create policy attendance_admin_write on public.attendance
+  for all using (public.is_admin()) with check (public.is_admin());
 
-NÂ‚˜Ü™X]H[š\]YH[™^Yˆ›İ^\İÈ›Ùš[\×İXÚÙ]İÚÙ[—ÚYˆÛˆX›XËœ›Ùš[\ÊXÚÙ]İÚÙ[ŠNÂ‚˜Ü™X]HX›HYˆ›İ^\İÈX›XË˜][™[˜ÙH
-ˆY]ZYš[X\HÙ^HY˜][Ù[—Ü˜[™ÛWİ]ZY
+-- ============================================================
+-- æ–°ç€äº¤æµä¼šãƒ¡ãƒ¼ãƒ«é€šçŸ¥ã®é€ä¿¡çŠ¶æ³
+-- ============================================================
+alter table public.events
+  add column if not exists notified_at timestamptz;
+alter table public.events
+  add column if not exists notified_count int;
 
-Kˆ]™[ÚY]ZY›İ[™Y™\™[˜Ù\ÈX›XË™]™[ÊY
-HÛˆ[]HØ\ØØYKˆ\XÚ\[ÚY]ZY›İ[™Y™\™[˜Ù\ÈX›XËœ›Ùš[\ÊY
-HÛˆ[]HØ\ØØYKˆÚXÚÙYÚ[—Ø][Y\İ[\‹ˆÚXÚÙYÛİ]Ø][Y\İ[\‹ˆÜ™X]YØ][Y\İ[\ˆ›İ[Y˜][›İÊ
-Kˆ[š\]YH
-]™[ÚY\XÚ\[ÚY
-BŠNÂ‚˜[\ˆX›HX›XË˜][™[˜ÙH[˜X›H›İÈ]™[ÙXİ\š]NÂ‚™›ÜÛXŞHYˆ^\İÈ][™[˜ÙWÜÙ[XİÛİÛ—ÛÜ—ØYZ[ˆÛˆX›XË˜][™[˜ÙNÂ˜Ü™X]HÛXŞH][™[˜ÙWÜÙ[XİÛİÛ—ÛÜ—ØYZ[ˆÛˆX›XË˜][™[˜ÙBˆ›ÜˆÙ[Xİ\Ú[™È
-\XÚ\[ÚYH]]ZY
+-- ============================================================
+-- get_member_directory: å‚åŠ è€…åç°¿(å‚åŠ è€…ã‚¢ãƒ—ãƒªå´ã‹ã‚‰ä»–ã®å‚åŠ è€…ã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ã‚’é–²è¦§)
+-- ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã¯å«ã‚ãªã„(é€£çµ¡å…ˆã¯ãƒãƒƒãƒãƒ³ã‚°æˆç«‹å¾Œã®ã¿é–‹ç¤º)
+-- ============================================================
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
 
-HÜˆX›XËš\×ØYZ[Š
-JNÂ‚‹KH9¦î8àcz/¯8àoøàkú`bùe­Š9cåù.æ9¢áyodÊxàk¸àoøà ”T¹cåù.æ8àkùë¨yä!¹å.úgh¸àbøà¢z(c8àa‚™›ÜÛXŞHYˆ^\İÈ][™[˜ÙWØYZ[—İÜš]HÛˆX›XË˜][™[˜ÙNÂ˜Ü™X]HÛXŞH][™[˜ÙWØYZ[—İÜš]HÛˆX›XË˜][™[˜ÙBˆ›Üˆ[\Ú[™È
-X›XËš\×ØYZ[Š
-JHÚ]ÚXÚÈ
-X›XËš\×ØYZ[Š
-JNÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KH9¥¬9ç`9.©9­`y/&¸àèxàï8àêú`&¹çéxàkº` y/èyâ­¹¬àB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜[\ˆX›HX›XË™]™[ÂˆYÛÛ[[ˆYˆ›İ^\İÈ›İYšYYØ][Y\İ[\Â˜[\ˆX›HX›XË™]™[ÂˆYÛÛ[[ˆYˆ›İ^\İÈ›İYšYYØÛİ[[Â‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHÙ]ÛY[X™\—Ù\™XİÜNˆ9cà¹b¨: !yd#yì/Ê9cà¹b¨: !xà¨¸àåøàê¹`m8àbøà¢y.å¸àk¹cà¹b¨: !xàk¸àåøàëxàåxà¨øàï8àêøà¤ºe¬º)©ÊB‹KH8àèxàï8àêøà¨¸àâxàë8à®xàkùd*øà xàj¸àa
-:`(ùíhyab8àkøàç¸ààøààxàìøà¬9¢$9êâùo£8àk¸àoúe¢ùé.ŠB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]ÛY[X™\—Ù\™XİÜJ
-Bœ™]\›œÈX›Jˆ\XÚ\[ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ[™\İH^ˆÛÛ›™XİİÚ]^ˆÛÛ›™XİİÚ]İYÜÈ^×Kˆš[È^ˆ]™[×Ø][™Y[ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİˆšY\È\XÚ\[ÚYˆ›˜[YKˆ˜ÛÛ\[Kˆš[™\İKˆ˜ÛÛ›™XİİÚ]ˆ˜ÛÛ›™XİİÚ]İYÜËˆ˜š[Ëˆ
-ˆÙ[XİÛİ[
+grant execute on function public.get_member_directory() to authenticated;
 
-ŠNš[œ›ÛHX›XËœ™YÚ\İ˜][ÛœÈ‚ˆÚ\™H‹œ\XÚ\[ÚYHšY[™‹˜][™[™ÈHYBˆ
-H\È]™[×Ø][™Yˆœ›ÛHX›XËœ›Ùš[\ÈˆÚ\™Hœ›ÛHH	Ü\XÚ\[	Âˆ[™šYˆ]]ZY
+-- ============================================================
+-- å‚åŠ è€…ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«é …ç›®ã®è¿½åŠ (è·ç¨®ãƒ»å½¹è·ãƒ»é›»è©±ç•ªå·)
+-- ============================================================
+alter table public.profiles add column if not exists job_type text;
+alter table public.profiles add column if not exists job_title text;
+alter table public.profiles add column if not exists phone text;
 
-BˆÜ™\ˆH›˜[YH[È\İÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]ÛY[X™\—Ù\™XİÜJ
-HÈ]][XØ]YÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KH9cà¹b¨: !xàåøàëxàåxà¨øàï8àêúh!yæë¸àkº/ïyb¨
-: mùê+øàîùonz møàîúfîú*lyåj¹cíÊB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜[\ˆX›HX›XËœ›Ùš[\ÈYÛÛ[[ˆYˆ›İ^\İÈ›Ø—İ\H^Â˜[\ˆX›HX›XËœ›Ùš[\ÈYÛÛ[[ˆYˆ›İ^\İÈ›Ø—İ]H^Â˜[\ˆX›HX›XËœ›Ùš[\ÈYÛÛ[[ˆYˆ›İ^\İÈÛ™H^Â‚‹KHÙ]ÛY[X™\—Ù\™XİÜH8à¤º mùê+¸àîùonnz møà º/å8àfxà¢8àa¸àjùa£yk¦¹ïªJ:fîú*lyåj¹cíøàkùd*øà xàj¸àa
-B™›Ü[˜İ[ÛˆYˆ^\İÈX›XË™Ù]ÛY[X™\—Ù\™XİÜJ
-NÂ˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]ÛY[X™\—Ù\™XİÜJ
-Bœ™]\›œÈX›Jˆ\XÚ\[ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ›Ø—İ\H^ˆ›Ø—İ]H^ˆ[™\İH^ˆÛÛ›™XİİÚ]^ˆÛÛ›™XİİÚ]İYÜÈ^×Kˆš[È^ˆ]™[×Ø][™Y[ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİˆšY\È\XÚ\[ÚYˆ›˜[YKˆ˜ÛÛ\[Kˆš›Ø—İ\Kˆš›Ø—İ]Kˆš[™\İKˆ˜ÛÛ›™XİİÚ]ˆ˜ÛÛ›™XİİÚ]İYÜËˆ˜š[Ëˆ
-ˆÙ[XİÛİ[
+-- get_member_directory ã‚’è·ç¨®ãƒ»å½¹è·ã‚‚è¿”ã™ã‚ˆã†ã«å†å®šç¾©(é›»è©±ç•ªå·ã¯å«ã‚ãªã„)
+drop function if exists public.get_member_directory();
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
 
-ŠNš[œ›ÛHX›XËœ™YÚ\İ˜][ÛœÈ‚ˆÚ\™H‹œ\XÚ\[ÚYHšY[™‹˜][™[™ÈHYBˆ
-H\È]™[×Ø][™Yˆœ›ÛHX›XËœ›Ùš[\ÈˆÚ\™Hœ›ÛHH	Ü\XÚ\[	Âˆ[™šYˆ]]ZY
+grant execute on function public.get_member_directory() to authenticated;
 
-BˆÜ™\ˆH›˜[YH[È\İÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]ÛY[X™\—Ù\™XİÜJ
-HÈ]][XØ]YÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHY\ÜØYÙ\Îˆ8àç¸ààøàày¢$9êâøàeøàgùæî9¢bùd#9hêøàk¸ààxàèøààøàâ
-9liy«m8àkù.©9­`y/&¸à¤¸ào¸àgøàa8àiú$á9êcJB‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜Ü™X]HX›HYˆ›İ^\İÈX›XË›Y\ÜØYÙ\È
-ˆY]ZYš[X\HÙ^HY˜][Ù[—Ü˜[™ÛWİ]ZY
+-- ============================================================
+-- messages: ãƒãƒƒãƒæˆç«‹ã—ãŸç›¸æ‰‹åŒå£«ã®ãƒãƒ£ãƒƒãƒˆ(å±¥æ­´ã¯äº¤æµä¼šã‚’ã¾ãŸã„ã§è“„ç©)
+-- ============================================================
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null check (char_length(trim(content)) > 0),
+  read_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (sender_id <> recipient_id)
+);
 
-KˆÙ[™\—ÚY]ZY›İ[™Y™\™[˜Ù\ÈX›XËœ›Ùš[\ÊY
-HÛˆ[]HØ\ØØYKˆ™XÚ\Y[ÚY]ZY›İ[™Y™\™[˜Ù\ÈX›XËœ›Ùš[\ÊY
-HÛˆ[]HØ\ØØYKˆÛÛ[^›İ[ÚXÚÈ
-Ú\—Û[™İ
-š[JÛÛ[
-JHˆ
-Kˆ™XYØ][Y\İ[\‹ˆÜ™X]YØ][Y\İ[\ˆ›İ[Y˜][›İÊ
-KˆÚXÚÈ
-Ù[™\—ÚYˆ™XÚ\Y[ÚY
-BŠNÂ‚˜Ü™X]H[™^Yˆ›İ^\İÈY\ÜØYÙ\×ÜZ\—ØÜ™X]YÚYˆÛˆX›XË›Y\ÜØYÙ\È
-X\İ
-Ù[™\—ÚY™XÚ\Y[ÚY
-KÜ™X]\İ
-Ù[™\—ÚY™XÚ\Y[ÚY
-KÜ™X]YØ]
-NÂ‚˜Ü™X]H[™^Yˆ›İ^\İÈY\ÜØYÙ\×Ü™XÚ\Y[İ[œ™XYÚYˆÛˆX›XË›Y\ÜØYÙ\È
-™XÚ\Y[ÚY™XYØ]
-NÂ‚‹KH:`c¹c®ùd*øà xà xàa8àf¸à£8àbøàk¹.©9­`y/&¸àiùæî9.¤¸àjøà#:*lxàeøài¸àoøàgøàa8à#xàc9¢$9êâøàeøài¸àa8à¢ùæî9¢bøàbÂ˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XËš\×ÛX]ÚYİÚ]
-İ\—ÚY]ZY
-Bœ™]\›œÈ›ÛÛX[‚›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[Xİ^\İÊˆÙ[XİHœ›ÛHX›XË›ZÙ\ÈBˆ›Ú[ˆX›XË›ZÙ\È‚ˆÛˆK™]™[ÚYH‹™]™[ÚYˆ[™K™œ›ÛWÚYH‹×ÚYˆ[™K×ÚYH‹™œ›ÛWÚYˆÚ\™HK™œ›ÛWÚYH]]ZY
+create index if not exists messages_pair_created_idx
+  on public.messages (least(sender_id, recipient_id), greatest(sender_id, recipient_id), created_at);
 
-H[™K×ÚYHİ\—ÚYˆ
-NÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XËš\×ÛX]ÚYİÚ]
-]ZY
-HÈ]][XØ]YÂ‚˜[\ˆX›HX›XË›Y\ÜØYÙ\È[˜X›H›İÈ]™[ÙXİ\š]NÂ‚™›ÜÛXŞHYˆ^\İÈY\ÜØYÙ\×ÜÙ[XİÛİÛˆÛˆX›XË›Y\ÜØYÙ\ÎÂ˜Ü™X]HÛXŞHY\ÜØYÙ\×ÜÙ[XİÛİÛˆÛˆX›XË›Y\ÜØYÙ\Âˆ›ÜˆÙ[Xİ\Ú[™È
-Ù[™\—ÚYH]]ZY
+create index if not exists messages_recipient_unread_idx
+  on public.messages (recipient_id, read_at);
 
-HÜˆ™XÚ\Y[ÚYH]]ZY
+-- éå»å«ã‚ã€ã„ãšã‚Œã‹ã®äº¤æµä¼šã§ç›¸äº’ã«ã€Œè©±ã—ã¦ã¿ãŸã„ã€ãŒæˆç«‹ã—ã¦ã„ã‚‹ç›¸æ‰‹ã‹
+create or replace function public.is_matched_with(other_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists(
+    select 1 from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id
+     and a.from_id = b.to_id
+     and a.to_id = b.from_id
+    where a.from_id = auth.uid() and a.to_id = other_id
+  );
+$$;
 
-HÜˆX›XËš\×ØYZ[Š
-JNÂ‚‹KH:` y/èxàkøàç¸ààøààxàc9¢$9êâøàeøài¸àa8à¢ùæî9¢bøàjøàk¸àoú*,ycëÊ9¥èº*«xàåxàêxà¬8àk¹¦í9¥¬8àkÈX\š×ØÛÛ™\œØ][Û—Ü™XY9íc9å,xàk¸àoÊB™›ÜÛXŞHYˆ^\İÈY\ÜØYÙ\×Ú[œÙ\ÛX]ÚYÛˆX›XË›Y\ÜØYÙ\ÎÂ˜Ü™X]HÛXŞHY\ÜØYÙ\×Ú[œÙ\ÛX]ÚYÛˆX›XË›Y\ÜØYÙ\Âˆ›Üˆ[œÙ\Ú]ÚXÚÈ
-ˆÙ[™\—ÚYH]]ZY
+grant execute on function public.is_matched_with(uuid) to authenticated;
 
-H[™X›XËš\×ÛX]ÚYİÚ]
-™XÚ\Y[ÚY
-Bˆ
-NÂ‚˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË›X\š×ØÛÛ™\œØ][Û—Ü™XY
-\™\ˆ]ZY
-Bœ™]\›œÈ›ÚY›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂ˜\È		ˆ\]HX›XË›Y\ÜØYÙ\ÂˆÙ]™XYØ]H›İÊ
-BˆÚ\™H™XÚ\Y[ÚYH]]ZY
+alter table public.messages enable row level security;
 
-H[™Ù[™\—ÚYH\™\ˆ[™™XYØ]\È[Â‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË›X\š×ØÛÛ™\œØ][Û—Ü™XY
-]ZY
-HÈ]][XØ]YÂ‚‹KH8ààxàèøààøàâ9æî9¢bøàk¸àåøàëxàåxà¨øàï8àêÊ8àç¸ààøààxàeøài¸àa8à¢ùh-9d"8àk¸àoú/å8àfxà œ›Ùš[\È8àkù§+9.®¸àk¸àoúe¬º)©ùcëøàk¸àgøà yl ¹å*”øàc9oáz) JB‹KHX]ÚYØ]ˆ8àa8ài8àç¸ààøààxàc9¢$9êâøàeøàgøàbÊZ\œúhª8àk¸ààxàèøààøàâ9a¤ºh+xà#8à!ù§"8à!ù¥éxàjøàç¸ààøààxàeøào¸àeøàgøà#z(j9é.¹å*
-B˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]ØÛÛ™\œØ][Û—Ü\™\Š\™\ˆ]ZY
-Bœ™]\›œÈX›Jˆ\XÚ\[ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ›Ø—İ]H^ˆ[™\İH^ˆÛÛ›™XİİÚ]^ˆX]ÚYØ][Y\İ[\‚ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİˆšYˆ›˜[YKˆ˜ÛÛ\[Kˆš›Ø—İ]Kˆš[™\İKˆ˜ÛÛ›™XİİÚ]ˆ
-ˆÙ[XİÜ™X]\İ
-K˜Ü™X]YØ]‹˜Ü™X]YØ]
-Bˆœ›ÛHX›XË›ZÙ\ÈBˆ›Ú[ˆX›XË›ZÙ\È‚ˆÛˆK™]™[ÚYH‹™]™[ÚY[™K™œ›ÛWÚYH‹×ÚY[™K×ÚYH‹™œ›ÛWÚYˆÚ\™HK™œ›ÛWÚYH]]ZY
+drop policy if exists messages_select_own on public.messages;
+create policy messages_select_own on public.messages
+  for select using (sender_id = auth.uid() or recipient_id = auth.uid() or public.is_admin());
 
-H[™K×ÚYH\™\‚ˆÜ™\ˆHÜ™X]\İ
-K˜Ü™X]YØ]‹˜Ü™X]YØ]
-H\ØÂˆ[Z]Bˆ
-H\ÈX]ÚYØ]ˆœ›ÛHX›XËœ›Ùš[\ÈˆÚ\™HšYH\™\‚ˆ[™X›XËš\×ÛX]ÚYİÚ]
-\™\ŠNÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]ØÛÛ™\œØ][Û—Ü\™\Š]ZY
-HÈ]][XØ]YÂ‚˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]İ[œ™XYÛY\ÜØYÙWØÛİ[
+-- é€ä¿¡ã¯ãƒãƒƒãƒãŒæˆç«‹ã—ã¦ã„ã‚‹ç›¸æ‰‹ã«ã®ã¿è¨±å¯(æ—¢èª­ãƒ•ãƒ©ã‚°ã®æ›´æ–°ã¯ mark_conversation_read çµŒç”±ã®ã¿)
+drop policy if exists messages_insert_matched on public.messages;
+create policy messages_insert_matched on public.messages
+  for insert with check (
+    sender_id = auth.uid() and public.is_matched_with(recipient_id)
+  );
 
-Bœ™]\›œÈ[›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİÛİ[
+create or replace function public.mark_conversation_read(partner uuid)
+returns void
+language sql
+security definer set search_path = public
+as $$
+  update public.messages
+  set read_at = now()
+  where recipient_id = auth.uid() and sender_id = partner and read_at is null;
+$$;
 
-ŠNš[œ›ÛHX›XË›Y\ÜØYÙ\ÂˆÚ\™H™XÚ\Y[ÚYH]]ZY
+grant execute on function public.mark_conversation_read(uuid) to authenticated;
 
-H[™™XYØ]\È[Â‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]İ[œ™XYÛY\ÜØYÙWØÛİ[
+-- ãƒãƒ£ãƒƒãƒˆç›¸æ‰‹ã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«(ãƒãƒƒãƒã—ã¦ã„ã‚‹å ´åˆã®ã¿è¿”ã™ã€‚profiles ã¯æœ¬äººã®ã¿é–²è¦§å¯ã®ãŸã‚å°‚ç”¨RPCãŒå¿…è¦)
+-- matched_at: ã„ã¤ãƒãƒƒãƒãŒæˆç«‹ã—ãŸã‹(Pairsé¢¨ã®ãƒãƒ£ãƒƒãƒˆå†’é ­ã€Œã€‡æœˆã€‡æ—¥ã«ãƒãƒƒãƒã—ã¾ã—ãŸã€è¡¨ç¤ºç”¨)
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text,
+  matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
 
-HÈ]][XØ]YÂ‚‹KH8à#8àèxààøà®øàï8à®8à#y. :)©Ê9¥éøàç¸ààøàày. :)©ÊNˆ8àç¸ààøààyæî9¢bøàe8àj8àjÌz(c8à y.©9­`y/&¸à¤¸ào¸àgøàa8àiúfá¹í!˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]Û^WØÛÛ™\œØ][ÛœÊ
-Bœ™]\›œÈX›Jˆ\™\—ÚY]ZYˆ˜[YH^ˆÛÛ\[H^ˆ›Ø—İ]H^ˆ\İÛY\ÜØYÙH^ˆ\İÛY\ÜØYÙWØ][Y\İ[\‹ˆ\İÜÙ[™\—ÚY]ZYˆ[œ™XYØÛİ[[ˆX]ÚYÙ]™[È^×Kˆš\œİÛX]ÚYØ][Y\İ[\‚ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÚ]]]X[\È
-ˆÙ[XİK×ÚY\È\™\—ÚYˆZ[ŠX\İ
-K˜Ü™X]YØ]‹˜Ü™X]YØ]
-JH\Èš\œİÛX]ÚYØ]ˆ\œ˜^WØYÙÊ\İ[˜İK]HÜ™\ˆHK]JH\ÈX]ÚYÙ]™[Âˆœ›ÛHX›XË›ZÙ\ÈBˆ›Ú[ˆX›XË›ZÙ\È‚ˆÛˆK™]™[ÚYH‹™]™[ÚY[™K™œ›ÛWÚYH‹×ÚY[™K×ÚYH‹™œ›ÛWÚYˆ›Ú[ˆX›XË™]™[ÈHÛˆKšYHK™]™[ÚYˆÚ\™HK™œ›ÛWÚYH]]ZY
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
 
-BˆÜ›İ\HK×ÚYˆ
-Kˆ\İÛ\ÙÈ\È
-ˆÙ[Xİ\İ[˜İÛˆ
-\™\—ÚY
-Bˆ\™\—ÚYÛÛ[Ü™X]YØ]Ù[™\—ÚYˆœ›ÛH
-ˆÙ[XİˆØ\ÙHÚ[ˆÙ[™\—ÚYH]]ZY
+create or replace function public.get_unread_message_count()
+returns int
+language sql
+security definer set search_path = public
+stable
+as $$
+  select count(*)::int from public.messages
+  where recipient_id = auth.uid() and read_at is null;
+$$;
 
-H[ˆ™XÚ\Y[ÚY[ÙHÙ[™\—ÚY[™\È\™\—ÚYˆÛÛ[Ü™X]YØ]Ù[™\—ÚYˆœ›ÛHX›XË›Y\ÜØYÙ\ÂˆÚ\™HÙ[™\—ÚYH]]ZY
+grant execute on function public.get_unread_message_count() to authenticated;
 
-HÜˆ™XÚ\Y[ÚYH]]ZY
+-- ã€Œãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã€ä¸€è¦§(æ—§ãƒãƒƒãƒä¸€è¦§): ãƒãƒƒãƒç›¸æ‰‹ã”ã¨ã«1è¡Œã€äº¤æµä¼šã‚’ã¾ãŸã„ã§é›†ç´„
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
 
-Bˆ
-HˆÜ™\ˆH\™\—ÚYÜ™X]YØ]\ØÂˆ
-Kˆ[œ™XY\È
-ˆÙ[XİÙ[™\—ÚY\È\™\—ÚYÛİ[
+grant execute on function public.get_my_conversations() to authenticated;
 
-ŠNš[\ÈÛˆœ›ÛHX›XË›Y\ÜØYÙ\ÂˆÚ\™H™XÚ\Y[ÚYH]]ZY
+-- Realtime: ãƒãƒ£ãƒƒãƒˆã®æ–°ç€ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«é…ä¿¡ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages'
+  ) then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+end $$;
 
-H[™™XYØ]\È[ˆÜ›İ\HÙ[™\—ÚYˆ
-BˆÙ[XİˆKœ\™\—ÚYˆ›˜[YKˆ˜ÛÛ\[Kˆš›Ø—İ]KˆK˜ÛÛ[\È\İÛY\ÜØYÙKˆK˜Ü™X]YØ]\È\İÛY\ÜØYÙWØ]ˆKœÙ[™\—ÚY\È\İÜÙ[™\—ÚYˆÛØ[\ØÙJK˜Û
-H\È[œ™XYØÛİ[ˆK›X]ÚYÙ]™[ËˆK™š\œİÛX]ÚYØ]ˆœ›ÛH]]X[Bˆ›Ú[ˆX›XËœ›Ùš[\ÈÛˆšYHKœ\™\—ÚYˆY›Ú[ˆ\İÛ\ÙÈHÛˆKœ\™\—ÚYHKœ\™\—ÚYˆY›Ú[ˆ[œ™XYHÛˆKœ\™\—ÚYHKœ\™\—ÚYˆÜ™\ˆHÛØ[\ØÙJK˜Ü™X]YØ]K™š\œİÛX]ÚYØ]
-H\ØÎÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]Û^WØÛÛ™\œØ][ÛœÊ
-HÈ]][XØ]YÂ‚‹KH™X[[YNˆ8ààxàèøààøàâ8àk¹¥¬9ç`8àèxààøà®øàï8à®8à¤¸à«øàêxà©8à¨¸àìøàâ8àjúacy/èxàiøàcxà¢øà¢8àa¸àjøàfxà¢Â™È		˜™YÚ[‚ˆYˆ›İ^\İÈ
-ˆÙ[XİHœ›ÛH×ÜX›XØ][Û—İX›\ÂˆÚ\™HX›˜[YHH	Üİ\X˜\ÙWÜ™X[[YIÈ[™ØÚ[X[˜[YHH	ÜX›XÉÈ[™X›[˜[YHH	ÛY\ÜØYÙ\ÉÂˆ
-H[‚ˆ[\ˆX›XØ][Ûˆİ\X˜\ÙWÜ™X[[YHYX›HX›XË›Y\ÜØYÙ\ÎÂˆ[™YÂ™[™		Â‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHÙ]Û^WØØ\][Üİ[[X\Nˆ9cà¹b¨: !yd$xàdxà#8à`¸àj¸àgøàk¹.®¹æ¡:,áù§+8à#xàà8ààøà­øàéN89Î8;Î88™¸nŠˆ€¢ÒÒXø.Xª8~8şKªNkXKÉ®i[8;¾8N8®8Î8>8şK«®i[8;¾8(N8(®88(®8~8ş8:88>8+¾8;Î8+i[8®8’¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ævWEö×•ö6—FÅ÷7VÖÖ'’‚§&WGW&ç2F&ÆR€¢WfVçG5öGFVæFVB–çBÀ¢6öææV7F–öç5ö6÷VçB–çBÀ¢ÖW76vW5ö6÷VçB–çBÀ¢f—'7EöGFVæFVEöBF–ÖW7F×G¢À¢ÆFW7E÷'FæW%öæÖRFW‡BÀ¢ÆFW7EöÖF6†VEöBF–ÖW7F×G ¢¦ÆæwVvR7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0§7F&ÆP¦2B@¢v—F‚GB2€¢6VÆV7B6÷VçB‚¢“£¦–çB22ÂÖ–â†6†V6¶VEö–åöB’2f—'7Eö@¢g&öÒV&Æ–2æGFVæFæ6P¢v†W&R'F–6—çEö–BÒWF‚çV–B‚’æB6†V6¶VEö–åöB—2æ÷BçVÆÀ¢’À¢6öæâ2€¢6VÆV7BçFõö–B2'FæW%ö–BÂÖ–â†ÆV7B†æ7&VFVEöBÂ"æ7&VFVEöB’’2ÖF6†VEö@¢g&öÒV&Æ–2æÆ–¶W2¢¦ö–âV&Æ–2æÆ–¶W2 ¢öâæWfVçEö–BÒ"æWfVçEö–BæBæg&öÕö–BÒ"çFõö–BæBçFõö–BÒ"æg&öÕö–@¢v†W&Ræg&öÕö–BÒWF‚çV–B‚¢w&÷W'’çFõö–@¢’À¢ÆFW7B2€¢6VÆV7BææÖRÂ2æÖF6†VEö@¢g&öÒ6öæâ0¢¦ö–âV&Æ–2ç&öf–ÆW2öâæ–BÒ2ç'FæW%ö–@¢÷&FW"'’2æÖF6†VEöBFW60¢Æ–Ö—B¢’À¢×6r2€¢6VÆV7B6÷VçB‚¢“£¦–çB22g&öÒV&Æ–2æÖW76vW0¢v†W&R6VæFW%ö–BÒWF‚çV–B‚’÷"&V6—–VçEö–BÒWF‚çV–B‚¢¢6VÆV7@¢6öÆW66R‚‡6VÆV7B2g&öÒGB’Â’À¢6öÆW66R‚‡6VÆV7B6÷VçB‚¢“£¦–çBg&öÒ6öæâ’Â’À¢6öÆW66R‚‡6VÆV7B2g&öÒ×6r’Â’À¢‡6VÆV7Bf—'7EöBg&öÒGB’À¢‡6VÆV7BæÖRg&öÒÆFW7B’À¢‡6VÆV7BÖF6†VEöBg&öÒÆFW7B“°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ævWEö×•ö6—FÅ÷7VÖÖ'’‚’FòWF†VçF–6FVC° ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¢ÒÒvWE÷W6öÖ–æuöWfVçG5÷V&Æ–3¢iÊ®8:Ş8+8*N8;>8~8(.Šh¾8(8(Î8(¾XZÎ™h¾8*N898;>88h8^Z¢ÒÒ„888:>88>8889Î88>888ÎiÈik8î™h¾X*ÎK¨Zé®8).zÙN88(8(Î8(¾8(8n8¾88(¾8ş8(8îiÈ[ş™™8îXZÎ™h¾89>8:^8;Â¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ævWE÷W6öÖ–æuöWfVçG5÷V&Æ–2‚§&WGW&ç2F&ÆR€¢F—FÆRFW‡BÀ¢WfVçEöFFRFFRÀ¢7F'E÷F–ÖRF–ÖRÀ¢fVçVRFW‡BÀ¢FW67&—F–öâFW‡BÀ¢fVUöæ÷FRFW‡@¢¦ÆæwVvR7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0§7F&ÆP¦2B@¢6VÆV7BF—FÆRÂWfVçEöFFRÂ7F'E÷F–ÖRÂfVçVRÂFW67&—F–öâÂfVUöæ÷FP¢g&öÒV&Æ–2æWfVçG0¢v†W&RWfVçEöFFRãÒ7W'&VçEöFFP¢æB7FGW2–â‚wW6öÖ–ærrÂv6Æ÷6VBr¢÷&FW"'’WfVçEöFFR60¢Æ–Ö—BS°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ævWE÷W6öÖ–æuöWfVçG5÷V&Æ–2‚’FòæöâÂWF†VçF–6FVC° ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¢ÒÒ7W÷'Eö–çV—&–W3¢888:>88>8889Î88>88{XÎyK8î8Î˜	®Z8Ş8Î˜¾Ykn88îYXş8NY8(ş8¾8Ğ¢ÒÒiÊ®8:Ş8+8*N8;2†æöâ8îiÚ^ZNˆ^8~8(.˜Kú8~8Ş8(¾8(8n8–ç6W'B8òæöâ8¾8(.Š‹Xúş88(¾8 ¢ÒÒ™k.Šj~8;¾i»NikZûî[ùÎx«nk88îZHi»B8ş˜¾Ykb†FÖ–â8î8ş8.iÊÎK«®8şˆz®Xˆn8Î˜8>8şXˆn88™k.Šj~Xúş8 ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFRF&ÆR–bæ÷BW†—7G2V&Æ–2ç7W÷'Eö–çV—&–W2€¢–BWV–B&–Ö'’¶W’FVfVÇBvVå÷&æFöÕ÷WV–B‚’À¢¶–æBFW‡Bæ÷BçVÆÂ6†V6²†¶–æB–â‚w&W÷'BrÂv6öçF7Br’’À¢'F–6—çEö–BWV–B&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR6WBçVÆÂÀ¢6öçF7EöæÖRFW‡BÀ¢6öçF7EöVÖ–ÂFW‡BÀ¢7VÖÖ'’FW‡Bæ÷BçVÆÂÀ¢FWF–Ç2FW‡BÀ¢—5ö'W6–æW75ö†÷W'2&ööÆVâÀ¢7FGW2FW‡Bæ÷BçVÆÂFVfVÇBv÷Vâr6†V6²‡7FGW2–â‚v÷VârÂv–å÷&öw&W72rÂw&W6öÇfVBr’’À¢7&VFVEöBF–ÖW7F×G¢æ÷BçVÆÂFVfVÇBæ÷r‚’À¢&W6öÇfVEöBF–ÖW7F×G¢À¢&W6öÇfVEö'’WV–B&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR6WBçVÆÀ¢“° ¦7&VFR–æFW‚–bæ÷BW†—7G27W÷'Eö–çV—&–W5÷7FGW5ö7&VFVEö–G€¢öâV&Æ–2ç7W÷'Eö–çV—&–W2‡7FGW2Â7&VFVEöBFW62“° ¦ÇFW"F&ÆRV&Æ–2ç7W÷'Eö–çV—&–W2Væ&ÆR&÷rÆWfVÂ6V7W&—G“° ¢ÒÒ–ç6W'C¢Š«8~8(.˜KúXúò†æöîY
-¾8(8.8:Ş8+8*N8;>KŠŞ8şˆz®Xˆn8â'F–6—çEö–B8î8şhÈ~Zé®Xúşˆ;Ş8 ¦G&÷öÆ–7’–bW†—7G27W÷'Eö–çV—&–W5ö–ç6W'Eöç’öâV&Æ–2ç7W÷'Eö–çV—&–W3°¦7&VFRöÆ–7’7W÷'Eö–çV—&–W5ö–ç6W'Eöç’öâV&Æ–2ç7W÷'Eö–çV—&–W0¢f÷"–ç6W'BFòæöâÂWF†VçF–6FV@¢v—F‚6†V6²‡'F–6—çEö–B—2çVÆÂ÷"'F–6—çEö–BÒWF‚çV–B‚’“° ¢ÒÒ6VÆV7C¢˜¾Ykn8şXZK»n8iÊÎK«®8şˆz®Xˆn8Î˜Kú8~8şXˆn8î8ğ¦G&÷öÆ–7’–bW†—7G27W÷'Eö–çV—&–W5÷6VÆV7Eö÷våö÷%öFÖ–âöâV&Æ–2ç7W÷'Eö–çV—&–W3°¦7&VFRöÆ–7’7W÷'Eö–çV—&–W5÷6VÆV7Eö÷våö÷%öFÖ–âöâV&Æ–2ç7W÷'Eö–çV—&–W0¢f÷"6VÆV7BW6–ær€¢V&Æ–2æ—5öFÖ–â‚¢÷"‡'F–6—çEö–B—2æ÷BçVÆÂæB'F–6—çEö–BÒWF‚çV–B‚’¢“° ¢ÒÒWFFS¢Zûî[ùÎx«nk88îZHi»N8ş˜¾Ykn8î8ğ¦G&÷öÆ–7’–bW†—7G27W÷'Eö–çV—&–W5÷WFFUöFÖ–âöâV&Æ–2ç7W÷'Eö–çV—&–W3°¦7&VFRöÆ–7’7W÷'Eö–çV—&–W5÷WFFUöFÖ–âöâV&Æ–2ç7W÷'Eö–çV—&–W0¢f÷"WFFRW6–ær‡V&Æ–2æ—5öFÖ–â‚’’v—F‚6†V6²‡V&Æ–2æ—5öFÖ–â‚’“° ¦w&çB–ç6W'BöâV&Æ–2ç7W÷'Eö–çV—&–W2FòæöâÂWF†VçF–6FVC°¦w&çB6VÆV7BÂWFFRöâV&Æ–2ç7W÷'Eö–çV—&–W2FòWF†VçF–6FVC° ¢ÒÒ˜¾YknY	8¢Zûî[ùÎkˆ8ş8¾88(°¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ç&W6öÇfU÷7W÷'Eö–çV—'’†–çV—'•ö–BWV–B§&WGW&ç2fö–@¦ÆæwVvRÇw7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0¦2B@¦&Vv–à¢–bæ÷BV&Æ–2æ—5öFÖ–â‚’F†Và¢&—6RW†6WF–öâvFÖ–âöæÇ’s°¢VæB–c°¢WFFRV&Æ–2ç7W÷'Eö–çV—&–W0¢6WB7FGW2Òw&W6öÇfVBrÂ&W6öÇfVEöBÒæ÷r‚’Â&W6öÇfVEö'’ÒWF‚çV–B‚¢v†W&R–BÒ–çV—'•ö–C°¦VæC°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ç&W6öÇfU÷7W÷'Eö–çV—'’‡WV–B’FòWF†VçF–6FVC° ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¢ÒÒWfVçEöfVVF&6³¢Xø.Xª[èÎ8*.8;>8+8;Î88‚k¨‹k>[ªn8;´å>8;¾ˆz®yKŠ‰‹û¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFRF&ÆR–b&æ÷BW†—7G2V&Æ–2æWfVçEöfVVF&6²€¢–BWV–B&–Ö'’¶W’FVfVÇBvVå÷&æFöÕ÷WV–B‚’À¢WfVçEö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2æWfVçG2†–B’öâFVÆWFR666FRÀ¢'F–6—çEö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR666FRÀ¢&F–ær–çBæ÷BçVÆÂ6†V6²‡&F–ær&WGvVVâæBR’À¢v÷VÆE÷&V6öÖÖVæBFW‡Bæ÷BçVÆÂ6†V6²‡v÷VÆE÷&V6öÖÖVæB–â‚w–W2rÂvæWWG&ÂrÂvæòr’’À¢6öÖÖVçBFW‡BÀ¢7&VFVEöBF–ÖW7F×G¢æ÷BçVÆÂFVfVÇBæ÷r‚’À¢Væ—VR†WfVçEö–BÂ'F–6—çEö–B¢“° ¦7&VFR–æFW‚–bæ÷BW†—7G2WfVçEöfVVF&6µöWfVçEö–G‚öâV&Æ–2æWfVçEöfVVF&6²†WfVçEö–B“° ¦ÇFW"F&ÆRV&Æ–2æWfVçEöfVVF&6²Væ&ÆR&÷rÆWfVÂ6V7W&—G“° ¦G&÷öÆ–7’–bW†—7G2WfVçEöfVVF&6µö–ç6W'Eö÷vâöâV&Æ–2æWfVçEöfVVF&6³°¦7&VFRöÆ–7’WfVçEöfVVF&6µö–ç6W'Eö÷vâöâV&Æ–2æWfVçEöfVVF&6°¢f÷"–ç6W'BFòWF†VçF–6FV@¢v—F‚6†V6²‡'F–6—çEö–BÒWF‚çV–B‚’“° ¦G&÷öÆ–7’–bW†—7G2WfVçEöfVVF&6µ÷WFFUö÷vâöâV&Æ–2æWfVçEöfVVF&6³°¦7&VFRöÆ–7’WfVçEöfVVF&6µ÷WFFUö÷vâöâV&Æ–2æWfVçEöfVVF&6°¢f÷"WFFRFòWF†VçF–6FV@¢W6–ær†‡'F–6—çEö–BÒWF‚çV–B‚’¢v—F‚6†V6²‡'F–6—çEö–BÒWF‚çV–B‚’“° ¦F–GGöÆ–7’–bW†—7G2WfVçEöfVVF&6µ÷6VÆV7Eö÷våö÷%öFÖ–âöâV&Æ–2æWfVçEöfVVF&6³°¦7&VFRöÆ–7’WfVçEöfVVF&6µ÷6VÆV7Eö÷våö÷%öFÖ–âöâV&Æ–2æWfVçEöfVVF&6°¢f÷"6VÆV7BW6–ær‡'F–6—çEö–BÒWF‚çV–B‚’÷"V&Æ–2æ—5öFÖ–â‚’“° ¦w&çB–ç6W'BÂWFFRÂ6VÆV7BöâV&Æ–2æWfVçEöfVVF&6²FòWF†VçF–6FVC° ¢ÒÒvWE÷VæF–æuöfVVF&6µöWfVçG3¢ˆz®Xˆn8ÎXø.Xª8~8ò™h¾X*Îiz^8Î˜î8î8ò88î88*.8;>8+8;Î88iÊ®Y¹îzÙN8îKªNkXKÉ ¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ævWE÷VæF–æuöfVVF&6µöWfVçG2‚§&WGW&ç2F&ÆR€¢WfVçEö–BWV–BÀ¢F—FÆRFW‡BÀ¢WfVçEöFFRFFP¢¦ÆæwVvR7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0§7F&ÆP¦2B@¢6VÆV7BRæ–BÂRçF—FÆRÂRæWfVçEöFFP¢g&öÒV&Æ–2æWfVçG2P¢¦ö–âV&Æ–2ç&Vv—7G&F–öç2"öâ"æWfVçEö–BÒRæ–@¢v†W&R"ç'F–6—çEö–BÒWF‚çV–B‚¢æB"æGFVæF–ærÒG'VP¢æBRæWfVçEöFFRÂ7W'&VçEöFFP¢æBæ÷BW†—7G2€¢6VÆV7Bg&öÒV&Æ–2æWfVçEöfVVF&6²`¢v†W&RbæWfVçEö–BÒRæ–BæBbç'F–6—çEö–BÒWF‚çV–B‚¢¢÷&FW"'’RæWfVçEöFFRFW63°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ævWE÷VæF–æuöfVVF&6µöWfVçG2‚’FòWF†VçF–6FVC° ¢ÒÒ7V&Ö—EöWfVçEöfVVF&6³¢8*.8;>8+8;Î88˜Kúôù¦í9¥¬˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XËœİX›Z]Ù]™[Ù™YY˜XÚÊˆÙ]™[ÚY]ZYˆÜ˜][™È[ˆİÛİ[Ü™XÛÛ[Y[™^ˆØÛÛ[Y[^ŠBœ™]\›œÈ›ÚY›[™İXYÙHÜÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂ˜\È		˜™YÚ[‚ˆ[œÙ\[ÈX›XË™]™[Ù™YY˜XÚÈ
-]™[ÚY\XÚ\[ÚY˜][™ËÛİ[Ü™XÛÛ[Y[™ÛÛ[Y[
-Bˆ˜[Y\È
-Ù]™[ÚY]]ZY
+-- ============================================================
+-- get_my_capital_summary: å‚åŠ è€…å‘ã‘ã€Œã‚ãªãŸã®äººçš„è³‡æœ¬ã€ãƒ€ãƒƒã‚·ãƒ¥ãƒœãƒ¼ãƒ‰é›†è¨ˆ
+-- (å‚åŠ ã—ãŸäº¤æµä¼šæ•°ãƒ»ã¤ãªãŒã£ãŸäººæ•°ãƒ»ã‚„ã‚Šã¨ã‚Šã—ãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸æ•°ãªã©)
+-- ============================================================
+create or replace function public.get_my_capital_summary()
+returns table(
+  events_attended int,
+  connections_count int,
+  messages_count int,
+  first_attended_at timestamptz,
+  latest_partner_name text,
+  latest_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, min(checked_in_at) as first_at
+    from public.attendance
+    where participant_id = auth.uid() and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id, min(least(a.created_at, b.created_at)) as matched_at
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  latest as (
+    select p.name, c.matched_at
+    from conn c
+    join public.profiles p on p.id = c.partner_id
+    order by c.matched_at desc
+    limit 1
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = auth.uid() or recipient_id = auth.uid()
+  )
+  select
+    coalesce((select c from att), 0),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0),
+    (select first_at from att),
+    (select name from latest),
+    (select matched_at from latest);
+$$;
 
-KÜ˜][™ËİÛİ[Ü™XÛÛ[Y[™[YŠØÛÛ[Y[	ÉÊJBˆÛˆÛÛ™›Xİ
-]™[ÚY\XÚ\[ÚY
-BˆÈ\]HÙ]ˆ˜][™ÈH^ÛYYœ˜][™ËˆÛİ[Ü™XÛÛ[Y[™H^ÛYYÛİ[Ü™XÛÛ[Y[™ˆÛÛ[Y[H^ÛYY˜ÛÛ[Y[Â™[™Â‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XËœİX›Z]Ù]™[Ù™YY˜XÚÊ]ZY[^^
-HÈ]][XØ]YÂ‚‹KHÙ]Ù]™[Ù™YY˜XÚ×Üİ[[X\Nˆ:`bùe­¹d$xàdzfáº*"
-8à©8àæxàìøàâ8àe8àj8àk¹nlùgaú*ey/¨xàîÓ”ùa¡z*,ÊB˜Ü™X]HÜˆ™\XÙH[˜İ[ÛˆX›XË™Ù]Ù]™[Ù™YY˜XÚ×Üİ[[X\J
-Bœ™]\›œÈX›Jˆ]™[ÚY]ZYˆ]H^ˆ]™[Ù]H]Kˆ™\ÜÛœÙWØÛİ[[ˆ]™×Ü˜][™È[Y\šXËˆ›Û[İ\œÈ[ˆ™]]˜[È[ˆ]˜XİÜœÈ[ˆœÈ[ŠB›[™İXYÙHÜ[œÙXİ\š]HYš[™\ˆÙ]ÙX\˜ÚÜ]HX›XÂœİX›B˜\È		ˆÙ[XİˆKšYˆK]KˆK™]™[Ù]KˆÛİ[
-‹šY
-Nš[\È™\ÜÛœÙWØÛİ[ˆ›İ[™
-]™Ê‹œ˜][™ÊN›[Y\šXËJH\È]™×Ü˜][™ËˆÛİ[
+grant execute on function public.get_my_capital_summary() to authenticated;
 
-ŠHš[\ˆ
-Ú\™H‹Ûİ[Ü™XÛÛ[Y[™H	ŞY\ÉÊNš[\È›Û[İ\œËˆÛİ[
+-- ============================================================
+-- get_upcoming_events_public: æœªãƒ­ã‚°ã‚¤ãƒ³ã§ã‚‚è¦‹ã‚‰ã‚Œã‚‹å…¬é–‹ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ±
+-- (AIãƒãƒ£ãƒƒãƒˆãƒœãƒƒãƒˆãŒæœ€æ–°ã®é–‹å‚¬äºˆå®šã‚’ç­”ãˆã‚‰ã‚Œã‚‹ã‚ˆã†ã«ã™ã‚‹ãŸã‚ã®æœ€å°é™ã®å…¬é–‹ãƒ“ãƒ¥ãƒ¼)
+-- ============================================================
+create or replace function public.get_upcoming_events_public()
+returns table(
+  title text,
+  event_date date,
+  start_time time,
+  venue text,
+  description text,
+  fee_note text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select title, event_date, start_time, venue, description, fee_note
+  from public.events
+  where event_date >= current_date
+    and status in ('upcoming','closed')
+  order by event_date asc
+  limit 5;
+$$;
 
-ŠHš[\ˆ
-Ú\™H‹Ûİ[Ü™XÛÛ[Y[™H	Û™]]˜[	ÊNš[\È™]]˜[ËˆÛİ[
+grant execute on function public.get_upcoming_events_public() to anon, authenticated;
 
-ŠHš[\ˆ
-Ú\™H‹Ûİ[Ü™XÛÛ[Y[™H	Û›ÉÊNš[\È]˜XİÜœËˆØ\ÙHÚ[ˆÛİ[
-‹šY
-HH[ˆˆ[ÙH›İ[™
-ˆ
-Ûİ[
+-- ============================================================
+-- support_inquiries: AIãƒãƒ£ãƒƒãƒˆãƒœãƒƒãƒˆçµŒç”±ã®ã€Œé€šå ±ã€ã€Œé‹å–¶ã¸ã®å•ã„åˆã‚ã›ã€
+-- æœªãƒ­ã‚°ã‚¤ãƒ³(anon)ã®æ¥å ´è€…ã§ã‚‚é€ä¿¡ã§ãã‚‹ã‚ˆã†ã€insert ã¯ anon ã«ã‚‚è¨±å¯ã™ã‚‹ã€‚
+-- é–²è¦§ãƒ»æ›´æ–°(å¯¾å¿œçŠ¶æ³ã®å¤‰æ›´)ã¯é‹å–¶(admin)ã®ã¿ã€‚æœ¬äººã¯è‡ªåˆ†ãŒé€ã£ãŸåˆ†ã ã‘é–²è¦§å¯ã€‚
+-- ============================================================
+create table if not exists public.support_inquiries (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('report','contact')),
+  participant_id uuid references public.profiles(id) on delete set null,
+  contact_name text,
+  contact_email text,
+  summary text not null,
+  details text,
+  is_business_hours boolean,
+  status text not null default 'open' check (status in ('open','in_progress','resolved')),
+  created_at timestamptz not null default now(),
+  resolved_at timestamptz,
+  resolved_by uuid references public.profiles(id) on delete set null
+);
 
-ŠHš[\ˆ
-Ú\™H‹Ûİ[Ü™XÛÛ[Y[™H	ŞY\ÉÊN›[Y\šXÂˆHÛİ[
+create index if not exists support_inquiries_status_created_idx
+  on public.support_inquiries (status, created_at desc);
 
-ŠHš[\ˆ
-Ú\™H‹Ûİ[Ü™XÛÛ[Y[™H	Û›ÉÊN›[Y\šXÊBˆÈÛİ[
-‹šY
-H
-ˆLˆ
-Nš[ˆ[™\ÈœÂˆœ›ÛHX›XË™]™[ÈBˆY›Ú[ˆX›XË™]™[Ù™YY˜XÚÈˆÛˆ‹™]™[ÚYHKšYˆÚ\™HX›XËš\×ØYZ[Š
-BˆÜ›İ\HKšYK]KK™]™[Ù]Bˆ]š[™ÈÛİ[
-‹šY
-HˆˆÜ™\ˆHK™]™[Ù]H\ØÎÂ‰	Â‚™Ü˜[^Xİ]HÛˆ[˜İ[ÛˆX›XË™Ù]Ù]™[Ù™YY˜XÚ×Üİ[[X\J
-HÈ]][XØ]YÂ‚‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‹KHYZ[—Û›İ\Îˆ:`bùe­¸àèxàìøàä8àï8àc9cà¹b¨: !xàjù«¢øàfxàèxàè¸àîøàåxàªxàëxàï8à¨¸ààøàåÂ‹KHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB˜Ü™X]HX›HYˆ›İ^\İÈX›XË˜YZ[—Û›İ\È
-ˆY]ZYš[X\HÙ^HY˜][Ù[—Ü˜[™ÛWİ]ZY
+alter table public.support_inquiries enable row level security;
 
-Kˆ\XÚ\[ÚY]ZY›İ[™Y™\™[˜Ù\ÈX›XËœ›Ùš[\ÊY
-HÛˆ[]HØ\ØØYKˆ]]Ü—ÚY]ZY™Y™\™[˜Ù\ÈX›XËœ›Ùš[\ÊY
-HÛˆ[]HÙ][ˆ›İH^›İ[ˆÜ™X]YØ][Y\İ[\ˆ›İ[Y˜][›İÊ
-BŠNÂ‚˜Ü™X]H[™^Yˆ›İ^\İÈYZ[—Û›İ\×Ü\XÚ\[ÚYÛˆX›XË˜YZ[—Û›İ\Ê\XÚ\[ÚYÜ™X]YØ]\ØÊNÂ‚˜[\ˆX›HX›XË˜YZ[—Û›İ\È[˜X›H›İÈ]™[ÙXİ\š]NÂ‚™›ÜÛXŞHYˆ^\İÈYZ[—Û›İ\×ØYZ[—Ø[ÛˆX›XË˜YZ[—Û›İ\ÎÂ˜Ü™X]HÛXŞHYZ[—Û›İ\×ØYZ[—Ø[ÛˆX›XË˜YZ[—Û›İ\Âˆ›Üˆ[\Ú[™È
-X›XËš\×ØYZ[Š
-JHÚ]ÚXÚÈ
-X›XËš\×ØYZ[Š
-JNÂ‚™Ü˜[Ù[Xİ[œÙ\[]HÛˆX›XË˜YZ[—Û›İ\ÈÈ]][XØ]YÂ‚‹KHÙ]Ü\XÚ\[ØYZ[—Üİ[[X\Nˆ:`bùe­¹d$xàdxà yânyk¦¹cà¹aªˆ^8îXø.XªZéş{‹î8+^89î8: ¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ævWE÷'F–6—çEöFÖ–å÷7VÖÖ'’‡÷'F–6—çEö–BWV–B§&WGW&ç2F&ÆR€¢WfVçG5öGFVæFVB–çBÀ¢Æ7EöGFVæFVEöBF–ÖW7F×G¢À¢ÖF6†W5ö6÷VçB–çBÀ¢ÖW76vW5ö6÷VçB–ç@¢¦ÆæwVvR7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0§7F&ÆP¦2B@¢v—F‚GB2€¢6VÆV7B6÷VçB‚¢“£¦–çB22ÂÖ‚†6†V6¶VEö–åöB’2Æ7Eö@¢g&öÒV&Æ–2æGFVæFæ6P¢v†W&R'F–6—çEö–BÒ÷'F–6—çEö–BæB6†V6¶VEö–åöB—2æ÷BçVÆÀ¢’À¢6öæâ2€¢6VÆV7BçFõö–B2'FæW%ö–@¢g&öÒV&Æ–2æÆ–¶W2¢¦ö–âV&Æ–2æÆ–¶W2 ¢öâæWfVçEö–BÒ"æWfVçEö–BæBæg&öÕö–BÒ"çFõö–BæBçFõö–BÒ"æg&öÕö–@¢v†W&Ræg&öÕö–BÒ÷'F–6—çEö–@¢w&÷W'’çFõö–@¢’À¢×6r2€¢6VÆV7B6÷VçB‚¢“£¦–çB22g&öÒV&Æ–2æÖW76vW0¢v†W&R6VæFW%ö–BÒ÷'F–6—çEö–B÷"&V6—–VçEö–BÒ÷'F–6—çEö–@¢¢6VÆV7@¢6öÆW66R‚‡6VÆV7B2g&öÒGB’Â’À¢‡6VÆV7BÆ7EöBg&öÒGB’À¢6öÆW66R‚‡6VÆV7B6÷VçB‚¢“£¦–çBg&öÒ6öæâ’Â’À¢6öÆW66R‚‡6VÆV7B2g&öÒ×6r’Â¢v†W&RV&Æ–2æ—5öFÖ–â‚“°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ævWE÷'F–6—çEöFÖ–å÷7VÖÖ'’‡WV–B’FòWF†VçF–6FVC° ¢ÒÒvWE÷'F–6—çEö7F—f—G“¢˜¾YknY	88XZXø.Xªˆ^8îiÈ{X.Xø.Xªiz^8;¾{JşŠˆXø.XªY¹îi[KˆŠj~8îKÉyÊXŠNZé®8¾KÛş8b¦7&VFR÷"&WÆ6RgVæ7F–öâV&Æ–2ævWE÷'F–6—çEö7F—f—G’‚§&WGW&ç2F&ÆR€¢'F–6—çEö–BWV–BÀ¢Æ7EöGFVæFVEöBF–ÖW7F×G¢À¢WfVçG5öGFVæFVB–ç@¢¦ÆæwVvR7À§6V7W&—G’FVf–æW"6WB6V&6…÷F‚ÒV&Æ–0§7F&ÆP¦2B@¢6VÆV7@¢ç'F–6—çEö–BÀ¢Ö‚†æ6†V6¶VEö–åöB’2Æ7EöGFVæFVEöBÀ¢6÷VçB†æ–B“£¦–çB2WfVçG5öGFVæFV@¢g&öÒV&Æ–2æGFVæFæ6R¢v†W&RV&Æ–2æ—5öFÖ–â‚’æBæ6†V6¶VEö–åöB—2æ÷BçVÆÀ¢w&÷W'’ç'F–6—çEö–C°¢BC° ¦w&çBW†V7WFRöâgVæ7F–öâV&Æ–2ævWE÷'F–6—çEö7F—f—G’‚’FòWF†VçF–6FVC° ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¢ÒÒ'W6–æW75ö6&G3¢YŞX‹®8î88~8+8+ş8:¾XÉb„ô5.h«ŞX{®{YiéÎ8îKùŞZÙ8.yK¾X8ş8Ş8î8(.8î8şKùŞZÙ8~8®8B¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFRF&ÆR–bæ÷BW†—7G2V&Æ–2æ'W6–æW75ö6&G2€¢–BWV–B&–Ö'’¶W’FVfVÇBvVå÷&æFöÕ÷WV–B‚’À¢÷væW%ö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR666FRÀ¢æÖRFW‡BÀ¢6ö×ç’FW‡BÀ¢¦ö%÷F—FÆRFW‡BÀ¢†öæRFW‡BÀ¢VÖ–ÂFW‡BÀ¢æ÷FRFW‡BÀ¢7&VFVEöBF–ÖW7F×G¢æ÷BçVÆÂFVfVÇBæ÷r‚¢“° ¦7&VFR–æFW‚–bæ÷BW†—7G2'W6–æW75ö6&G5ö÷væW%ö–G‚öâV&Æ–2æ'W6–æW75ö6&G2†÷væW%ö–BÂ7&VFVEöBFW62“° ¦ÇFW"F&ÆRV&Æ–2æ'W6–æW75ö6&G2Væ&ÆR&÷rÆWfVÂ6V7W&—G“° ¦G&÷öÆ–7’–bW†—7G2'W6–æW75ö6&G5ö÷væW%öÆÂöâV&Æ–2æ'W6–æW75ö6&G3°¦7&VFRöÆ–7’'W6–æW75ö6&G5ö÷væW%öÆÂöâV&Æ–2æ'W6–æW75ö6&G0¢f÷"ÆÂW6–ær†÷væW%ö–BÒWF‚çV–B‚’’v—F‚6†V6²†÷væW%ö–BÒWF‚çV–B‚’“° ¦w&çB6VÆV7BÂ–ç6W'BÂWFFRÂFVÆWFRöâV&Æ–2æ'W6–æW75ö6&G2FòWF†VçF–6FVC° ¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¢ÒÒ÷7G2ò÷7EöÆ–¶W3¢KªNkXKÉ®8îY™i>8).Yø¾8(8(¾8+>89ş8:^88¾88n8*>89^8:>8;Î88¢ÒÒÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓĞ¦7&VFRF&ÆR–bæ÷BW†—7G2V&Æ–2ç÷7G2€¢–BWV–B&–Ö'’¶W’FVfVÇBvVå÷&æFöÕ÷WV–B‚’À¢WF†÷%ö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR666FRÀ¢6öçFVçBFW‡Bæ÷BçVÆÂÀ¢7&VFVEöBF–ÖW7F×G¢æ÷BçVÆÂFVfVÇBæ÷r‚¢“° ¦7&VFR–æFW‚–bæ÷BW†—7G2÷7G5ö7&VFVEö–G‚öâV&Æ–2ç÷7G2†7&VFVEöBFW62“° ¦ÇFW"F&ÆRV&Æ–2ç÷7G2Væ&ÆR&÷rÆWfVÂ6V7W&—G“° ¦G&÷öÆ–7’–bW†—7G2÷7G5÷6VÆV7EöWF†VçF–6FVBöâV&Æ–2ç÷7G3°¦7&VFRöÆ–7’÷7G5÷6VÆV7EöWF†VçF–6FVBöâV&Æ–2ç÷7G0¢f÷"6VÆV7BFòWF†VçF–6FVBW6–ær‡G'VR“° ¦G&÷öÆ–7’–bW†—7G2÷7G5ö–ç6W'Eö÷vâöâV&Æ–2ç÷7G3°¦7&VFRöÆ–7’÷7G5ö–ç6W'Eö÷vâöâV&Æ–2ç÷7G0¢f÷"–ç6W'BFòWF†VçF–6FVBv—F‚6†V6²†WF†÷%ö–BÒWF‚çV–B‚’“° ¦G&÷öÆ–7’–bW†—7G2÷7G5öFVÆWFUö÷våö÷%öFÖ–âöâV&Æ–2ç÷7G3¶7&VFRöÆ–7’÷7G5öFVÆWFUö÷våö÷%öFÖ–âöâV&Æ–2ç÷7G0¢f÷"FVÆWFRW6–ær†WF†÷%ö–BÒWF‚çV–B‚’÷"V&Æ–2æ—5öFÖ–â‚’“° ¦w&çB6VÆV7BÂ–ç6W'BÂFVÆWFRöâV&Æ–2ç÷7G2FòWF†VçF–6FVC° ¦7&VFRF&ÆR–bæ÷BW†—7G2V&Æ–2ç÷7EöÆ–¶W2€¢÷7Eö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2ç÷7G2†–B’öâFVÆWFR666FRÀ¢'F–6—çEö–BWV–Bæ÷BçVÆÂ&VfW&Væ6W2V&Æ–2ç&öf–ÆW2†–B’öâFVÆWFR666FRÀ¢7&VFVEöBF–ÖW7F×G¢æ÷BçVÆÂFVfVÇBæ÷r‚’À¢&–Ö'’¶W’‡÷7Eö–BÂ'F–6—çEö–B¢“° ¦ÇFW"F&ÆRV&Æ–2ç÷7EöÆ–¶W2Væ&ÆR&÷rÆWfVÂ6V7W&—G“° ¦G&÷öÆ–7’–bW†—7G2÷7EöÆ–¶W5÷6VÆV7EöWF†VçF–6FVBöâV&Æ–2ç÷7EöÆ–¶W3°¦7&VFRöÆ–7’÷7EöÆ–¶W5÷6VÆV7EöWF†VçF–6FVBöâV&Æ–2ç÷7EöÆ–¶W0¢f÷"6VÆV7BFòWF†VçF–6FVBW6–ær‡G'VR“° ¦G&÷öÆ–7’–bW†—7G2÷7EöÆ–¶W5ö–ç6W'Eö÷vâöâV&Æ–2ç÷7EöÆ–¶W3°¦7&VFRöÆ–7’÷7EöÆ–¶W5ö–ç6W'Eö÷vâöâV&Æ–2ç÷7EöÆ–¶W0¢f÷"–ç6W'BFòWF†VçF–6FVBv—F‚6†V6²‡'F–6—çEö–BÒWF‚çV–B‚’“° ¦G&÷öÆ–7’–bW†—7G2÷7EöÆ–¶W5öFVÆWFUö÷vâöâV&Æ–2ç÷7EöÆ–¶W3°¦7&VFRöÆ–7’÷7EöÆ–¶W5öFVÆWFUö÷vâöâV&Æ–2ç÷7EöÆ–¶W0¢f÷"FVÆWFRW6–ær‡'F–6—çEö–BÒWF‚çV–B‚’“° ¦w&çB6VÆV7BÂ–ç6W'BÂFVÆWFRöâV&Æ–2ç÷7EöÆ–¶W2FòWF†VçF–6FVC° ¢ÒÒvWEöfVVE÷÷7G3¢89^8*>8;Î8+hGRKˆŠjr‰~ˆ^h8^Z8;¾8N8N8Şi[8;¾ˆz®Xˆn8N8N8Şkˆ8ş8²¦7&VFR÷"
+-- insert: èª°ã§ã‚‚é€ä¿¡å¯(anonå«ã‚€)ã€‚ãƒ­ã‚°ã‚¤ãƒ³ä¸­ã¯è‡ªåˆ†ã® participant_id ã®ã¿æŒ‡å®šå¯èƒ½ã€‚
+drop policy if exists support_inquiries_insert_any on public.support_inquiries;
+create policy support_inquiries_insert_any on public.support_inquiries
+  for insert to anon, authenticated
+  with check (participant_id is null or participant_id = auth.uid());
+
+-- select: é‹å–¶ã¯å…¨ä»¶ã€æœ¬äººã¯è‡ªåˆ†ãŒé€ä¿¡ã—ãŸåˆ†ã®ã¿
+drop policy if exists support_inquiries_select_own_or_admin on public.support_inquiries;
+create policy support_inquiries_select_own_or_admin on public.support_inquiries
+  for select using (
+    public.is_admin()
+    or (participant_id is not null and participant_id = auth.uid())
+  );
+
+-- update: å¯¾å¿œçŠ¶æ³ã®å¤‰æ›´ã¯é‹å–¶ã®ã¿
+drop policy if exists support_inquiries_update_admin on public.support_inquiries;
+create policy support_inquiries_update_admin on public.support_inquiries
+  for update using (public.is_admin()) with check (public.is_admin());
+
+grant insert on public.support_inquiries to anon, authenticated;
+grant select, update on public.support_inquiries to authenticated;
+
+-- é‹å–¶å‘ã‘: å¯¾å¿œæ¸ˆã¿ã«ã™ã‚‹
+create or replace function public.resolve_support_inquiry(inquiry_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'admin only';
+  end if;
+  update public.support_inquiries
+  set status = 'resolved', resolved_at = now(), resolved_by = auth.uid()
+  where id = inquiry_id;
+end;
+$$;
+
+grant execute on function public.resolve_support_inquiry(uuid) to authenticated;
+
+-- ============================================================
+-- event_feedback: å‚åŠ å¾Œã‚¢ãƒ³ã‚±ãƒ¼ãƒˆ(æº€è¶³åº¦ãƒ»NPSãƒ»è‡ªç”±è¨˜è¿°)
+-- ============================================================
+create table if not exists public.event_feedback (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  rating int not null check (rating between 1 and 5),
+  would_recommend text not null check (would_recommend in ('yes', 'neutral', 'no')),
+  comment text,
+  created_at timestamptz not null default now(),
+  unique (event_id, participant_id)
+);
+
+create index if not exists event_feedback_event_idx on public.event_feedback(event_id);
+
+alter table public.event_feedback enable row level security;
+
+drop policy if exists event_feedback_insert_own on public.event_feedback;
+create policy event_feedback_insert_own on public.event_feedback
+  for insert to authenticated
+  with check (participant_id = auth.uid());
+
+drop policy if exists event_feedback_update_own on public.event_feedback;
+create policy event_feedback_update_own on public.event_feedback
+  for update to authenticated
+  using (participant_id = auth.uid())
+  with check (participant_id = auth.uid());
+
+drop policy if exists event_feedback_select_own_or_admin on public.event_feedback;
+create policy event_feedback_select_own_or_admin on public.event_feedback
+  for select using (participant_id = auth.uid() or public.is_admin());
+
+grant insert, update, select on public.event_feedback to authenticated;
+
+-- get_pending_feedback_events: è‡ªåˆ†ãŒå‚åŠ ã—ãŸ(é–‹å‚¬æ—¥ãŒéããŸ)ã€ã¾ã ã‚¢ãƒ³ã‚±ãƒ¼ãƒˆæœªå›ç­”ã®äº¤æµä¼š
+create or replace function public.get_pending_feedback_events()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select e.id, e.title, e.event_date
+  from public.events e
+  join public.registrations r on r.event_id = e.id
+  where r.participant_id = auth.uid()
+    and r.attending = true
+    and e.event_date < current_date
+    and not exists (
+      select 1 from public.event_feedback f
+      where f.event_id = e.id and f.participant_id = auth.uid()
+    )
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_pending_feedback_events() to authenticated;
+
+-- submit_event_feedback: ã‚¢ãƒ³ã‚±ãƒ¼ãƒˆé€ä¿¡/æ›´æ–°
+create or replace function public.submit_event_feedback(
+  p_event_id uuid,
+  p_rating int,
+  p_would_recommend text,
+  p_comment text
+)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.event_feedback (event_id, participant_id, rating, would_recommend, comment)
+  values (p_event_id, auth.uid(), p_rating, p_would_recommend, nullif(p_comment, ''))
+  on conflict (event_id, participant_id)
+  do update set
+    rating = excluded.rating,
+    would_recommend = excluded.would_recommend,
+    comment = excluded.comment;
+end;
+$$;
+
+grant execute on function public.submit_event_feedback(uuid, int, text, text) to authenticated;
+
+-- get_event_feedback_summary: é‹å–¶å‘ã‘é›†è¨ˆ(ã‚¤ãƒ™ãƒ³ãƒˆã”ã¨ã®å¹³å‡è©•ä¾¡ãƒ»NPSå†…è¨³)
+create or replace function public.get_event_feedback_summary()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date,
+  response_count int,
+  avg_rating numeric,
+  promoters int,
+  neutrals int,
+  detractors int,
+  nps int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    e.id,
+    e.title,
+    e.event_date,
+    count(f.id)::int as response_count,
+    round(avg(f.rating)::numeric, 1) as avg_rating,
+    count(*) filter (where f.would_recommend = 'yes')::int as promoters,
+    count(*) filter (where f.would_recommend = 'neutral')::int as neutrals,
+    count(*) filter (where f.would_recommend = 'no')::int as detractors,
+    case when count(f.id) = 0 then 0
+      else round(
+        (count(*) filter (where f.would_recommend = 'yes')::numeric
+         - count(*) filter (where f.would_recommend = 'no')::numeric)
+        / count(f.id) * 100
+      )::int
+    end as nps
+  from public.events e
+  left join public.event_feedback f on f.event_id = e.id
+  where public.is_admin()
+  group by e.id, e.title, e.event_date
+  having count(f.id) > 0
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_event_feedback_summary() to authenticated;
+
+-- ============================================================
+-- admin_notes: é‹å–¶ãƒ¡ãƒ³ãƒãƒ¼ãŒå‚åŠ è€…ã«æ®‹ã™ãƒ¡ãƒ¢ãƒ»ãƒ•ã‚©ãƒ­ãƒ¼ã‚¢ãƒƒãƒ—
+-- ============================================================
+create table if not exists public.admin_notes (
+  id uuid primary key default gen_random_uuid(),
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  author_id uuid references public.profiles(id) on delete set null,
+  note text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists admin_notes_participant_idx on public.admin_notes(participant_id, created_at desc);
+
+alter table public.admin_notes enable row level security;
+
+drop policy if exists admin_notes_admin_all on public.admin_notes;
+create policy admin_notes_admin_all on public.admin_notes
+  for all using (public.is_admin()) with check (public.is_admin());
+
+grant select, insert, delete on public.admin_notes to authenticated;
+
+-- get_participant_admin_summary: é‹å–¶å‘ã‘ã€ç‰¹å®šå‚åŠ è€…ã®å‚åŠ å®Ÿç¸¾ã‚µãƒãƒª
+create or replace function public.get_participant_admin_summary(p_participant_id uuid)
+returns table(
+  events_attended int,
+  last_attended_at timestamptz,
+  matches_count int,
+  messages_count int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, max(checked_in_at) as last_at
+    from public.attendance
+    where participant_id = p_participant_id and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    where a.from_id = p_participant_id
+    group by a.to_id
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = p_participant_id or recipient_id = p_participant_id
+  )
+  select
+    coalesce((select c from att), 0),
+    (select last_at from att),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0)
+  where public.is_admin();
+$$;
+
+grant execute on function public.get_participant_admin_summary(uuid) to authenticated;
+
+-- get_participant_activity: é‹å–¶å‘ã‘ã€å…¨å‚åŠ è€…ã®æœ€çµ‚å‚åŠ æ—¥ãƒ»ç´¯è¨ˆå‚åŠ å›æ•°(ä¸€è¦§ã®ä¼‘çœ åˆ¤å®šã«ä½¿ã†)
+create or replace function public.get_participant_activity()
+returns table(
+  participant_id uuid,
+  last_attended_at timestamptz,
+  events_attended int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    a.participant_id,
+    max(a.checked_in_at) as last_attended_at,
+    count(a.id)::int as events_attended
+  from public.attendance a
+  where public.is_admin() and a.checked_in_at is not null
+  group by a.participant_id;
+$$;
+
+grant execute on function public.get_participant_activity() to authenticated;
+
+-- ============================================================
+-- business_cards: ååˆºã®ãƒ‡ã‚¸ã‚¿ãƒ«åŒ–(OCRæŠ½å‡ºçµæœã®ä¿å­˜ã€‚ç”»åƒãã®ã‚‚ã®ã¯ä¿å­˜ã—ãªã„)
+-- ============================================================
+create table if not exists public.business_cards (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  name text,
+  company text,
+  job_title text,
+  phone text,
+  email text,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists business_cards_owner_idx on public.business_cards(owner_id, created_at desc);
+
+alter table public.business_cards enable row level security;
+
+drop policy if exists business_cards_owner_all on public.business_cards;
+create policy business_cards_owner_all on public.business_cards
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+grant select, insert, update, delete on public.business_cards to authenticated;
+
+-- ============================================================
+-- posts / post_likes: äº¤æµä¼šã®åˆé–“ã‚’åŸ‹ã‚ã‚‹ã‚³ãƒŸãƒ¥ãƒ‹ãƒ†ã‚£ãƒ•ã‚£ãƒ¼ãƒ‰
+-- ============================================================
+create table if not exists public.posts (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists posts_created_idx on public.posts(created_at desc);
+
+alter table public.posts enable row level security;
+
+drop policy if exists posts_select_authenticated on public.posts;
+create policy posts_select_authenticated on public.posts
+  for select to authenticated using (true);
+
+drop policy if exists posts_insert_own on public.posts;
+create policy posts_insert_own on public.posts
+  for insert to authenticated with check (author_id = auth.uid());
+
+drop policy if exists posts_delete_own_or_admin on public.posts;
+create policy posts_delete_own_or_admin on public.posts
+  for delete using (author_id = auth.uid() or public.is_admin());
+
+grant select, insert, delete on public.posts to authenticated;
+
+create table if not exists public.post_likes (
+  post_id uuid not null references public.posts(id) on delete cascade,
+  participant_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, participant_id)
+);
+
+alter table public.post_likes enable row level security;
+
+drop policy if exists post_likes_select_authenticated on public.post_likes;
+create policy post_likes_select_authenticated on public.post_likes
+  for select to authenticated using (true);
+
+drop policy if exists post_likes_insert_own on public.post_likes;
+create policy post_likes_insert_own on public.post_likes
+  for insert to authenticated with check (participant_id = auth.uid());
+
+drop policy if exists post_likes_delete_own on public.post_likes;
+create policy post_likes_delete_own on public.post_likes
+  for delete using (participant_id = auth.uid());
+
+grant select, insert, delete on public.post_likes to authenticated;
+
+-- get_feed_posts: ãƒ•ã‚£ãƒ¼ãƒ‰ä¸€è¦§(è‘—è€…æƒ…å ±ãƒ»ã„ã„ã­æ•°ãƒ»è‡ªåˆ†ãŒã„ã„ã­æ¸ˆã¿ã‹)
+create or replace function public.get_feed_posts(p_limit int default 50)
+returns table(
+  post_id uuid,
+  content text,
+  created_at timestamptz,
+  author_id uuid,
+  author_name text,
+  author_company text,
+  like_count int,
+  liked_by_me boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.content,
+    p.created_at,
+    p.author_id,
+    prof.name,
+    prof.company,
+    (select count(*)::int from public.post_likes l where l.post_id = p.id) as like_count,
+    exists(
+      select 1 from public.post_likes l2
+      where l2.post_id = p.id and l2.participant_id = auth.uid()
+    ) as liked_by_me
+  from public.posts p
+  join public.profiles prof on prof.id = p.author_id
+  order by p.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_feed_posts(int) to authenticated;
+
+-- ============================================================
+-- é‹å–¶ã‚³ãƒ¼ãƒ‰(å…±é€šã‚³ãƒ¼ãƒ‰)ã«ã‚ˆã‚‹ç®¡ç†è€…è‡ªå·±æ˜‡æ ¼ + ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ç”»åƒ (2026-09)
+-- ============================================================
+
+-- profiles.role ã‚’ä¸æ­£ãªç›´æ¥æ›´æ–°ã‹ã‚‰ä¿è­·ã™ã‚‹ã€‚
+-- ã“ã‚Œã¾ã§ã¯ profiles_update_own_or_admin ãƒãƒªã‚·ãƒ¼ã«åˆ—å˜ä½ã®åˆ¶é™ãŒãªãã€
+-- èªè¨¼æ¸ˆã¿ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒè‡ªåˆ†è‡ªèº«ã® role ã‚’ç›´æ¥ 'admin' ã«æ›¸ãæ›ãˆã‚‰ã‚Œã¦ã—ã¾ã†
+-- éš™é–“ãŒã‚ã£ãŸãŸã‚ã€ãƒˆãƒªã‚¬ãƒ¼ã§å¡ãã€‚
+-- è¨±å¯ã•ã‚Œã‚‹ã®ã¯ (a) ç®¡ç†è€…è‡ªèº«ã«ã‚ˆã‚‹UIçµŒç”±ã®æ›´æ–° (is_admin()) ã¨
+-- (b) ã‚µãƒ¼ãƒãƒ¼å´ã® service_role ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆçµŒç”±ã®æ›´æ–°
+-- (é‹å–¶ã‚³ãƒ¼ãƒ‰ã«ã‚ˆã‚‹è‡ªå·±æ˜‡æ ¼ãƒ»Stripe/Slackç­‰ã®ã‚µãƒ¼ãƒãƒ¼å‡¦ç†) ã®ã¿ã€‚
+create or replace function public.protect_profile_role_field()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if auth.role() = 'service_role' or public.is_admin() then
+    return new;
+  end if;
+  new.role := old.role;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_role_field_trigger on public.profiles;
+create trigger protect_profile_role_field_trigger
+  before update on public.profiles
+  for each row execute procedure public.protect_profile_role_field();
+
+-- ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ç”»åƒ
+alter table public.profiles
+  add column if not exists avatar_url text;
+
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists avatars_public_read on storage.objects;
+create policy avatars_public_read on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists avatars_insert_own on storage.objects;
+create policy avatars_insert_own on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_update_own on storage.objects;
+create policy avatars_update_own on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_delete_own on storage.objects;
+create policy avatars_delete_own on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ä»¥ä¸‹ã€ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ç”»åƒã‚’ã‚¢ãƒ—ãƒªå†…ã®å„æ‰€(ãƒãƒƒãƒãƒ³ã‚°ãƒ»åç°¿ãƒ»ãƒãƒ£ãƒƒãƒˆãƒ»ãƒ•ã‚£ãƒ¼ãƒ‰)ã«
+-- è¡¨ç¤ºã™ã‚‹ãŸã‚ã€æ—¢å­˜ã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«å‚ç…§RPCã‚’ avatar_url è¾¼ã¿ã§å†å®šç¾©ã™ã‚‹ã€‚
+-- æˆ»ã‚Šå€¤ã®åˆ—æ§‹æˆ(RETURNS TABLE)ãŒå¤‰ã‚ã‚‹ãŸã‚ã€create or replace ã®å‰ã«
+-- ä¸€åº¦ drop function ã™ã‚‹å¿…è¦ãŒã‚ã‚‹(Postgresã®åˆ¶ç´„: æˆ»ã‚Šå€¤å‹ã¯ç½®ãæ›ãˆä¸å¯)ã€‚
+
+drop function if exists public.get_event_attendees(uuid);
+create or replace function public.get_event_attendees(p_event_id uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  already_liked boolean,
+  match_score int,
+  shared_tags text[],
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mine as (
+    select
+      coalesce(nullif(mine_r.connect_with_tags, '{}'::text[]), mine_p.connect_with_tags, '{}'::text[]) as tags,
+      mine_p.industry as industry
+    from public.profiles mine_p
+    left join public.registrations mine_r
+      on mine_r.event_id = p_event_id and mine_r.participant_id = auth.uid()
+    where mine_p.id = auth.uid()
+  )
+  select
+    r.participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    exists(
+      select 1 from public.likes l
+      where l.event_id = p_event_id
+        and l.from_id = auth.uid()
+        and l.to_id = r.participant_id
+    ) as already_liked,
+    (
+      cardinality(
+        array(
+          select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+          intersect
+          select unnest((select tags from mine))
+        )
+      ) * 10
+      + case
+          when (select industry from mine) is not null
+           and coalesce(nullif(r.industry, ''), p.industry) is not null
+           and (select industry from mine) = coalesce(nullif(r.industry, ''), p.industry)
+          then 5 else 0
+        end
+    )::int as match_score,
+    array(
+      select unnest(coalesce(nullif(r.connect_with_tags, '{}'::text[]), p.connect_with_tags, '{}'::text[]))
+      intersect
+      select unnest((select tags from mine))
+    ) as shared_tags,
+    p.avatar_url
+  from public.registrations r
+  join public.profiles p on p.id = r.participant_id
+  where r.event_id = p_event_id
+    and r.attending = true
+    and r.participant_id <> auth.uid()
+    and exists (
+      select 1 from public.registrations mine2
+      where mine2.event_id = p_event_id
+        and mine2.participant_id = auth.uid()
+        and mine2.attending = true
+    )
+  order by match_score desc, p.name nulls last;
+$$;
+
+grant execute on function public.get_event_attendees(uuid) to authenticated;
+
+drop function if exists public.get_member_directory();
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
+
+drop function if exists public.get_conversation_partner(uuid);
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text,
+  matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at,
+    p.avatar_url
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
+
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
+
+drop function if exists public.get_my_conversations();
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.event_id = b.event_id and a.from_id = b.to_id and a.to_id = b.from_id
+    join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at,
+    p.avatar_url
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
+
+grant execute on function public.get_my_conversations() to authenticated;
+
+drop function if exists public.get_feed_posts(int);
+create or replace function public.get_feed_posts(p_limit int default 50)
+returns table(
+  post_id uuid,
+  content text,
+  created_at timestamptz,
+  author_id uuid,
+  author_name text,
+  author_company text,
+  like_count int,
+  liked_by_me boolean,
+  author_avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.content,
+    p.created_at,
+    p.author_id,
+    prof.name,
+    prof.company,
+    (select count(*)::int from public.post_likes l where l.post_id = p.id) as like_count,
+    exists(
+      select 1 from public.post_likes l2
+      where l2.post_id = p.id and l2.participant_id = auth.uid()
+    ) as liked_by_me,
+    prof.avatar_url
+  from public.posts p
+  join public.profiles prof on prof.id = p.author_id
+  order by p.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_feed_posts(int) to authenticated;
+
+-- ============================================================
+-- ã‚¢ã‚«ã‚¦ãƒ³ãƒˆè‡ªå·±ç®¡ç†: ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹å¤‰æ›´ã‚’profilesã¸åŒæœŸ
+-- ============================================================
+-- æœ¬äººãŒãƒã‚¤ãƒšãƒ¼ã‚¸ã‹ã‚‰ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å¤‰æ›´ã™ã‚‹ã¨ã€Supabase Authã®ç¢ºèªãƒ•ãƒ­ãƒ¼ã‚’çµŒã¦
+-- auth.users.email ãŒå®Ÿéš›ã«æ›´æ–°ã•ã‚ŒãŸã‚¿ã‚¤ãƒŸãƒ³ã‚°ã§ã“ã®ãƒˆãƒªã‚¬ãƒ¼ãŒç™ºç«ã—ã€
+-- è¡¨ç¤ºç”¨ã«è¤‡è£½ã—ã¦ã„ã‚‹ public.profiles.email ã‚‚è¿½éšã•ã›ã‚‹ã€‚
+create or replace function public.handle_user_email_change()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.email is distinct from old.email then
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_email_updated on auth.users;
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute procedure public.handle_user_email_change();
+
+-- ============================================================
+-- åç°¿ã‹ã‚‰ã®ä¸€èˆ¬ãƒãƒƒãƒãƒ³ã‚°(äº¤æµä¼šã‚’ã¾ãŸãŒãªã„ã€Œè©±ã—ã¦ã¿ãŸã„ã€)
+-- + ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ä¿å­˜(ãƒ–ãƒƒã‚¯ãƒãƒ¼ã‚¯)æ©Ÿèƒ½ (2026-09-16)
+--
+-- ã“ã‚Œã¾ã§ likes ã¯ç‰¹å®šã®äº¤æµä¼š(event_id)ã«ç´ã¥ãç›¸æ‰‹ã«ã—ã‹é€ã‚Œãªã‹ã£ãŸãŸã‚ã€
+-- å‚åŠ è€…åç°¿(/members)ã‹ã‚‰ã¯ã€Œæ°—ã«ãªã‚‹äººã€ã«è©±ã—ã¦ã¿ãŸã„ã‚’é€ã‚Œãªã‹ã£ãŸã€‚
+-- event_id ã‚’ NULL è¨±å®¹ã«ã—ã¦ã€Œä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆã€ã‚’è¡¨ç¾ã§ãã‚‹ã‚ˆã†ã«ã—ã€
+-- æ—¢å­˜ã®ãƒãƒƒãƒãƒ³ã‚°ãƒ»ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¾ã‚ã‚Šã®é–¢æ•°ã‚’ã€ã“ã®ä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆã‚‚
+-- æ­£ã—ãé›†è¨ˆã§ãã‚‹ã‚ˆã†ã«å†å®šç¾©ã™ã‚‹(é–¢æ•°ã®æˆ»ã‚Šå€¤ã®åˆ—æ§‹æˆã¯å¤‰ãˆã¦ã„ãªã„ã‚‚ã®ã¯
+-- create or replace ã®ã¿ã€åˆ—ã‚’è¿½åŠ ã™ã‚‹ã‚‚ã®ã ã‘ drop ã—ã¦ã‹ã‚‰å†ä½œæˆã™ã‚‹)ã€‚
+-- ============================================================
+
+-- likes.event_id ã‚’ NULL è¨±å®¹ã«ã™ã‚‹(NULL = äº¤æµä¼šã‚’ã¾ãŸãŒãªã„ä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆ)
+alter table public.likes alter column event_id drop not null;
+
+-- é€šå¸¸ã® unique (event_id, from_id, to_id) ã¯ event_id ãŒ NULL ã®è¡ŒåŒå£«ã‚’
+-- åŒºåˆ¥ã—ã¦ã—ã¾ã†(SQLã®æ¨™æº–ä»•æ§˜ã§NULLåŒå£«ã¯é‡è¤‡ã¨ã¿ãªã•ã‚Œãªã„)ãŸã‚ã€
+-- ä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆã®é‡è¤‡é˜²æ­¢ã¯éƒ¨åˆ†ãƒ¦ãƒ‹ãƒ¼ã‚¯ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§åˆ¥é€”æ‹…ä¿ã™ã‚‹ã€‚
+create unique index if not exists likes_general_unique_idx
+  on public.likes (from_id, to_id) where event_id is null;
+
+-- is_matched_with: event_id ãŒä¸¡æ–¹NULLã®ä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆåŒå£«ã‚‚
+-- ç›¸äº’ãƒãƒƒãƒã¨ã—ã¦æ¤œå‡ºã§ãã‚‹ã‚ˆã†ã€çµåˆæ¡ä»¶ã‚’ "=" ã‹ã‚‰
+-- "is not distinct from" ã«å¤‰æ›´(NULLåŒå£«ã‚‚ä¸€è‡´ã¨ã¿ãªã™)ã€‚
+create or replace function public.is_matched_with(other_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists(
+    select 1 from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = auth.uid() and a.to_id = other_id
+  );
+$$;
+
+-- get_my_matches: ä¸€èˆ¬ãƒãƒƒãƒ(event_id ãŒ null)ã‚‚ä¸€è¦§ã«å«ã‚ã‚‹ã€‚
+-- event_title ã¯ä¸€èˆ¬ãƒãƒƒãƒã®å ´åˆ null ã‚’è¿”ã™ã€‚
+create or replace function public.get_my_matches()
+returns table(
+  event_id uuid,
+  event_title text,
+  participant_id uuid,
+  name text,
+  company text,
+  industry text,
+  connect_with text,
+  email text,
+  matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    a.event_id,
+    e.title as event_title,
+    a.to_id as participant_id,
+    p.name,
+    p.company,
+    coalesce(nullif(r.industry, ''), p.industry) as industry,
+    coalesce(nullif(r.connect_with, ''), p.connect_with) as connect_with,
+    p.email,
+    greatest(a.created_at, b.created_at) as matched_at
+  from public.likes a
+  join public.likes b
+    on a.from_id = b.to_id
+   and a.to_id = b.from_id
+   and a.event_id is not distinct from b.event_id
+  join public.profiles p on p.id = a.to_id
+  left join public.events e on e.id = a.event_id
+  left join public.registrations r
+    on r.event_id = a.event_id and r.participant_id = a.to_id
+  where a.from_id = auth.uid()
+  order by matched_at desc;
+$$;
+
+-- get_conversation_partner: ä¸€èˆ¬ãƒãƒƒãƒã® matched_at ã‚‚å–å¾—ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
+create or replace function public.get_conversation_partner(partner uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_title text,
+  industry text,
+  connect_with text,
+  matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    p.company,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    (
+      select greatest(a.created_at, b.created_at)
+      from public.likes a
+      join public.likes b
+        on a.from_id = b.to_id
+       and a.to_id = b.from_id
+       and a.event_id is not distinct from b.event_id
+      where a.from_id = auth.uid() and a.to_id = partner
+      order by greatest(a.created_at, b.created_at) desc
+      limit 1
+    ) as matched_at,
+    p.avatar_url
+  from public.profiles p
+  where p.id = partner
+    and public.is_matched_with(partner);
+$$;
+
+-- get_my_conversations: ä¸€èˆ¬ãƒãƒƒãƒã‚‚ä¼šè©±ä¸€è¦§ã«å«ã‚ã‚‹(matched_events ã¯
+-- ä¸€èˆ¬ãƒãƒƒãƒåˆ†ã‚’é™¤ã„ãŸäº¤æµä¼šåã®ã¿é›†è¨ˆã€‚ã‚¤ãƒ™ãƒ³ãƒˆåãŒã²ã¨ã¤ã‚‚ç„¡ã‘ã‚Œã° null)
+create or replace function public.get_my_conversations()
+returns table(
+  partner_id uuid,
+  name text,
+  company text,
+  job_title text,
+  last_message text,
+  last_message_at timestamptz,
+  last_sender_id uuid,
+  unread_count int,
+  matched_events text[],
+  first_matched_at timestamptz,
+  avatar_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with mutual as (
+    select a.to_id as partner_id,
+           min(least(a.created_at, b.created_at)) as first_matched_at,
+           array_agg(distinct e.title order by e.title) filter (where e.title is not null) as matched_events
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    left join public.events e on e.id = a.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  last_msg as (
+    select distinct on (partner_id)
+      partner_id, content, created_at, sender_id
+    from (
+      select
+        case when sender_id = auth.uid() then recipient_id else sender_id end as partner_id,
+        content, created_at, sender_id
+      from public.messages
+      where sender_id = auth.uid() or recipient_id = auth.uid()
+    ) x
+    order by partner_id, created_at desc
+  ),
+  unread as (
+    select sender_id as partner_id, count(*)::int as cnt
+    from public.messages
+    where recipient_id = auth.uid() and read_at is null
+    group by sender_id
+  )
+  select
+    m.partner_id,
+    p.name,
+    p.company,
+    p.job_title,
+    lm.content as last_message,
+    lm.created_at as last_message_at,
+    lm.sender_id as last_sender_id,
+    coalesce(u.cnt, 0) as unread_count,
+    m.matched_events,
+    m.first_matched_at,
+    p.avatar_url
+  from mutual m
+  join public.profiles p on p.id = m.partner_id
+  left join last_msg lm on lm.partner_id = m.partner_id
+  left join unread u on u.partner_id = m.partner_id
+  order by coalesce(lm.created_at, m.first_matched_at) desc;
+$$;
+
+-- get_my_capital_summary: ã€Œã¤ãªãŒã£ãŸäººæ•°ã€ã«ä¸€èˆ¬ãƒãƒƒãƒã‚‚å«ã‚ã‚‹
+create or replace function public.get_my_capital_summary()
+returns table(
+  events_attended int,
+  connections_count int,
+  messages_count int,
+  first_attended_at timestamptz,
+  latest_partner_name text,
+  latest_matched_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, min(checked_in_at) as first_at
+    from public.attendance
+    where participant_id = auth.uid() and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id, min(least(a.created_at, b.created_at)) as matched_at
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = auth.uid()
+    group by a.to_id
+  ),
+  latest as (
+    select p.name, c.matched_at
+    from conn c
+    join public.profiles p on p.id = c.partner_id
+    order by c.matched_at desc
+    limit 1
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = auth.uid() or recipient_id = auth.uid()
+  )
+  select
+    coalesce((select c from att), 0),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0),
+    (select first_at from att),
+    (select name from latest),
+    (select matched_at from latest);
+$$;
+
+-- get_participant_admin_summary: é‹å–¶å‘ã‘ã‚µãƒãƒªã®ã€Œãƒãƒƒãƒæ•°ã€ã«ã‚‚ä¸€èˆ¬ãƒãƒƒãƒã‚’å«ã‚ã‚‹
+create or replace function public.get_participant_admin_summary(p_participant_id uuid)
+returns table(
+  events_attended int,
+  last_attended_at timestamptz,
+  matches_count int,
+  messages_count int
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  with att as (
+    select count(*)::int as c, max(checked_in_at) as last_at
+    from public.attendance
+    where participant_id = p_participant_id and checked_in_at is not null
+  ),
+  conn as (
+    select a.to_id as partner_id
+    from public.likes a
+    join public.likes b
+      on a.from_id = b.to_id
+     and a.to_id = b.from_id
+     and a.event_id is not distinct from b.event_id
+    where a.from_id = p_participant_id
+    group by a.to_id
+  ),
+  msg as (
+    select count(*)::int as c from public.messages
+    where sender_id = p_participant_id or recipient_id = p_participant_id
+  )
+  select
+    coalesce((select c from att), 0),
+    (select last_at from att),
+    coalesce((select count(*)::int from conn), 0),
+    coalesce((select c from msg), 0)
+  where public.is_admin();
+$$;
+
+grant execute on function public.is_matched_with(uuid) to authenticated;
+grant execute on function public.get_my_matches() to authenticated;
+grant execute on function public.get_conversation_partner(uuid) to authenticated;
+grant execute on function public.get_my_conversations() to authenticated;
+grant execute on function public.get_my_capital_summary() to authenticated;
+grant execute on function public.get_participant_admin_summary(uuid) to authenticated;
+
+-- ============================================================
+-- saved_profiles: åç°¿ã‹ã‚‰æ°—ã«ãªã‚‹å‚åŠ è€…ã‚’ä¿å­˜(ãƒ–ãƒƒã‚¯ãƒãƒ¼ã‚¯)ã™ã‚‹
+-- ============================================================
+create table if not exists public.saved_profiles (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  saved_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (owner_id, saved_id),
+  check (owner_id <> saved_id)
+);
+
+alter table public.saved_profiles enable row level security;
+
+drop policy if exists saved_profiles_owner_all on public.saved_profiles;
+create policy saved_profiles_owner_all on public.saved_profiles
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+grant select, insert, delete on public.saved_profiles to authenticated;
+
+-- toggle_saved_profile: ä¿å­˜ã™ã‚‹/è§£é™¤ã™ã‚‹
+drop function if exists public.toggle_saved_profile(uuid, boolean);
+create or replace function public.toggle_saved_profile(p_target uuid, p_save boolean)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if p_save then
+    insert into public.saved_profiles (owner_id, saved_id)
+    values (auth.uid(), p_target)
+    on conflict (owner_id, saved_id) do nothing;
+  else
+    delete from public.saved_profiles
+    where owner_id = auth.uid() and saved_id = p_target;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_saved_profile(uuid, boolean) to authenticated;
+
+-- toggle_general_like: åç°¿ã‹ã‚‰ã®ã€Œè©±ã—ã¦ã¿ãŸã„ã€ã‚’é€ã‚‹/å–ã‚Šæ¶ˆã™(äº¤æµä¼šã‚’ã¾ãŸãŒãªã„ä¸€èˆ¬ãƒªã‚¯ã‚¨ã‚¹ãƒˆ)
+drop function if exists public.toggle_general_like(uuid, boolean);
+create or replace function public.toggle_general_like(p_target uuid, p_like boolean)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if p_target = auth.uid() then
+    raise exception 'è‡ªåˆ†è‡ªèº«ã«ã¯ãƒªã‚¯ã‚¨ã‚¹ãƒˆã§ãã¾ã›ã‚“';
+  end if;
+  if p_like then
+    insert into public.likes (event_id, from_id, to_id)
+    values (null, auth.uid(), p_target)
+    on conflict (from_id, to_id) where event_id is null do nothing;
+  else
+    delete from public.likes
+    where from_id = auth.uid() and to_id = p_target and event_id is null;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_general_like(uuid, boolean) to authenticated;
+
+-- get_member_directory: ä¿å­˜æ¸ˆã¿ã‹ãƒ»è©±ã—ã¦ã¿ãŸã„é€ä¿¡æ¸ˆã¿ã‹ãƒ»ãƒãƒƒãƒæ¸ˆã¿ã‹ã‚’è¿½åŠ ã§è¿”ã™
+drop function if exists public.get_member_directory();
+create or replace function public.get_member_directory()
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text,
+  is_saved boolean,
+  already_liked boolean,
+  is_matched boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url,
+    exists(
+      select 1 from public.saved_profiles s
+      where s.owner_id = auth.uid() and s.saved_id = p.id
+    ) as is_saved,
+    exists(
+      select 1 from public.likes l
+      where l.from_id = auth.uid() and l.to_id = p.id and l.event_id is null
+    ) as already_liked,
+    public.is_matched_with(p.id) as is_matched
+  from public.profiles p
+  where p.role = 'participant'
+    and p.id <> auth.uid()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_member_directory() to authenticated;
+
+-- get_member_profile: åç°¿ã®1äººåˆ†ã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«è©³ç´°(/members/[id] ç”¨)
+drop function if exists public.get_member_profile(uuid);
+create or replace function public.get_member_profile(p_id uuid)
+returns table(
+  participant_id uuid,
+  name text,
+  company text,
+  job_type text,
+  job_title text,
+  industry text,
+  connect_with text,
+  connect_with_tags text[],
+  bio text,
+  events_attended int,
+  avatar_url text,
+  is_saved boolean,
+  already_liked boolean,
+  is_matched boolean
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    p.id as participant_id,
+    p.name,
+    p.company,
+    p.job_type,
+    p.job_title,
+    p.industry,
+    p.connect_with,
+    p.connect_with_tags,
+    p.bio,
+    (
+      select count(*)::int from public.registrations r
+      where r.participant_id = p.id and r.attending = true
+    ) as events_attended,
+    p.avatar_url,
+    exists(
+      select 1 from public.saved_profiles s
+      where s.owner_id = auth.uid() and s.saved_id = p.id
+    ) as is_saved,
+    exists(
+      select 1 from public.likes l
+      where l.from_id = auth.uid() and l.to_id = p.id and l.event_id is null
+    ) as already_liked,
+    public.is_matched_with(p.id) as is_matched
+  from public.profiles p
+  where p.id = p_id
+    and p.role = 'participant';
+$$;
+
+grant execute on function public.get_member_profile(uuid) to authenticated;
+
+-- ============================================================
+-- é€šçŸ¥æ©Ÿèƒ½(ã‚³ãƒŸãƒ¥ãƒ‹ãƒ†ã‚£ã®ã„ã„ã­ãƒ»ãƒãƒƒãƒæˆç«‹ãƒ»æ–°ç€äº¤æµä¼š) (2026-09-16 v2)
+-- ============================================================
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null,
+  title text not null,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_created_idx
+  on public.notifications(user_id, created_at desc);
+
+alter table public.notifications enable row level security;
+
+-- æŒ¿å…¥ã¯ä¸‹è¨˜ã®ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£å®šç¾©é–¢æ•°/ãƒˆãƒªã‚¬ãƒ¼çµŒç”±ã®ã¿(ãªã‚Šã™ã¾ã—é˜²æ­¢ã®ãŸã‚
+-- authenticated ãƒ­ãƒ¼ãƒ«ã¸ã® insert ãƒãƒªã‚·ãƒ¼ã¯ã‚ãˆã¦ç”¨æ„ã—ãªã„)
+drop policy if exists notifications_owner_select on public.notifications;
+create policy notifications_owner_select on public.notifications
+  for select using (user_id = auth.uid());
+
+drop policy if exists notifications_owner_update on public.notifications;
+create policy notifications_owner_update on public.notifications
+  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists notifications_owner_delete on public.notifications;
+create policy notifications_owner_delete on public.notifications
+  for delete using (user_id = auth.uid());
+
+grant select, update, delete on public.notifications to authenticated;
+
+drop function if exists public.get_my_notifications(int);
+create or replace function public.get_my_notifications(p_limit int default 30)
+returns table(
+  id uuid,
+  type text,
+  title text,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select n.id, n.type, n.title, n.body, n.link, n.read_at, n.created_at
+  from public.notifications n
+  where n.user_id = auth.uid()
+  order by n.created_at desc
+  limit p_limit;
+$$;
+
+grant execute on function public.get_my_notifications(int) to authenticated;
+
+drop function if exists public.get_unread_notification_count();
+create or replace function public.get_unread_notification_count()
+returns int
+language sql
+security definer set search_path = public
+stable
+as $$
+  select count(*)::int from public.notifications
+  where user_id = auth.uid() and read_at is null;
+$$;
+
+grant execute on function public.get_unread_notification_count() to authenticated;
+
+drop function if exists public.mark_notification_read(uuid);
+create or replace function public.mark_notification_read(p_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.notifications
+  set read_at = now()
+  where id = p_id and user_id = auth.uid() and read_at is null;
+end;
+$$;
+
+grant execute on function public.mark_notification_read(uuid) to authenticated;
+
+drop function if exists public.mark_all_notifications_read();
+create or replace function public.mark_all_notifications_read()
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.notifications
+  set read_at = now()
+  where user_id = auth.uid() and read_at is null;
+end;
+$$;
+
+grant execute on function public.mark_all_notifications_read() to authenticated;
+
+-- ã‚³ãƒŸãƒ¥ãƒ‹ãƒ†ã‚£æŠ•ç¨¿ã«ã„ã„ã­ãŒä»˜ã„ãŸã‚‰æŠ•ç¨¿è€…ã«é€šçŸ¥
+create or replace function public.notify_on_post_like()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_author uuid;
+  v_liker_name text;
+begin
+  select author_id into v_author from public.posts where id = new.post_id;
+  if v_author is null or v_author = new.participant_id then
+    return new;
+  end if;
+
+  select coalesce(name, 'ãƒ¡ãƒ³ãƒãƒ¼') into v_liker_name
+  from public.profiles where id = new.participant_id;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  values (
+    v_author,
+    'post_like',
+    'æŠ•ç¨¿ã«ã„ã„ã­ãŒã¤ãã¾ã—ãŸ',
+    v_liker_name || 'ã•ã‚“ãŒã‚ãªãŸã®æŠ•ç¨¿ã«ã„ã„ã­ã—ã¾ã—ãŸ',
+    '/feed'
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_on_post_like_trigger on public.post_likes;
+create trigger notify_on_post_like_trigger
+  after insert on public.post_likes
+  for each row execute procedure public.notify_on_post_like();
+
+-- ç›¸äº’ã«ã€Œè©±ã—ã¦ã¿ãŸã„ã€ãŒæˆç«‹(ãƒãƒƒãƒ)ã—ãŸã‚‰åŒæ–¹ã«é€šçŸ¥
+-- (2ä»¶ç›®ã®likeãŒå…¥ã£ãŸç¬é–“ã ã‘ç™ºç«ã™ã‚‹ã®ã§é€šçŸ¥ã¯1çµ„ã«ã¤ã1å›ã ã‘)
+create or replace function public.notify_on_match()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_reciprocal boolean;
+  v_from_name text;
+  v_to_name text;
+begin
+  select exists(
+    select 1 from public.likes b
+    where b.from_id = new.to_id
+      and b.to_id = new.from_id
+      and b.event_id is not distinct from new.event_id
+  ) into v_reciprocal;
+
+  if not v_reciprocal then
+    return new;
+  end if;
+
+  select coalesce(name, 'ãƒ¡ãƒ³ãƒãƒ¼') into v_from_name from public.profiles where id = new.from_id;
+  select coalesce(name, 'ãƒ¡ãƒ³ãƒãƒ¼') into v_to_name from public.profiles where id = new.to_id;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  values
+    (new.from_id, 'match', 'ğŸ‰ ãƒãƒƒãƒãŒæˆç«‹ã—ã¾ã—ãŸ', v_to_name || 'ã•ã‚“ã¨ãƒãƒƒãƒã—ã¾ã—ãŸã€‚ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã£ã¦ã¿ã¾ã—ã‚‡ã†ã€‚', '/mypage/matches/' || new.to_id::text),
+    (new.to_id, 'match', 'ğŸ‰ ãƒãƒƒãƒãŒæˆç«‹ã—ã¾ã—ãŸ', v_from_name || 'ã•ã‚“ã¨ãƒãƒƒãƒã—ã¾ã—ãŸã€‚ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã£ã¦ã¿ã¾ã—ã‚‡ã†ã€‚', '/mypage/matches/' || new.from_id::text);
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_on_match_trigger on public.likes;
+create trigger notify_on_match_trigger
+  after insert on public.likes
+  for each row execute procedure public.notify_on_match();
+
+-- æ–°ã—ã„äº¤æµä¼šãŒå…¬é–‹ã•ã‚ŒãŸã‚‰å‚åŠ è€…å…¨å“¡ã«é€šçŸ¥(é‹å–¶ãŒã€Œå‚åŠ è€…ã«é€šçŸ¥ã€ã‚’æŠ¼ã—ãŸã¨ã)
+drop function if exists public.notify_new_event(uuid);
+create or replace function public.notify_new_event(p_event_id uuid)
+returns int
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_title text;
+  v_count int;
+begin
+  if not public.is_admin() then
+    raise exception 'æ¨©é™ãŒã‚ã‚Šã¾ã›ã‚“';
+  end if;
+
+  select title into v_title from public.events where id = p_event_id;
+  if v_title is null then
+    raise exception 'äº¤æµä¼šãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“';
+  end if;
+
+  insert into public.notifications (user_id, type, title, body, link)
+  select p.id, 'event', 'ğŸ“… æ–°ã—ã„äº¤æµä¼šãŒå…¬é–‹ã•ã‚Œã¾ã—ãŸ', v_title, '/events/' || p_event_id::text
+  from public.profiles p
+  where p.role = 'participant';
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+grant execute on function public.notify_new_event(uuid) to authenticated;
+
+-- ============================================================
+-- æ±ºæ¸ˆè¨­å®š(Stripe)ã‚’äº‹å‹™å±€ãŒç®¡ç†ç”»é¢ã‹ã‚‰è¨­å®šã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹ (2026-09-30)
+-- ç¨Ÿè²´ã•ã‚“(é‹å–¶ä»£è¡¨)è‡ªèº«ã¯æ±ºæ¸ˆã®APIã‚­ãƒ¼è¨­å®šã«ã¯é–¢ä¸ã›ãšã€äº‹å‹™å±€æ‹…å½“è€…ãŒ
+-- Vercelã®ç’°å¢ƒå¤‰æ•°ã‚’ä¸€åˆ‡è§¦ã‚‰ãšã« /admin/settings/payments ç”»é¢ã‹ã‚‰
+-- Stripeã®ã‚·ãƒ¼ã‚¯ãƒ¬ãƒƒãƒˆã‚­ãƒ¼ãƒ»Webhookç½²åã‚·ãƒ¼ã‚¯ãƒ¬ãƒƒãƒˆã‚’ç™»éŒ²ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
+-- ã“ã®ãƒ†ãƒ¼ãƒ–ãƒ«ã¯ RLS ã‚’æœ‰åŠ¹ã«ã—ãŸã†ãˆã§ authenticated å‘ã‘ã®ãƒãƒªã‚·ãƒ¼ã‚’
+-- ä¸€åˆ‡ä½œæˆã—ãªã„ãŸã‚ã€é€šå¸¸ã®ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‹ã‚‰ã¯ä¸€åˆ‡èª­ã¿æ›¸ãã§ããªã„ã€‚
+-- ã‚¢ãƒ—ãƒªå´ã¯å¿…ãš service_role ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆ(lib/supabase/admin.ts)çµŒç”±ã§ã®ã¿
+-- ã‚¢ã‚¯ã‚»ã‚¹ã—ã€ãã®æ‰‹å‰ã§ç®¡ç†è€…æ¨©é™ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†(lib/payment-settings.ts)ã€‚
+-- ============================================================
+create table if not exists public.payment_settings (
+  id boolean primary key default true,
+  stripe_secret_key text,
+  stripe_webhook_secret text,
+  updated_by uuid references public.profiles(id),
+  updated_at timestamptz not null default now(),
+  constraint payment_settings_singleton check (id)
+);
+
+alter table public.payment_settings enable row level security;
+-- æ„å›³çš„ã« authenticated å‘ã‘ã®ãƒãƒªã‚·ãƒ¼ã‚’ä½œæˆã—ãªã„(service_roleã®ã¿ã‚¢ã‚¯ã‚»ã‚¹å¯èƒ½ã«ã™ã‚‹)
+
+-- PostgREST ã®ã‚¹ã‚­ãƒ¼ãƒã‚­ãƒ£ãƒƒã‚·ãƒ¥ã‚’å³æ™‚ãƒªãƒ­ãƒ¼ãƒ‰
+-- (SQL Editor ã‹ã‚‰ç›´æ¥DDLã‚’å®Ÿè¡Œã—ãŸéš›ã€æ–°ã—ãè¿½åŠ ã—ãŸRPCãŒã™ãã«åæ˜ ã•ã‚Œãªã„
+-- ã“ã¨ãŒã‚ã‚‹ãŸã‚ã€å¿µã®ãŸã‚ã“ã“ã§æ˜ç¤ºçš„ã«ãƒªãƒ­ãƒ¼ãƒ‰ã‚’é€šçŸ¥ã™ã‚‹)
+select pg_notify('pgrst', 'reload schema');
+
+-- ============================================================
+-- æ±ºæ¸ˆæ©Ÿèƒ½(Stripeé€£æº): æœ¬ç•ªDBã«ã¯ç›´æ¥é©ç”¨æ¸ˆã¿ã ã£ãŸãŒ schema.sql ã«æœªè¨˜è¼‰ã ã£ãŸãŸã‚è¿½è¨˜
+-- ============================================================
+-- ============================================================
+-- æ±ºæ¸ˆæ©Ÿèƒ½: events / registrations ã¸ã®æ±ºæ¸ˆé–¢é€£ã‚«ãƒ©ãƒ è¿½åŠ 
+-- ============================================================
+alter table public.events add column if not exists fee_amount int;
+
+alter table public.registrations add column if not exists payment_status text not null default 'unpaid' check (payment_status in ('unpaid','pending','paid','refunded'));
+alter table public.registrations add column if not exists stripe_checkout_session_id text;
+alter table public.registrations add column if not exists stripe_payment_intent_id text;
+alter table public.registrations add column if not exists paid_amount int;
+alter table public.registrations add column if not exists paid_at timestamptz;
+alter table public.registrations add column if not exists receipt_url text;
+alter table public.registrations add column if not exists wants_receipt boolean not null default false;
+alter table public.registrations add column if not exists receipt_name text;
+
+-- ============================================================
+-- get_admin_revenue_summary: é‹å–¶å‘ã‘ã€ã‚¤ãƒ™ãƒ³ãƒˆã”ã¨ã®æ±ºæ¸ˆçŠ¶æ³ã‚µãƒãƒª
+-- ============================================================
+drop function if exists public.get_admin_revenue_summary();
+create or replace function public.get_admin_revenue_summary()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date,
+  fee_amount int,
+  attending_count int,
+  paid_count int,
+  unpaid_count int,
+  pending_count int,
+  refunded_count int,
+  total_revenue bigint
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    e.id as event_id,
+    e.title,
+    e.event_date,
+    e.fee_amount,
+    count(r.id) filter (where r.attending = true)::int as attending_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'paid')::int as paid_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'unpaid')::int as unpaid_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'pending')::int as pending_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'refunded')::int as refunded_count,
+    coalesce(sum(r.paid_amount) filter (where r.attending = true and r.payment_status = 'paid'), 0)::bigint as total_revenue
+  from public.events e
+  left join public.registrations r on r.event_id = e.id
+  where public.is_admin()
+  group by e.id, e.title, e.event_date, e.fee_amount
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_admin_revenue_summary() to authenticated;
+
+-- ============================================================
+-- get_event_payment_details: é‹å–¶å‘ã‘ã€ç‰¹å®šã‚¤ãƒ™ãƒ³ãƒˆã®å‚åŠ è€…ã”ã¨ã®æ±ºæ¸ˆè©³ç´°
+-- ============================================================
+drop function if exists public.get_event_payment_details(uuid);
+create or replace function public.get_event_payment_details(p_event_id uuid)
+returns table(
+  registration_id uuid,
+  participant_id uuid,
+  name text,
+  company text,
+  attending boolean,
+  payment_status text,
+  paid_amount int,
+  paid_at timestamptz,
+  wants_receipt boolean,
+  receipt_name text,
+  receipt_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    r.id as registration_id,
+    r.participant_id,
+    p.name,
+    p.company,
+    r.attending,
+    r.payment_status,
+    r.paid_amount,
+    r.paid_at,
+    r.wants_receipt,
+    r.receipt_name,
+    r.receipt_url
+  from public.registrations r
+  join public.profiles p on p.id = r.participant_id
+  where r.event_id = p_event_id
+    and public.is_admin()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_event_payment_details(uuid) to authenticated;
+
+-- ============================================================
+-- ã‚ªãƒ³ãƒœãƒ¼ãƒ‡ã‚£ãƒ³ã‚°: æ–°è¦ç™»éŒ²ç›´å¾Œã«ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«å…¥åŠ›ã‚¹ãƒ†ãƒƒãƒ—ã‚’å¿…é ˆè¡¨ç¤ºã™ã‚‹ãŸã‚ã®ãƒ•ãƒ©ã‚°
+-- ============================================================
+alter table public.profiles add column if not exists onboarding_completed boolean not null default false;
