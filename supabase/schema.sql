@@ -360,6 +360,7 @@ alter table public.profiles add column if not exists job_title text;
 alter table public.profiles add column if not exists phone text;
 
 -- get_member_directory を職種・役職も返すように再定義(電話番号は含めない)
+drop function if exists public.get_member_directory();
 create or replace function public.get_member_directory()
 returns table(
   participant_id uuid,
@@ -2112,3 +2113,104 @@ alter table public.payment_settings enable row level security;
 -- (SQL Editor から直接DDLを実行した際、新しく追加したRPCがすぐに反映されない
 -- ことがあるため、念のためここで明示的にリロードを通知する)
 select pg_notify('pgrst', 'reload schema');
+
+-- ============================================================
+-- 決済機能(Stripe連携): 本番DBには直接適用済みだったが schema.sql に未記載だったため追記
+-- ============================================================
+-- ============================================================
+-- 決済機能: events / registrations への決済関連カラム追加
+-- ============================================================
+alter table public.events add column if not exists fee_amount int;
+
+alter table public.registrations add column if not exists payment_status text not null default 'unpaid' check (payment_status in ('unpaid','pending','paid','refunded'));
+alter table public.registrations add column if not exists stripe_checkout_session_id text;
+alter table public.registrations add column if not exists stripe_payment_intent_id text;
+alter table public.registrations add column if not exists paid_amount int;
+alter table public.registrations add column if not exists paid_at timestamptz;
+alter table public.registrations add column if not exists receipt_url text;
+alter table public.registrations add column if not exists wants_receipt boolean not null default false;
+alter table public.registrations add column if not exists receipt_name text;
+
+-- ============================================================
+-- get_admin_revenue_summary: 運営向け、イベントごとの決済状況サマリ
+-- ============================================================
+drop function if exists public.get_admin_revenue_summary();
+create or replace function public.get_admin_revenue_summary()
+returns table(
+  event_id uuid,
+  title text,
+  event_date date,
+  fee_amount int,
+  attending_count int,
+  paid_count int,
+  unpaid_count int,
+  pending_count int,
+  refunded_count int,
+  total_revenue bigint
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    e.id as event_id,
+    e.title,
+    e.event_date,
+    e.fee_amount,
+    count(r.id) filter (where r.attending = true)::int as attending_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'paid')::int as paid_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'unpaid')::int as unpaid_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'pending')::int as pending_count,
+    count(r.id) filter (where r.attending = true and r.payment_status = 'refunded')::int as refunded_count,
+    coalesce(sum(r.paid_amount) filter (where r.attending = true and r.payment_status = 'paid'), 0)::bigint as total_revenue
+  from public.events e
+  left join public.registrations r on r.event_id = e.id
+  where public.is_admin()
+  group by e.id, e.title, e.event_date, e.fee_amount
+  order by e.event_date desc;
+$$;
+
+grant execute on function public.get_admin_revenue_summary() to authenticated;
+
+-- ============================================================
+-- get_event_payment_details: 運営向け、特定イベントの参加者ごとの決済詳細
+-- ============================================================
+drop function if exists public.get_event_payment_details(uuid);
+create or replace function public.get_event_payment_details(p_event_id uuid)
+returns table(
+  registration_id uuid,
+  participant_id uuid,
+  name text,
+  company text,
+  attending boolean,
+  payment_status text,
+  paid_amount int,
+  paid_at timestamptz,
+  wants_receipt boolean,
+  receipt_name text,
+  receipt_url text
+)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select
+    r.id as registration_id,
+    r.participant_id,
+    p.name,
+    p.company,
+    r.attending,
+    r.payment_status,
+    r.paid_amount,
+    r.paid_at,
+    r.wants_receipt,
+    r.receipt_name,
+    r.receipt_url
+  from public.registrations r
+  join public.profiles p on p.id = r.participant_id
+  where r.event_id = p_event_id
+    and public.is_admin()
+  order by p.name nulls last;
+$$;
+
+grant execute on function public.get_event_payment_details(uuid) to authenticated;
