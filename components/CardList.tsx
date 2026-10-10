@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { BusinessCard } from "@/lib/types";
 import Avatar from "@/components/Avatar";
 import DeleteCardButton from "@/components/DeleteCardButton";
@@ -38,12 +39,19 @@ export default function CardList({ cards }: { cards: BusinessCard[] }) {
         <div className="space-y-3">
           {filtered.map((c) => (
             <div key={c.id} className="card flex items-start gap-3">
-              <Avatar name={c.name} size={44} />
+              <Avatar name={c.name} avatarUrl={c.avatar_url} size={44} />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">
-                  {c.name || "(氏名未設定)"}
-                  {c.company ? `(${c.company})` : ""}
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate font-semibold">
+                    {c.name || "(氏名未設定)"}
+                    {c.company ? `(${c.company})` : ""}
+                  </p>
+                  {c.source === "qr" && (
+                    <span className="badge shrink-0 bg-accent/15 text-[10px] text-accent">
+                      QR交換
+                    </span>
+                  )}
+                </div>
                 {c.job_title && (
                   <p className="mt-0.5 text-sm text-gray-500">{c.job_title}</p>
                 )}
@@ -55,6 +63,14 @@ export default function CardList({ cards }: { cards: BusinessCard[] }) {
                   <p className="mt-1.5 whitespace-pre-wrap text-xs text-gray-400">
                     {c.note}
                   </p>
+                )}
+                {c.contact_user_id && (
+                  <Link
+                    href={`/mypage/matches/${c.contact_user_id}`}
+                    className="mt-2 inline-block text-xs font-semibold text-primary hover:underline"
+                  >
+                    💬 メッセージを送る
+                  </Link>
                 )}
               </div>
               <DeleteCardButton cardId={c.id} />

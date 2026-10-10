@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
-import { BusinessCard } from "@/lib/types";
+import { BusinessCard, Profile } from "@/lib/types";
+import CardQrScanner from "@/components/CardQrScanner";
 import CardScanner from "@/components/CardScanner";
 import CardList from "@/components/CardList";
 
@@ -13,22 +15,74 @@ export default async function MyCardsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/mypage/cards");
 
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+  const profile = profileData as Profile;
+
   const { data } = await supabase
     .from("business_cards")
     .select("*")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
-
   const cards = (data as BusinessCard[]) || [];
+
+  const qrValue = `ARKIVE:card:v1:${profile.card_token}`;
+  const qrDataUrl = await QRCode.toDataURL(qrValue, {
+    margin: 1,
+    width: 280,
+    color: { dark: "#10192f", light: "#ffffffff" },
+  });
 
   return (
     <div>
       <h1 className="mb-1 text-xl font-bold">マイ名刺</h1>
       <p className="mb-6 text-sm text-gray-500">
-        交流会で交換した名刺をスキャンして、人脈リストとして蓄積できます。
+        QRコードを見せ合うだけで、お互いのプロフィールを自動で交換できます。紙の名刺を撮影して保存することもできます。
       </p>
 
-      <CardScanner />
+      <div className="card mb-4">
+        <p className="font-semibold">① 自分のQRコードを見せる</p>
+        <p className="mt-1 text-sm text-gray-500">
+          この画面を相手に見せて、「② 相手のQRコードを読み取る」でスキャンしてもらってください。
+        </p>
+        <details className="mt-3">
+          <summary className="btn-secondary inline-block cursor-pointer select-none">
+            📇 自分のQRコードを表示
+          </summary>
+          <div className="mt-4 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrDataUrl}
+              alt="マイ名刺QRコード"
+              className="mx-auto h-auto w-full max-w-[220px] rounded-xl border border-gray-100"
+            />
+            <p className="mt-2 text-sm font-semibold">
+              {profile.name || "(名前未設定)"}
+              {profile.company ? `(${profile.company})` : ""}
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <div className="card mb-6">
+        <p className="font-semibold">② 相手のQRコードを読み取る</p>
+        <p className="mt-1 text-sm text-gray-500">
+          相手に①の画面を見せてもらい、カメラで読み取ってください。双方の名刺が自動で交換され、そのままメッセージも送れるようになります。
+        </p>
+        <CardQrScanner />
+      </div>
+
+      <details className="card mb-6">
+        <summary className="cursor-pointer select-none font-semibold">
+          📷 紙の名刺を撮影して保存する
+        </summary>
+        <div className="mt-4">
+          <CardScanner />
+        </div>
+      </details>
 
       <CardList cards={cards} />
     </div>

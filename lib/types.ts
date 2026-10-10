@@ -14,6 +14,7 @@ export interface Profile {
   connect_with_tags: string[] | null;
   bio: string | null;
   ticket_token: string;
+  card_token: string;
   avatar_url: string | null;
   onboarding_completed: boolean;
 }
@@ -254,11 +255,14 @@ export interface FeedPost {
 export interface BusinessCard {
   id: string;
   owner_id: string;
+  contact_user_id: string | null;
   name: string | null;
   company: string | null;
   job_title: string | null;
   phone: string | null;
   email: string | null;
+  avatar_url: string | null;
   note: string | null;
+  source: "photo" | "qr" | "manual";
   created_at: string;
 }
