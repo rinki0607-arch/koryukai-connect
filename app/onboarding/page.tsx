@@ -29,9 +29,9 @@ export default async function OnboardingPage() {
         <div className="mx-auto w-fit">
           <Logo size={56} />
         </div>
-        <h1 className="mt-3 text-xl font-bold">プロフィールを設定しましょう</h1>
+        <h1 className="mt-3 text-xl font-bold">ようこそ、ARKIVEへ</h1>
         <p className="mt-1 text-sm text-gray-500">
-          入力した内容は交流会の申込や参加者名簿に使われます
+          使い方の説明とプロフィール設定を済ませましょう
         </p>
       </div>
       <OnboardingWizard profile={profile as Profile} />

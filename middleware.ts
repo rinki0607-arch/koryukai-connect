@@ -49,6 +49,15 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // このアプリはスマホで共有・利用される前提のため、未ログインでリンク(トップページ)を開いた場合は
+  // 紹介ランディングを挟まず、最初に新規登録/ログイン画面を表示する。
+  if (!user && pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("mode", "signup");
+    return NextResponse.redirect(url);
+  }
+
   if (user && !isExemptFromOnboarding(pathname)) {
     const { data: profile } = await supabase
       .from("profiles")

@@ -5,7 +5,38 @@ import { JOB_TYPES, INDUSTRIES, CONNECT_TAGS } from "@/lib/constants";
 import { completeOnboarding, skipOnboarding } from "@/app/onboarding/actions";
 import type { Profile } from "@/lib/types";
 
-const STEPS = ["基本情報", "興味・関心", "自己紹介"] as const;
+const STEPS = ["使い方", "基本情報", "興味・関心", "自己紹介"] as const;
+
+const HOW_TO_USE = [
+  {
+    icon: "🗓️",
+    title: "交流会に参加登録",
+    description:
+      "気になる交流会に参加登録。二次会への参加希望もあわせて伝えられます。",
+  },
+  {
+    icon: "🤝",
+    title: "参加者とマッチング",
+    description:
+      "会場で気になった人に「話してみたい」を送信。お互いに送り合うとマッチング成立です。",
+  },
+  {
+    icon: "💬",
+    title: "メッセージでやりとり",
+    description: "マッチした相手とは、アプリ内のメッセージでそのまま連絡できます。",
+  },
+  {
+    icon: "📇",
+    title: "QR受付・名刺交換",
+    description:
+      "当日はマイQRコードで受付。その場でのプロフィール・名刺交換もアプリで完結します。",
+  },
+  {
+    icon: "🔔",
+    title: "通知でお知らせ",
+    description: "新しいマッチングやメッセージ、交流会のお知らせを通知で受け取れます。",
+  },
+] as const;
 
 export default function OnboardingWizard({
   profile,
@@ -14,6 +45,7 @@ export default function OnboardingWizard({
 }) {
   const [step, setStep] = useState(0);
   const last = step === STEPS.length - 1;
+  const isIntro = step === 0;
 
   return (
     <form action={completeOnboarding}>
@@ -35,7 +67,19 @@ export default function OnboardingWizard({
         {STEPS[step]}({step + 1}/{STEPS.length})
       </p>
 
-      <div className="card space-y-4" hidden={step !== 0}>
+      <div hidden={step !== 0} className="space-y-3">
+        {HOW_TO_USE.map((item) => (
+          <div key={item.title} className="card flex items-start gap-3">
+            <span className="text-2xl leading-none">{item.icon}</span>
+            <div>
+              <p className="font-semibold text-primary">{item.title}</p>
+              <p className="mt-0.5 text-sm text-gray-500">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card space-y-4" hidden={step !== 1}>
         <div>
           <label className="label">会社名・所属</label>
           <input
@@ -72,7 +116,7 @@ export default function OnboardingWizard({
         </div>
       </div>
 
-      <div className="card space-y-4" hidden={step !== 1}>
+      <div className="card space-y-4" hidden={step !== 2}>
         <div>
           <label className="label">業種</label>
           <input
@@ -118,7 +162,7 @@ export default function OnboardingWizard({
         </div>
       </div>
 
-      <div className="card space-y-4" hidden={step !== 2}>
+      <div className="card space-y-4" hidden={step !== 3}>
         <div>
           <label className="label">自己紹介(参加者名簿に表示されます)</label>
           <textarea
@@ -169,15 +213,17 @@ export default function OnboardingWizard({
         )}
       </div>
 
-      <p className="mt-4 text-center">
-        <button
-          type="submit"
-          formAction={skipOnboarding}
-          className="text-xs text-gray-400 underline"
-        >
-          あとで入力する
-        </button>
-      </p>
+      {!isIntro && (
+        <p className="mt-4 text-center">
+          <button
+            type="submit"
+            formAction={skipOnboarding}
+            className="text-xs text-gray-400 underline"
+          >
+            あとで入力する
+          </button>
+        </p>
+      )}
     </form>
   );
 }
