@@ -22,6 +22,16 @@ export async function updateProfile(formData: FormData) {
   const bio = String(formData.get("bio") || "");
   const tags = formData.getAll("connect_with_tags").map(String);
 
+  const memberCategoryRaw = String(formData.get("member_category") || "general");
+  const memberCategory = ["general", "founder", "investor", "mentor"].includes(
+    memberCategoryRaw
+  )
+    ? memberCategoryRaw
+    : "general";
+  const fundingStage = String(formData.get("funding_stage") || "").trim() || null;
+  const investorMentorNote =
+    String(formData.get("investor_mentor_note") || "").trim() || null;
+
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -34,6 +44,12 @@ export async function updateProfile(formData: FormData) {
       connect_with: connectWith,
       connect_with_tags: tags,
       bio,
+      member_category: memberCategory,
+      funding_stage: memberCategory === "founder" ? fundingStage : null,
+      investor_mentor_note:
+        memberCategory === "investor" || memberCategory === "mentor"
+          ? investorMentorNote
+          : null,
     })
     .eq("id", user.id);
 
