@@ -62,13 +62,16 @@ export default async function NavBar() {
                   参加者名簿
                 </Link>
                 <Link href="/feed" className="text-gray-600 transition hover:text-primary">
-                  コミュニティ
+                  コマニティ
                 </Link>
                 <Link href="/mypage/ticket" className="text-gray-600 transition hover:text-primary">
                   マイQRコード
                 </Link>
                 <Link href="/mypage/cards" className="text-gray-600 transition hover:text-primary">
                   マイ名刺
+                </Link>
+                <Link href="/mypage/ranking" className="text-gray-600 transition hover:text-primary">
+                  🏆 ランキング
                 </Link>
                 <Link
                   href="/mypage/matches"
@@ -112,7 +115,7 @@ export default async function NavBar() {
             )}
           </nav>
 
-          {/* モバイル幅: お知らせ・管理者リンク・ログアウトだけ右上に出す(それ以外は下部タブバー) */}
+          {/* モバイル幅: お知らせ・管理者リンク・ログアウトだけを右上に出す(それ以外は下部タブバー) */}
           <div className="flex items-center gap-3 lg:hidden">
             {user && (
               <Link
