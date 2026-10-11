@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#10192f",
+  themeColor: "#D6304A",
 };
 
 export default function RootLayout({
@@ -39,7 +39,7 @@ export default function RootLayout({
         />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap"
         />
       </head>
       <body className="min-h-screen">

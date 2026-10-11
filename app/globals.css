@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #f4f5f9;
+  --color-bg: #fdf8f6;
 }
 
 * {
@@ -16,7 +16,7 @@ html {
 
 body {
   background-color: var(--color-bg);
-  color: #10192f;
+  color: #2b2630;
   font-family: "Noto Sans JP", "Zen Kaku Gothic New", sans-serif;
   overscroll-behavior-y: none;
 }
@@ -24,11 +24,11 @@ body {
 h1,
 h2,
 h3 {
-  font-family: "Shippori Mincho", serif;
+  font-family: "M PLUS Rounded 1c", "Noto Sans JP", sans-serif;
 }
 
 ::selection {
-  background-color: #e9ebf2;
+  background-color: #ffe6ea;
 }
 
 /* ============================================================
@@ -36,7 +36,7 @@ h3 {
    1枚1枚の「タイル」として持ち上がって見えるようにする
    ============================================================ */
 .card {
-  @apply rounded-[20px] border border-gray-100 bg-white p-5 shadow-[0_2px_10px_rgba(16,25,47,0.06)];
+  @apply rounded-[20px] border border-gray-100 bg-white p-5 shadow-[0_2px_10px_rgba(43,38,48,0.06)];
 }
 
 a.card,
@@ -57,11 +57,11 @@ button.card {
 }
 
 .btn-primary {
-  @apply btn bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)] hover:bg-accent-dark;
+  @apply btn bg-primary text-white shadow-[0_4px_14px_rgba(214,48,74,0.32)] hover:bg-primary-dark;
 }
 
 .btn-dark {
-  @apply btn bg-primary text-white shadow-[0_4px_14px_rgba(16,25,47,0.22)] hover:bg-primary-dark;
+  @apply btn bg-[#2b2630] text-white shadow-[0_4px_14px_rgba(43,38,48,0.28)] hover:bg-[#1c1820];
 }
 
 .btn-secondary {
@@ -81,7 +81,7 @@ button.card {
    縁がしっかり主張する(スマホの誤タップを減らす)
    ============================================================ */
 .input {
-  @apply w-full rounded-2xl border border-gray-200 bg-gray-50/60 px-4 py-3 text-[15px] text-primary transition placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/15;
+  @apply w-full rounded-2xl border border-gray-200 bg-gray-50/60 px-4 py-3 text-[15px] text-[#2b2630] transition placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/15;
 }
 
 .label {
@@ -103,7 +103,7 @@ button.card {
 }
 
 .segment-option.is-active {
-  @apply bg-white text-primary shadow-[0_1px_6px_rgba(16,25,47,0.12)];
+  @apply bg-white text-primary shadow-[0_1px_6px_rgba(43,38,48,0.12)];
 }
 
 /* チップ(タグ選択): 選択時にふわっと色づく */
@@ -131,7 +131,7 @@ button.card {
   }
 }
 
-/* AIチャットボットの起動ボタン: モバイルでは下部タブバーの上に、
+/* サポートチャットの起動ボタン: モバイルでは下部タブバーの上に、
    デスクトップでは画面右下に固定する */
 .chatbot-fab {
   bottom: calc(84px + env(safe-area-inset-bottom));

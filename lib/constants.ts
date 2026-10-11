@@ -86,11 +86,13 @@ export const FUNDING_STAGES = [
 ];
 
 // 機能4: 人脈資本スコア・コミュニティランキングのティアに応じた色分け
+// プラチナ(最上位)だけは「メイン(コーラル)」ではなく、ゴールドのグラデーションで
+// 特別感を出す(コーラルはCTA・いいね専用に役割を絞るため)。
 export const CAPITAL_TIER_STYLES: Record<string, string> = {
   "ブロンズ": "bg-[#f0e4da] text-[#7a4a23]",
   "シルバー": "bg-gray-200 text-gray-700",
   "ゴールド": "bg-accent/20 text-accent-dark",
-  "プラチナ": "bg-primary text-white",
+  "プラチナ": "bg-gradient-to-br from-accent to-accent-dark text-[#241a03]",
 };
 
 export function formatEventDate(dateStr: string) {
