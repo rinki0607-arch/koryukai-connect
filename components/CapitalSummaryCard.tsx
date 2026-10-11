@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CapitalSummary } from "@/lib/types";
+import { CAPITAL_TIER_STYLES } from "@/lib/constants";
 
 function formatTenure(fromIso: string | null): string | null {
   if (!fromIso) return null;
@@ -34,6 +35,8 @@ export default function CapitalSummaryCard({
   summary: CapitalSummary;
 }) {
   const tenure = formatTenure(summary.first_attended_at);
+  const tierStyle =
+    CAPITAL_TIER_STYLES[summary.capital_tier] || "bg-gray-200 text-gray-700";
 
   const tiles = [
     { label: "参加した交流会", value: summary.events_attended, unit: "回" },
@@ -44,12 +47,19 @@ export default function CapitalSummaryCard({
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <div className="border-b border-gray-100 bg-primary-light/60 px-6 py-4">
-        <p className="font-mono text-[11px] font-bold tracking-widest text-accent-dark">
-          YOUR HUMAN CAPITAL
-        </p>
-        <h2 className="mt-1 font-display text-lg font-bold text-primary">
-          あなたの人的資本
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-[11px] font-bold tracking-widest text-accent-dark">
+              YOUR HUMAN CAPITAL
+            </p>
+            <h2 className="mt-1 font-display text-lg font-bold text-primary">
+              あなたの人的資本
+            </h2>
+          </div>
+          <span className={`badge shrink-0 ${tierStyle}`}>
+            {summary.capital_tier} ・ {summary.capital_score}pt
+          </span>
+        </div>
         <p className="mt-1 text-xs text-gray-500">
           交流会で生まれたつながりは、一度きりで終わらせず、ここに資産として積み重なっていきます。
         </p>
@@ -69,8 +79,8 @@ export default function CapitalSummaryCard({
         ))}
       </div>
 
-      {(tenure || summary.latest_partner_name) && (
-        <div className="flex flex-col gap-2 border-t border-gray-100 px-6 py-4 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 border-t border-gray-100 px-6 py-4 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
           {tenure && (
             <p>
               <span className="text-gray-400">{tenure}</span>{" "}
@@ -93,8 +103,23 @@ export default function CapitalSummaryCard({
               )}
             </p>
           )}
+          {summary.community_rank && summary.community_size && (
+            <p>
+              コマキュニティ内順位:{" "}
+              <span className="font-semibold text-primary">
+                {summary.community_rank}位
+              </span>{" "}
+              / {summary.community_size}人中
+            </p>
+          )}
         </div>
-      )}
+        <Link
+          href="/mypage/ranking"
+          className="btn-secondary !min-h-0 shrink-0 px-4 py-2 text-xs"
+        >
+          🏆 ランキングを見る
+        </Link>
+      </div>
     </section>
   );
 }
