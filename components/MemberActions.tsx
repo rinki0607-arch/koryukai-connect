@@ -90,8 +90,8 @@ export default function MemberActions({
           }
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:opacity-40 ${
             alreadyLiked
-              ? "bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)]"
-              : "border-[1.5px] border-gray-200 text-gray-500 hover:border-accent hover:text-accent-dark"
+              ? "bg-primary text-white shadow-[0_4px_14px_rgba(214,48,74,0.35)]"
+              : "border-[1.5px] border-gray-200 text-gray-500 hover:border-primary hover:text-primary-dark"
           }`}
         >
           <HeartIcon filled={alreadyLiked} />

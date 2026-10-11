@@ -192,7 +192,7 @@ export default function ChatThread({
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_4px_rgba(16,25,47,0.06)] ${
+                  className={`max-w-[75%] px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_4px_rgba(43,38,48,0.06)] ${
                     isMine
                       ? "rounded-[18px] rounded-br-[4px] bg-primary text-white"
                       : "rounded-[18px] rounded-bl-[4px] border border-gray-100 bg-white text-gray-800"
@@ -228,7 +228,7 @@ export default function ChatThread({
                 setDraft(s);
                 setSuggestions([]);
               }}
-              className="max-w-full rounded-2xl border border-accent/40 bg-accent/10 px-3 py-1.5 text-left text-xs text-accent-dark transition hover:bg-accent/20"
+              className="max-w-full rounded-2xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-left text-xs text-primary-dark transition hover:bg-primary/20"
             >
               {s}
             </button>
@@ -244,7 +244,7 @@ export default function ChatThread({
             title="AIに話題を提案してもらう"
             onClick={handleSuggestIcebreaker}
             disabled={icebreakerLoading}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gray-200 text-lg text-gray-400 transition active:scale-90 hover:border-accent hover:text-accent-dark disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gray-200 text-lg text-gray-400 transition active:scale-90 hover:border-primary hover:text-primary-dark disabled:opacity-40"
           >
             {icebreakerLoading ? "⋯" : "💬"}
           </button>
@@ -266,7 +266,7 @@ export default function ChatThread({
           aria-label="送信"
           disabled={pending || !draft.trim()}
           onClick={handleSend}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)] transition-all duration-150 active:scale-90 disabled:pointer-events-none disabled:opacity-40"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-[0_4px_14px_rgba(214,48,74,0.35)] transition-all duration-150 active:scale-90 disabled:pointer-events-none disabled:opacity-40"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path

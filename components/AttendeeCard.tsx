@@ -76,7 +76,7 @@ export default function AttendeeCard({
           </p>
         )}
         {aiReason && (
-          <p className="mt-1.5 rounded-lg bg-accent/8 px-2 py-1 text-xs font-medium text-accent-dark">
+          <p className="mt-1.5 rounded-lg bg-primary/10 px-2 py-1 text-xs font-medium text-primary-dark">
             🤖 {aiReason}
           </p>
         )}
@@ -107,8 +107,8 @@ export default function AttendeeCard({
         }
         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all duration-150 active:scale-90 disabled:opacity-40 ${
           attendee.already_liked
-            ? "bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)]"
-            : "border-[1.5px] border-gray-200 text-gray-400 hover:border-accent hover:text-accent-dark"
+            ? "bg-primary text-white shadow-[0_4px_14px_rgba(214,48,74,0.35)]"
+            : "border-[1.5px] border-gray-200 text-gray-400 hover:border-primary hover:text-primary-dark"
         }`}
       >
         <HeartIcon filled={!!attendee.already_liked} />

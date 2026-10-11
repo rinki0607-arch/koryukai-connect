@@ -18,7 +18,7 @@ interface UpcomingEventPreview {
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "こんにちは。ARKIVEサポートAIです。アーク起業塾の交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。交流会での通報や運営への問い合わせも、下のボタンまたはメッセージからそのまま受け付けられます。",
+    "こんにちは!ARKIVEサポートです。アーク起業塾の交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。交流会での通報や運営への問い合わせも、下のボタンまたはメッセージからそのまま受け付けられます。",
 };
 
 const QUICK_ACTIONS: { label: string; icon: string; message: string }[] = [
@@ -121,14 +121,16 @@ export default function ChatbotWidget() {
       {open && (
         <div className="flex h-[70vh] max-h-[560px] w-[92vw] max-w-sm flex-col overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-2xl">
           <div className="flex items-start justify-between bg-primary px-4 py-3 text-white">
-            <div>
-              <p className="font-mono text-[10px] font-bold tracking-widest text-accent">
-                AI CONCIERGE · 24H
-              </p>
-              <p className="font-display text-base font-bold leading-tight">
-                24時間対応自動オペレーター
-              </p>
-              <p className="mt-0.5 text-[11px] text-white/50">ARKIVEサポートAI</p>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-base">
+                💬
+              </span>
+              <div>
+                <p className="font-display text-base font-bold leading-tight">
+                  ARKIVEサポート
+                </p>
+                <p className="mt-0.5 text-[11px] text-white/70">24時間いつでも質問できます</p>
+              </div>
             </div>
             <button
               aria-label="閉じる"
@@ -251,17 +253,17 @@ export default function ChatbotWidget() {
 
       <div className="flex items-center gap-2.5">
         {!open && (
-          <div className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-2 shadow-[0_4px_16px_rgba(16,25,47,0.12)]">
+          <div className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-2 shadow-[0_4px_16px_rgba(43,38,48,0.12)]">
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
             <p className="whitespace-nowrap text-[11px] font-bold text-primary sm:text-[12px]">
-              24時間対応 自動オペレーター
+              いつでも質問できます
             </p>
           </div>
         )}
         <button
-          aria-label={open ? "チャットを閉じる" : "ARKIVEサポートAIに質問する"}
+          aria-label={open ? "チャットを閉じる" : "ARKIVEサポートに質問する"}
           onClick={() => setOpen((v) => !v)}
-          className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-accent shadow-lg transition hover:opacity-90"
+          className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg transition hover:opacity-90"
         >
           {!open && (
             <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-accent" />
