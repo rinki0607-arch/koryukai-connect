@@ -60,6 +60,39 @@ export const CONNECT_TAGS = [
   "その他",
 ];
 
+// 機能5: 投資家・メンターマッチング特化カテゴリ
+export const MEMBER_CATEGORIES: { value: string; label: string; emoji: string }[] = [
+  { value: "general", label: "一般参加者", emoji: "🙂" },
+  { value: "founder", label: "起業家", emoji: "🚀" },
+  { value: "investor", label: "投資家", emoji: "💰" },
+  { value: "mentor", label: "メンター", emoji: "🎓" },
+];
+
+export function memberCategoryLabel(value: string | null | undefined): string {
+  return MEMBER_CATEGORIES.find((c) => c.value === value)?.label || "一般参加者";
+}
+
+export function memberCategoryEmoji(value: string | null | undefined): string {
+  return MEMBER_CATEGORIES.find((c) => c.value === value)?.emoji || "🙂";
+}
+
+export const FUNDING_STAGES = [
+  "アイデア・構想段階",
+  "プレシード",
+  "シード",
+  "シリーズA",
+  "シリーズB以降",
+  "資金調達予定なし",
+];
+
+// 機能4: 人脈資本スコア・コミュニティランキングのティアに応じた色分け
+export const CAPITAL_TIER_STYLES: Record<string, string> = {
+  "ブロンズ": "bg-[#f0e4da] text-[#7a4a23]",
+  "シルバー": "bg-gray-200 text-gray-700",
+  "ゴールド": "bg-accent/20 text-accent-dark",
+  "プラチナ": "bg-primary text-white",
+};
+
 export function formatEventDate(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("ja-JP", {

@@ -1,5 +1,7 @@
 export type Role = "participant" | "admin";
 
+export type MemberCategory = "general" | "founder" | "investor" | "mentor";
+
 export interface Profile {
   id: string;
   role: Role;
@@ -17,6 +19,9 @@ export interface Profile {
   card_token: string;
   avatar_url: string | null;
   onboarding_completed: boolean;
+  member_category: MemberCategory;
+  funding_stage: string | null;
+  investor_mentor_note: string | null;
 }
 
 export interface AttendanceRow {
@@ -58,6 +63,7 @@ export interface RegistrationRow {
   industry: string | null;
   connect_with: string | null;
   connect_with_tags: string[] | null;
+  goal_text: string | null;
   created_at: string;
   wants_receipt: boolean;
   receipt_name: string | null;
@@ -106,6 +112,10 @@ export interface AttendeeCandidate {
   match_score: number;
   shared_tags: string[];
   avatar_url: string | null;
+  goal_text: string | null;
+  member_category: MemberCategory;
+  funding_stage: string | null;
+  investor_mentor_note: string | null;
 }
 
 export interface DirectoryEntry {
@@ -123,6 +133,9 @@ export interface DirectoryEntry {
   is_saved: boolean;
   already_liked: boolean;
   is_matched: boolean;
+  member_category: MemberCategory;
+  funding_stage: string | null;
+  investor_mentor_note: string | null;
 }
 
 export interface MatchRow {
@@ -196,6 +209,21 @@ export interface CapitalSummary {
   first_attended_at: string | null;
   latest_partner_name: string | null;
   latest_matched_at: string | null;
+  capital_score: number;
+  capital_tier: string;
+  community_rank: number | null;
+  community_size: number | null;
+}
+
+export interface CapitalLeaderboardRow {
+  rank: number;
+  participant_id: string;
+  name: string | null;
+  company: string | null;
+  avatar_url: string | null;
+  capital_score: number;
+  capital_tier: string;
+  is_me: boolean;
 }
 
 export type RecommendAnswer = "yes" | "neutral" | "no";
@@ -265,4 +293,27 @@ export interface BusinessCard {
   note: string | null;
   source: "photo" | "qr" | "manual";
   created_at: string;
+}
+
+export interface PublicCard {
+  name: string | null;
+  company: string | null;
+  job_title: string | null;
+  job_type: string | null;
+  industry: string | null;
+  bio: string | null;
+  phone: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  member_category: MemberCategory;
+  investor_mentor_note: string | null;
+}
+
+export interface IcebreakerSuggestion {
+  suggestions: string[];
+}
+
+export interface AttendeeRecommendation {
+  participant_id: string;
+  reason: string;
 }
