@@ -10,6 +10,7 @@ export async function submitRegistration(formData: FormData) {
   const industry = String(formData.get("industry") || "");
   const connectWith = String(formData.get("connect_with") || "");
   const tags = formData.getAll("connect_with_tags").map(String);
+  const goalText = String(formData.get("goal_text") || "").trim();
   const saveAsDefault = formData.get("save_as_default") === "on";
   const wantsReceipt = formData.get("wants_receipt") === "on";
   const receiptName = String(formData.get("receipt_name") || "").trim() || null;
@@ -32,6 +33,7 @@ export async function submitRegistration(formData: FormData) {
       industry,
       connect_with: connectWith,
       connect_with_tags: tags,
+      goal_text: attending ? goalText || null : null,
       wants_receipt: attending ? wantsReceipt : false,
       receipt_name: attending ? receiptName : null,
     },

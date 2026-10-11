@@ -199,6 +199,22 @@ export default function RegistrationForm({
             />
           </div>
 
+          <div>
+            <label className="label">
+              今回の交流会で相談したいこと・会いたい人(自由記述)
+            </label>
+            <textarea
+              name="goal_text"
+              className="input"
+              rows={3}
+              defaultValue={registration?.goal_text || ""}
+              placeholder="例: シード資金調達について投資家の方に壁打ちしてほしい。BtoBマーケティングに詳しい方と話したい。"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              当日の目的を具体的に書くほど、AIによる「おすすめの参加者」の精度が上がります。
+            </p>
+          </div>
+
           <label className="flex items-center gap-2 text-sm text-gray-600">
             <input type="checkbox" name="save_as_default" defaultChecked />
             この内容を次回以降のデフォルトプロフィールとして保存する

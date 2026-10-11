@@ -53,6 +53,10 @@ export default function ChatThread({
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const [icebreakerLoading, setIcebreakerLoading] = useState(false);
+  const [icebreakerError, setIcebreakerError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
@@ -91,6 +95,7 @@ export default function ChatThread({
     const content = draft.trim();
     if (!content || pending) return;
     setDraft("");
+    setSuggestions([]);
     startTransition(async () => {
       try {
         await sendMessage(partnerId, content);
@@ -99,6 +104,29 @@ export default function ChatThread({
       }
     });
   };
+
+  async function handleSuggestIcebreaker() {
+    setIcebreakerError(null);
+    setIcebreakerLoading(true);
+    setSuggestions([]);
+    try {
+      const res = await fetch("/api/icebreaker", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ partnerId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(data?.suggestions)) {
+        setSuggestions(data.suggestions);
+      } else {
+        setIcebreakerError(data?.error || "話題の提案に失敗しました。");
+      }
+    } catch {
+      setIcebreakerError("通信エラーが発生しました。しばらくしてから再度お試しください。");
+    } finally {
+      setIcebreakerLoading(false);
+    }
+  }
 
   let lastDay = "";
 
@@ -117,9 +145,19 @@ export default function ChatThread({
           </div>
         )}
         {messages.length === 0 && (
-          <p className="mt-8 text-center text-sm text-gray-400">
-            まだメッセージはありません。最初のメッセージを送ってみましょう。
-          </p>
+          <div className="mt-8 flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-gray-400">
+              まだメッセージはありません。最初のメッセージを送ってみましょう。
+            </p>
+            <button
+              type="button"
+              onClick={handleSuggestIcebreaker}
+              disabled={icebreakerLoading}
+              className="btn-secondary !min-h-0 px-4 py-2 text-xs"
+            >
+              {icebreakerLoading ? "考え中..." : "💬 AIに話題を提案してもらう"}
+            </button>
+          </div>
         )}
         {messages.map((m, i) => {
           const day = formatDayLabel(m.created_at);
@@ -176,7 +214,41 @@ export default function ChatThread({
         <div ref={bottomRef} />
       </div>
 
+      {icebreakerError && (
+        <p className="mb-1.5 text-xs text-red-600">{icebreakerError}</p>
+      )}
+
+      {suggestions.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                setDraft(s);
+                setSuggestions([]);
+              }}
+              className="max-w-full rounded-2xl border border-accent/40 bg-accent/10 px-3 py-1.5 text-left text-xs text-accent-dark transition hover:bg-accent/20"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-end gap-2 border-t border-gray-100 bg-white pb-2 pt-3">
+        {messages.length > 0 && (
+          <button
+            type="button"
+            aria-label="AIに話題を提案してもらう"
+            title="AIに話題を提案してもらう"
+            onClick={handleSuggestIcebreaker}
+            disabled={icebreakerLoading}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gray-200 text-lg text-gray-400 transition active:scale-90 hover:border-accent hover:text-accent-dark disabled:opacity-40"
+          >
+            {icebreakerLoading ? "⋯" : "💬"}
+          </button>
+        )}
         <textarea
           className="input min-h-[44px] flex-1 resize-none rounded-3xl"
           rows={1}
