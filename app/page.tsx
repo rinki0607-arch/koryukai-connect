@@ -27,16 +27,13 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-[24px] bg-primary px-6 py-8 text-white shadow-[0_8px_28px_rgba(16,25,47,0.28)]">
+      <section className="relative overflow-hidden rounded-[24px] bg-primary px-6 py-8 text-white shadow-[0_8px_28px_rgba(184,36,61,0.32)]">
         <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-accent/20 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/10 blur-2xl" />
-        <p className="relative font-mono text-[11px] font-bold tracking-[0.25em] text-accent">
+        <p className="relative font-mono text-[11px] font-bold tracking-[0.25em] text-white/70">
           ARC ENTREPRENEUR NETWORK
         </p>
-        <h1
-          className="relative mt-1 text-3xl font-bold"
-          style={{ fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.05em" }}
-        >
+        <h1 className="relative mt-1 font-display text-3xl font-bold">
           ARKIVE
         </h1>
         <p className="relative mt-1 text-sm text-white/60">アーク起業塾 交流会プラットフォーム</p>
@@ -47,7 +44,7 @@ export default async function HomePage() {
 
         {user ? (
           <div className="relative mt-5 flex flex-wrap gap-3">
-            <Link href="/events" className="btn-primary">
+            <Link href="/events" className="btn bg-white text-primary hover:bg-white/90">
               交流会一覧を見る
             </Link>
             <InstallButton className="btn min-h-[46px] border-[1.5px] border-white/30 bg-white/10 text-white hover:bg-white/20" />
@@ -55,14 +52,14 @@ export default async function HomePage() {
         ) : (
           <>
             <div className="relative mt-5 flex flex-wrap gap-3">
-              <Link href="/login?mode=signup" className="btn-primary">
+              <Link href="/login?mode=signup" className="btn bg-white text-primary hover:bg-white/90">
                 新規登録してはじめる
               </Link>
               <InstallButton className="btn min-h-[46px] border-[1.5px] border-white/30 bg-white/10 text-white hover:bg-white/20" />
             </div>
             <p className="relative mt-4 text-sm text-white/70">
               すでにアカウントをお持ちの方は{" "}
-              <Link href="/login" className="font-semibold text-accent underline underline-offset-2">
+              <Link href="/login" className="font-semibold text-white underline underline-offset-2">
                 ログイン
               </Link>
             </p>
