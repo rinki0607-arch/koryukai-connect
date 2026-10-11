@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DirectoryEntry } from "@/lib/types";
+import { memberCategoryEmoji, memberCategoryLabel } from "@/lib/constants";
 import MemberActions from "@/components/MemberActions";
 
 const COVER_GRADIENTS = [
@@ -22,6 +23,8 @@ export default function MemberCard({ entry: e }: { entry: DirectoryEntry }) {
   const key = e.name || e.participant_id;
   const gradient = COVER_GRADIENTS[hashName(key) % COVER_GRADIENTS.length];
   const initial = (e.name || "?").trim().charAt(0) || "?";
+  const isInvestorOrMentor =
+    e.member_category === "investor" || e.member_category === "mentor";
 
   return (
     <div className="card overflow-hidden !p-0">
@@ -45,6 +48,11 @@ export default function MemberCard({ entry: e }: { entry: DirectoryEntry }) {
           )}
 
           <div className="absolute inset-x-0 top-0 flex justify-end gap-1.5 p-2.5">
+            {isInvestorOrMentor && (
+              <span className="badge bg-accent text-[#241a03] shadow-sm">
+                {memberCategoryEmoji(e.member_category)} {memberCategoryLabel(e.member_category)}
+              </span>
+            )}
             {e.events_attended > 0 && (
               <span className="badge bg-white/90 text-primary shadow-sm backdrop-blur-sm">
                 参加{e.events_attended}回
@@ -74,6 +82,12 @@ export default function MemberCard({ entry: e }: { entry: DirectoryEntry }) {
         {(e.job_type || e.industry) && (
           <p className="text-sm font-semibold text-accent-dark">
             {[e.job_type, e.industry].filter(Boolean).join(" ・ ")}
+          </p>
+        )}
+
+        {e.investor_mentor_note && (
+          <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+            {e.investor_mentor_note}
           </p>
         )}
 

@@ -12,6 +12,7 @@ export default function MemberDirectory({
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   const [savedOnly, setSavedOnly] = useState(false);
+  const [investorMentorOnly, setInvestorMentorOnly] = useState(false);
 
   const industries = useMemo(
     () =>
@@ -21,8 +22,18 @@ export default function MemberDirectory({
     [entries]
   );
 
+  const hasInvestorOrMentor = entries.some(
+    (e) => e.member_category === "investor" || e.member_category === "mentor"
+  );
+
   const filtered = entries.filter((e) => {
     if (savedOnly && !e.is_saved) return false;
+    if (
+      investorMentorOnly &&
+      e.member_category !== "investor" &&
+      e.member_category !== "mentor"
+    )
+      return false;
     if (industryFilter && e.industry !== industryFilter) return false;
     if (search) {
       const haystack = `${e.name || ""} ${e.company || ""} ${
@@ -62,21 +73,36 @@ export default function MemberDirectory({
             </select>
           </div>
         </div>
-        <div className="segment max-w-[240px]">
-          <button
-            type="button"
-            onClick={() => setSavedOnly(false)}
-            className={`segment-option ${!savedOnly ? "is-active" : ""}`}
-          >
-            すべて表示
-          </button>
-          <button
-            type="button"
-            onClick={() => setSavedOnly(true)}
-            className={`segment-option ${savedOnly ? "is-active" : ""}`}
-          >
-            ⭐ 保存済み
-          </button>
+        <div className="flex flex-wrap gap-2">
+          <div className="segment max-w-[240px]">
+            <button
+              type="button"
+              onClick={() => setSavedOnly(false)}
+              className={`segment-option ${!savedOnly ? "is-active" : ""}`}
+            >
+              すべて表示
+            </button>
+            <button
+              type="button"
+              onClick={() => setSavedOnly(true)}
+              className={`segment-option ${savedOnly ? "is-active" : ""}`}
+            >
+              ⭐ 保存済み
+            </button>
+          </div>
+          {hasInvestorOrMentor && (
+            <label
+              className={`chip ${investorMentorOnly ? "is-active" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={investorMentorOnly}
+                onChange={(e) => setInvestorMentorOnly(e.target.checked)}
+                className="hidden"
+              />
+              💰🎓 投資家・メンターのみ
+            </label>
+          )}
         </div>
       </div>
 
