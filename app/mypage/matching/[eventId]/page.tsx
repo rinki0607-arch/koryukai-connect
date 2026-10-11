@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AttendeeCandidate } from "@/lib/types";
-import AttendeeCard from "@/components/AttendeeCard";
+import AttendeeList from "@/components/AttendeeList";
 
 export const dynamic = "force-dynamic";
 
@@ -55,11 +55,7 @@ export default async function MatchingPage({
       )}
 
       {!error && attendees.length > 0 && (
-        <div className="space-y-3">
-          {attendees.map((a) => (
-            <AttendeeCard key={a.participant_id} eventId={eventId} attendee={a} />
-          ))}
-        </div>
+        <AttendeeList eventId={eventId} attendees={attendees} />
       )}
 
       <p className="mt-6 text-sm text-gray-500">

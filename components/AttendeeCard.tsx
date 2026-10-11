@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { likeParticipant, unlikeParticipant } from "@/app/mypage/matching/[eventId]/actions";
 import { AttendeeCandidate } from "@/lib/types";
+import { memberCategoryEmoji, memberCategoryLabel } from "@/lib/constants";
 import Avatar from "@/components/Avatar";
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -21,36 +22,62 @@ function HeartIcon({ filled }: { filled: boolean }) {
 export default function AttendeeCard({
   eventId,
   attendee,
+  aiReason,
 }: {
   eventId: string;
   attendee: AttendeeCandidate;
+  aiReason?: string;
 }) {
   const [pending, startTransition] = useTransition();
 
   const shared = attendee.shared_tags || [];
   const isRecommended = (attendee.match_score || 0) >= 15;
+  const isInvestorOrMentor =
+    attendee.member_category === "investor" || attendee.member_category === "mentor";
 
   return (
     <div className="card relative flex items-center gap-3 overflow-hidden">
-      {isRecommended && (
+      {!aiReason && isRecommended && (
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent-dark">
           ✨ おすすめ
         </span>
       )}
       <Avatar name={attendee.name} avatarUrl={attendee.avatar_url} size={48} />
       <div className="min-w-0 flex-1">
-        <p className="truncate pr-16 font-semibold">
-          {attendee.name || "(名前未設定)"}
-          {attendee.company ? `(${attendee.company})` : ""}
-        </p>
+        <div className="flex flex-wrap items-center gap-1.5 pr-16">
+          <p className="truncate font-semibold">
+            {attendee.name || "(名前未設定)"}
+            {attendee.company ? `(${attendee.company})` : ""}
+          </p>
+          {isInvestorOrMentor && (
+            <span className="badge shrink-0 border border-accent/40 bg-accent/10 text-accent-dark">
+              {memberCategoryEmoji(attendee.member_category)} {memberCategoryLabel(attendee.member_category)}
+            </span>
+          )}
+        </div>
         {attendee.industry && (
           <p className="mt-1 truncate text-sm text-gray-600">
             業種: {attendee.industry}
           </p>
         )}
+        {attendee.investor_mentor_note && (
+          <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+            {attendee.investor_mentor_note}
+          </p>
+        )}
         {attendee.connect_with && (
           <p className="mt-1 truncate text-sm text-gray-600">
             繋がりたい人: {attendee.connect_with}
+          </p>
+        )}
+        {attendee.goal_text && (
+          <p className="mt-1 truncate text-sm text-gray-600">
+            今日のゴール: {attendee.goal_text}
+          </p>
+        )}
+        {aiReason && (
+          <p className="mt-1.5 rounded-lg bg-accent/8 px-2 py-1 text-xs font-medium text-accent-dark">
+            🤖 {aiReason}
           </p>
         )}
         {shared.length > 0 && (
