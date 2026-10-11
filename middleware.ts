@@ -3,7 +3,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
-// オンボーディング(プロフィール入力)が未完了のユーザーをリダイレキトしない経路。
+// オンボーディング(プロフィール入力)が未完了のユーザーをリダイレクトしない経路。
 // ここに無い経路は、ログイン済み・オンボーディング未完了なら /onboarding に飛ばされる。
 const ONBOARDING_EXEMPT_PREFIXES = [
   "/onboarding",
@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // このアプリはスマホで共有・利用される前提のため、未ログインでリンキ(トップページ)を開いた場合は、
-  // 紹介ランディングを挿まず、最初に新規登録/ログイン画面を表示する。
+  // このアプリはスマホで共有・利用される前提のため、未ログインでリンク(トップページ)を開いた場合は、
+  // 紹介ランディングを挟まず、最初に新規登録/ログイン画面を表示する。
   if (!user && pathname === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
