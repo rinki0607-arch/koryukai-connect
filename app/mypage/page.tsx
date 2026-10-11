@@ -19,6 +19,7 @@ import { updateProfile } from "./actions";
 import CapitalSummaryCard from "@/components/CapitalSummaryCard";
 import AvatarUploader from "@/components/AvatarUploader";
 import StaffCodeForm from "@/components/StaffCodeForm";
+import MemberCategoryFields from "@/components/MemberCategoryFields";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ export default async function MyPage({
               📝 参加後アンケートにご協力ください
             </p>
             <p className="mt-1 text-sm text-gray-600">
-              交流会の感想をぜひお聞かせください。1分程度で回答できます。
+              交流会の感想をぶ詳お聞かせください。1分程度で回答できます。
             </p>
             <div className="mt-3 space-y-2">
               {pendingFeedback.map((ev) => (
@@ -127,7 +128,10 @@ export default async function MyPage({
             🎫 マイQRコード
           </Link>
           <Link href="/mypage/cards" className="btn-secondary">
-            📇 マイ名刺
+            📋 マイ名刑
+          </Link>
+          <Link href="/mypage/ranking" className="btn-secondary">
+            🏆 ランキング
           </Link>
           <Link href="/mypage/account" className="btn-secondary">
             🔐 アカウント設定
@@ -205,6 +209,13 @@ export default async function MyPage({
               運営からの緊急連絡のみに使用し、他の参加者には公開されません。
             </p>
           </div>
+
+          <MemberCategoryFields
+            defaultCategory={p?.member_category || "general"}
+            defaultFundingStage={p?.funding_stage ?? null}
+            defaultNote={p?.investor_mentor_note ?? null}
+          />
+
           <div>
             <p className="label">繋がりたい人のタイプ</p>
             <div className="flex flex-wrap gap-2">
