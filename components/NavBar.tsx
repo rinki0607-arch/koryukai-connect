@@ -41,11 +41,7 @@ export default async function NavBar() {
             className="flex items-center gap-2 text-lg font-bold text-primary"
           >
             <Logo size={34} />
-            <span
-              style={{ fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.06em" }}
-            >
-              ARKIVE
-            </span>
+            <span className="font-display">ARKIVE</span>
           </Link>
 
           {/* デスクトップ幅ではフルナビ、モバイル幅は下部タブバーに任せてシンプルに */}

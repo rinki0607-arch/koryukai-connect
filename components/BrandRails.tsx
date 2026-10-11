@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 /**
- * 超ワイド画面(2xl以上)で余白になる本文左右のスペースに、
- * ARKIVE と運営元(ヒューマンキャピタル株式会社)のブランド要素を
+ * 超ワイド画面(2xl以上)で余白になる本文左右のスパースに、
+ * ARKIVE と運営元(ヒューマンキャピタル株式会社)のブランド要素を、
  * 台帳(ledger)の背表紙のようにあしらう装飾レール。
  * 通常のノートPC幅では表示されず、レイアウトにも影響しない。
  */
@@ -28,7 +28,7 @@ export function BrandRailLeft() {
     >
       <Link
         href="/"
-        className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-primary font-display text-base font-bold text-accent shadow-sm transition hover:opacity-90"
+        className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-primary font-display text-base font-bold text-white shadow-sm transition hover:opacity-90"
       >
         A
       </Link>
@@ -36,7 +36,7 @@ export function BrandRailLeft() {
       <div className="mt-10 flex flex-col items-center gap-5">
         <TickRule />
         <p
-          className="select-none font-display text-[15px] font-bold tracking-[0.2em] text-primary/80"
+          className="select-none font-display text-[15px] font-bold tracking-[0.2em] text-primary"
           style={{ writingMode: "vertical-rl" }}
         >
           ARKIVE
@@ -67,7 +67,7 @@ export function BrandRailRight() {
       <div className="mt-10 flex flex-col items-center gap-3">
         <TickRule />
         <p
-          className="select-none font-display text-[15px] font-bold tracking-[0.14em] text-primary/80"
+          className="select-none font-display text-[15px] font-bold tracking-[0.14em] text-primary"
           style={{ writingMode: "vertical-rl" }}
         >
           ヒューマンキャピタル
