@@ -44,30 +44,19 @@ export default async function NavBar() {
             <span className="font-display">ARKIVE</span>
           </Link>
 
-          {/* デスクトップ幅ではフルナビ、モバイル幅は下部タブバーに任せてシンプルに */}
+          {/* デスクトップ幅では主要機能のみをナビに出し、その他(QR/名刺/ランキング等)はマイページから辿る。
+              モバイル幅は下部タブバーに任せてシンプルにする */}
           <nav className="hidden items-center gap-5 text-sm lg:flex">
             <Link href="/events" className="text-gray-600 transition hover:text-primary">
               交流会一覧
             </Link>
             {user && (
               <>
-                <Link href="/mypage" className="text-gray-600 transition hover:text-primary">
-                  マイページ
-                </Link>
                 <Link href="/members" className="text-gray-600 transition hover:text-primary">
                   参加者名簿
                 </Link>
                 <Link href="/feed" className="text-gray-600 transition hover:text-primary">
-                  コマニティ
-                </Link>
-                <Link href="/mypage/ticket" className="text-gray-600 transition hover:text-primary">
-                  マイQRコード
-                </Link>
-                <Link href="/mypage/cards" className="text-gray-600 transition hover:text-primary">
-                  マイ名刺
-                </Link>
-                <Link href="/mypage/ranking" className="text-gray-600 transition hover:text-primary">
-                  🏆 ランキング
+                  フィード
                 </Link>
                 <Link
                   href="/mypage/matches"
@@ -79,6 +68,9 @@ export default async function NavBar() {
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
+                </Link>
+                <Link href="/mypage" className="text-gray-600 transition hover:text-primary">
+                  マイページ
                 </Link>
                 <Link
                   href="/notifications"
@@ -111,7 +103,7 @@ export default async function NavBar() {
             )}
           </nav>
 
-          {/* モバイル幅: お知らせ・管理者リンク・ログアウトだけを右上に出す(それ以外は下部タブバー) */}
+          {/* モバイル幅: お知らせ・管理者リンク・ログアウトだけを右上に出す(それ以外は下部タブバーに任せる) */}
           <div className="flex items-center gap-3 lg:hidden">
             {user && (
               <Link

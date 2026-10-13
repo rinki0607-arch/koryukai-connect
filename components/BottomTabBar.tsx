@@ -7,27 +7,6 @@ interface TabItem {
   badge?: number;
 }
 
-function HomeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 11.5 12 4l8 7.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 10v8.5a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1V10"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function CalendarIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -132,9 +111,10 @@ export default function BottomTabBar({
   loggedIn: boolean;
   unreadCount: number;
 }) {
+  // 【情報設計の見直し】「ホーム」はヘッダーのARKIVEロゴ(常時表示)からも戻れるため、
+  // 下部タブバーでは重複させずに最大5項目までに絞る(マイQR/マイ名刺/ランキングはマイページに集約済み)。
   const items: TabItem[] = loggedIn
     ? [
-        { href: "/", label: "ホーム", icon: <HomeIcon /> },
         { href: "/events", label: "交流会", icon: <CalendarIcon /> },
         { href: "/members", label: "名簿", icon: <PeopleIcon /> },
         { href: "/feed", label: "フィード", icon: <FeedIcon /> },
@@ -147,7 +127,6 @@ export default function BottomTabBar({
         { href: "/mypage", label: "マイページ", icon: <PersonIcon /> },
       ]
     : [
-        { href: "/", label: "ホーム", icon: <HomeIcon /> },
         { href: "/events", label: "交流会", icon: <CalendarIcon /> },
         { href: "/login", label: "ログイン", icon: <PersonIcon /> },
       ];
