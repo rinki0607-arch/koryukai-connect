@@ -11,6 +11,9 @@
 ## セットアップ(ローカル開発)
 
 ```bash
+
+<!-- deploy-test: rinki0607-arch commit -->
+
 npm install
 cp .env.example .env.local  # Supabaseのプロジェクト情報を入力
 npm run dev
