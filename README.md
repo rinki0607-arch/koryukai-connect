@@ -21,7 +21,10 @@ npm run dev
 
 ## データベース
 
-`supabase/schema.sql` を Supabase の SQL Editor で実行するとテーブル・RLSポリシー・関数一式が作成されます。
+`supabase/schema.sql` を Supabase の SQL Editor で実行するとテーブル・RLSポリシー・関数一式
+
+<!-- deploy-test 2: rinki0607-arch commit -->
+が作成されます。
 
 ## 管理者権限の付与
 
