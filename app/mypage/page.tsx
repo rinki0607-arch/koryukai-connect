@@ -20,6 +20,7 @@ import CapitalSummaryCard from "@/components/CapitalSummaryCard";
 import AvatarUploader from "@/components/AvatarUploader";
 import StaffCodeForm from "@/components/StaffCodeForm";
 import MemberCategoryFields from "@/components/MemberCategoryFields";
+import PushNotificationButton from "@/components/PushNotificationButton";
 
 export const dynamic = "force-dynamic";
 
@@ -136,6 +137,7 @@ export default async function MyPage({
           <Link href="/mypage/account" className="btn-secondary">
             🔐 アカウント設定
           </Link>
+          <PushNotificationButton />
         </div>
         <form action={updateProfile} className="card max-w-xl space-y-4">
           <p className="text-sm text-gray-500">
