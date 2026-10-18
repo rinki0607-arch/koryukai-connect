@@ -127,7 +127,10 @@ button.card {
 
 @media (min-width: 1024px) {
   .pb-tabbar {
-    padding-bottom: 2rem;
+    /* デスクトップでも右下固定のサポートチャットボタン(.chatbot-fab、
+       bottom: 1.5rem、高さ56px)とページ下部のボタン類が重ならないよう、
+       タブバー用の下部余白をチャットボタンの高さ分広めに確保する */
+    padding-bottom: 6rem;
   }
 }
 
