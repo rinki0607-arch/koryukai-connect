@@ -32,6 +32,12 @@ export default async function MatchingPage({
 
   return (
     <div>
+      <Link
+        href={`/events/${eventId}`}
+        className="mb-3 inline-block text-sm text-gray-500 hover:text-primary"
+      >
+        ← 交流会の詳細に戻る
+      </Link>
       <h1 className="mb-1 text-xl font-bold">参加者マッチング</h1>
       <p className="text-sm text-gray-500">{event?.title}</p>
       {!error && attendees.length > 0 && (

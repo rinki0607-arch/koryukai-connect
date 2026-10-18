@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import NotificationList, {
@@ -20,6 +21,9 @@ export default async function NotificationsPage() {
 
   return (
     <div>
+      <Link href="/mypage" className="mb-3 inline-block text-sm text-gray-500 hover:text-primary">
+        ← マイページに戻る
+      </Link>
       <h1 className="mb-2 text-xl font-bold">お知らせ</h1>
       <p className="mb-6 text-sm text-gray-500">
         マッチ成立やコミュニティでのいいね、新しい交流会情報などをお知らせします。

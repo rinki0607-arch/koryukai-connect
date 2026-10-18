@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventRow } from "@/lib/types";
@@ -25,8 +26,13 @@ export default async function EventFeedbackPage({
 
   if (!event) {
     return (
-      <div className="card text-sm text-gray-500">
-        交流会が見つかりませんでした。
+      <div>
+        <Link href="/mypage" className="mb-4 inline-block text-sm text-gray-500 hover:text-primary">
+          ← マイページに戻る
+        </Link>
+        <div className="card text-sm text-gray-500">
+          交流会が見つかりませんでした。
+        </div>
       </div>
     );
   }
@@ -35,6 +41,9 @@ export default async function EventFeedbackPage({
 
   return (
     <div>
+      <Link href="/mypage" className="mb-4 inline-block text-sm text-gray-500 hover:text-primary">
+        ← マイページに戻る
+      </Link>
       <h1 className="mb-6 text-xl font-bold">参加後アンケート</h1>
       <FeedbackForm eventId={ev.id} eventTitle={ev.title} />
     </div>

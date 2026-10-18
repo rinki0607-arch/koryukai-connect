@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
@@ -48,6 +49,9 @@ export default async function MyCardsPage() {
 
   return (
     <div>
+      <Link href="/mypage" className="mb-4 inline-block text-sm text-gray-500 hover:text-primary">
+        ← マイページに戻る
+      </Link>
       <h1 className="mb-1 text-xl font-bold">マイ名刺</h1>
       <p className="mb-6 text-sm text-gray-500">
         QRコードを見せ合うだけで、お互いのプロフィールを自動で交換できます。紙の名刺を撮影して保存することもできます。
