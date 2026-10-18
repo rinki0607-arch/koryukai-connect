@@ -4,6 +4,25 @@ import LogoutButton from "@/components/LogoutButton";
 import BottomTabBar from "@/components/BottomTabBar";
 import Logo from "@/components/Logo";
 
+function BellIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M6 10.5a6 6 0 1 1 12 0c0 2.2.6 3.6 1.4 4.8.5.7 0 1.7-.9 1.7H5.5c-.9 0-1.4-1-.9-1.7.8-1.2 1.4-2.6 1.4-4.8Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.5 19.5a2.5 2.5 0 0 0 5 0"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default async function NavBar() {
   const supabase = await createClient();
   const {
@@ -77,7 +96,7 @@ export default async function NavBar() {
                   aria-label="お知らせ"
                   className="relative text-gray-600 transition hover:text-primary"
                 >
-                  🔔
+                  <BellIcon />
                   {notifCount > 0 && (
                     <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
                       {notifCount > 9 ? "9+" : notifCount}
@@ -111,7 +130,7 @@ export default async function NavBar() {
                 aria-label="お知らせ"
                 className="relative text-gray-500 hover:text-primary"
               >
-                🔔
+                <BellIcon />
                 {notifCount > 0 && (
                   <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
                     {notifCount > 9 ? "9+" : notifCount}
