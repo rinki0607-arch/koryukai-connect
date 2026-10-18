@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 /**
  * 超ワイド画面(2xl以上)で余白になる本文左右のスパースに、
@@ -28,9 +29,9 @@ export function BrandRailLeft() {
     >
       <Link
         href="/"
-        className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-primary font-display text-base font-bold text-white shadow-sm transition hover:opacity-90"
+        className="pointer-events-auto shrink-0 transition hover:opacity-90"
       >
-        A
+        <Logo size={36} />
       </Link>
 
       <div className="mt-10 flex flex-col items-center gap-5">
