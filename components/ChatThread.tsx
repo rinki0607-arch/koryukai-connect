@@ -84,6 +84,22 @@ export default function ChatThread({
           }
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        (payload) => {
+          const m = payload.new as Message;
+          const belongsHere =
+            (m.sender_id === currentUserId && m.recipient_id === partnerId) ||
+            (m.sender_id === partnerId && m.recipient_id === currentUserId);
+          if (!belongsHere) return;
+
+          // 相手が会話を開いて既読になったときに、既読表示をリアルタイムで反映する
+          setMessages((prev) =>
+            prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p))
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -129,6 +145,17 @@ export default function ChatThread({
   }
 
   let lastDay = "";
+
+  // 自分が送った最後のメッセージにのみ「既読」バッジを出す(全件に出すとうるさいため)
+  const lastMineReadId = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.sender_id === currentUserId) {
+        return m.read_at ? m.id : null;
+      }
+    }
+    return null;
+  })();
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -208,6 +235,9 @@ export default function ChatThread({
                   </p>
                 </div>
               </div>
+              {isMine && m.id === lastMineReadId && (
+                <p className="mr-1 mt-0.5 text-right text-[10px] text-gray-400">既読</p>
+              )}
             </div>
           );
         })}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isStaffBusinessHours, formatEventDate } from "@/lib/constants";
 
@@ -56,6 +57,7 @@ export default function ChatbotWidget() {
   const [nextEvent, setNextEvent] = useState<UpcomingEventPreview | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const isBusinessHours = isStaffBusinessHours();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ block: "end" });
@@ -115,6 +117,14 @@ export default function ChatbotWidget() {
       setPending(false);
     }
   };
+
+  // 1対1のメッセージスレッド画面では、送信ボタンとこのFABが重なってタップできなくなるため
+  // ここでは表示しない(スレッド内には別途「AIに話題を提案してもらう」ボタンがあるため、
+  // サポートへの入り口自体は失われない)。
+  const isConversationThread = !!pathname && /^\/mypage\/matches\/[^/]+$/.test(pathname);
+  if (isConversationThread) {
+    return null;
+  }
 
   return (
     <div className="chatbot-fab fixed right-4 z-[45] flex flex-col items-end gap-3 lg:right-6">
