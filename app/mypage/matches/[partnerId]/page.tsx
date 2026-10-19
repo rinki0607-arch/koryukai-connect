@@ -80,6 +80,10 @@ export default async function ConversationPage({
           partnerId={partnerId}
           partnerName={partner.name}
           partnerAvatarUrl={partner.avatar_url}
+          partnerCompany={partner.company}
+          partnerJobTitle={partner.job_title}
+          partnerIndustry={partner.industry}
+          partnerConnectWith={partner.connect_with}
           matchedAt={partner.matched_at}
           initialMessages={(messagesData as Message[]) || []}
         />
