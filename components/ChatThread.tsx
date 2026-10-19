@@ -249,20 +249,42 @@ export default function ChatThread({
       )}
 
       {suggestions.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {suggestions.map((s, i) => (
+        <div className="mb-2 overflow-hidden rounded-2xl border border-primary/20 bg-primary-light/40 shadow-[0_2px_10px_rgba(43,38,48,0.06)]">
+          <div className="flex items-center justify-between gap-2 border-b border-primary/15 bg-primary/10 px-3 py-1.5">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-primary-dark">
+              <span>💡</span>話題の提案。タップで入力欄にセットします
+            </p>
             <button
-              key={i}
               type="button"
-              onClick={() => {
-                setDraft(s);
-                setSuggestions([]);
-              }}
-              className="max-w-full rounded-2xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-left text-xs text-primary-dark transition hover:bg-primary/20"
+              aria-label="提案を閉じる"
+              onClick={() => setSuggestions([])}
+              className="shrink-0 rounded-full p-1 text-primary-dark/50 transition hover:bg-white/60 hover:text-primary-dark"
             >
-              {s}
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M5 5l10 10M15 5L5 15"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
-          ))}
+          </div>
+          <div className="divide-y divide-primary/10">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setDraft(s);
+                  setSuggestions([]);
+                }}
+                className="block w-full px-3 py-2.5 text-left text-[13px] leading-relaxed text-gray-700 transition active:scale-[0.99] hover:bg-white/70"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
