@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Message } from "@/lib/types";
 import { sendMessage, markConversationRead } from "@/app/mypage/matches/[partnerId]/actions";
+import { buildIcebreakerSuggestions } from "@/lib/icebreakers";
 import Avatar from "@/components/Avatar";
 
 function formatTime(iso: string) {
@@ -38,6 +39,10 @@ export default function ChatThread({
   partnerId,
   partnerName,
   partnerAvatarUrl,
+  partnerCompany,
+  partnerJobTitle,
+  partnerIndustry,
+  partnerConnectWith,
   matchedAt,
   initialMessages,
 }: {
@@ -45,6 +50,10 @@ export default function ChatThread({
   partnerId: string;
   partnerName?: string | null;
   partnerAvatarUrl?: string | null;
+  partnerCompany?: string | null;
+  partnerJobTitle?: string | null;
+  partnerIndustry?: string | null;
+  partnerConnectWith?: string | null;
   matchedAt?: string | null;
   initialMessages: Message[];
 }) {
@@ -53,8 +62,6 @@ export default function ChatThread({
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const [icebreakerLoading, setIcebreakerLoading] = useState(false);
-  const [icebreakerError, setIcebreakerError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -121,27 +128,18 @@ export default function ChatThread({
     });
   };
 
-  async function handleSuggestIcebreaker() {
-    setIcebreakerError(null);
-    setIcebreakerLoading(true);
-    setSuggestions([]);
-    try {
-      const res = await fetch("/api/icebreaker", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ partnerId }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && Array.isArray(data?.suggestions)) {
-        setSuggestions(data.suggestions);
-      } else {
-        setIcebreakerError(data?.error || "話題の提案に失敗しました。");
-      }
-    } catch {
-      setIcebreakerError("通信エラーが発生しました。しばらくしてから再度お試しください。");
-    } finally {
-      setIcebreakerLoading(false);
-    }
+  // AI(外部API)を呼ばず、相手のプロフィール情報からその場で話題候補を組み立てる。
+  // ネットワーク通信が無いため失敗することがなく、APIの契約状態にも左右されない。
+  function handleSuggestIcebreaker() {
+    setSuggestions(
+      buildIcebreakerSuggestions({
+        name: partnerName,
+        company: partnerCompany,
+        jobTitle: partnerJobTitle,
+        industry: partnerIndustry,
+        connectWith: partnerConnectWith,
+      })
+    );
   }
 
   let lastDay = "";
@@ -179,10 +177,9 @@ export default function ChatThread({
             <button
               type="button"
               onClick={handleSuggestIcebreaker}
-              disabled={icebreakerLoading}
               className="btn-secondary !min-h-0 px-4 py-2 text-xs"
             >
-              {icebreakerLoading ? "考え中..." : "💬 AIに話題を提案してもらう"}
+              💬 話題のきっかけを提案してもらう
             </button>
           </div>
         )}
@@ -244,10 +241,6 @@ export default function ChatThread({
         <div ref={bottomRef} />
       </div>
 
-      {icebreakerError && (
-        <p className="mb-1.5 text-xs text-red-600">{icebreakerError}</p>
-      )}
-
       {suggestions.length > 0 && (
         <div className="mb-2 overflow-hidden rounded-2xl border border-primary/20 bg-primary-light/40 shadow-[0_2px_10px_rgba(43,38,48,0.06)]">
           <div className="flex items-center justify-between gap-2 border-b border-primary/15 bg-primary/10 px-3 py-1.5">
@@ -292,13 +285,12 @@ export default function ChatThread({
         {messages.length > 0 && (
           <button
             type="button"
-            aria-label="AIに話題を提案してもらう"
-            title="AIに話題を提案してもらう"
+            aria-label="話題のきっかけを提案してもらう"
+            title="話題のきっかけを提案してもらう"
             onClick={handleSuggestIcebreaker}
-            disabled={icebreakerLoading}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gray-200 text-lg text-gray-400 transition active:scale-90 hover:border-primary hover:text-primary-dark disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gray-200 text-lg text-gray-400 transition active:scale-90 hover:border-primary hover:text-primary-dark"
           >
-            {icebreakerLoading ? "⋯" : "💬"}
+            💬
           </button>
         )}
         <textarea
