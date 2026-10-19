@@ -6,6 +6,7 @@ import { ConversationPartner, IcebreakerSuggestion, Profile } from "@/lib/types"
 export const dynamic = "force-dynamic";
 
 const NOT_CONFIGURED_MESSAGE = "AIによる話題提案は現在準備中です。";
+const GENERIC_FAILURE_MESSAGE = "話題の提案に失敗しました。しばらくしてから再度お試しください。";
 
 export async function POST(req: NextRequest) {
   if (!isAiConfigured()) {
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
       (s): s is string => typeof s === "string" && s.trim().length > 0
     );
     if (suggestions.length === 0) {
+      console.error("[icebreaker] AIの応答から話題を抽出できませんでした:", raw);
       return NextResponse.json(
         { error: "話題の提案を生成できませんでした。もう一度お試しください。" },
         { status: 502 }
@@ -87,14 +89,9 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ suggestions: suggestions.slice(0, 3) });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "話題の提案に失敗しました。",
-      },
-      { status: 500 }
-    );
+    // 生のAPIエラー(ステータスコード・課金状態など)は運営向けのログにだけ残し、
+    // 参加者の画面には技術的な詳細を出さない(サポートチャットボットと同じ方針)。
+    console.error("[icebreaker] AI呼び出しに失敗しました:", err);
+    return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
   }
 }
