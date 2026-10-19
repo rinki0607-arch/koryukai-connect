@@ -3,7 +3,9 @@
 // SDKは依存追加せず、既存の stripe.ts などと同じ「未設定なら機能オフ」のパターンに合わせる。
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
+// 旧モデル(claude-3-5-haiku-20241022)はAnthropic側で2026年2月に廃止済みのため、
+// チャットボット(app/api/chatbot/route.ts)と同じ現行モデルに統一する。
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
 export function isAiConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY;
