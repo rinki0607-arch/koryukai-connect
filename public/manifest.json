@@ -1,7 +1,7 @@
 {
-  "name": "ARKIVE - アーク起業塾 交流会プラットフォーム",
+  "name": "ARKIVE - アーク起業アカデミー 交流会プラットフォーム",
   "short_name": "ARKIVE",
-  "description": "アーク起業塾の交流会 参加登録・マッチング・QR受付アプリ",
+  "description": "アーク起業アカデミーの交流会 参加登録・マッチング・QR受付アプリ",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f5f9",

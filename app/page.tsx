@@ -36,7 +36,7 @@ export default async function HomePage() {
         <h1 className="relative mt-1 font-display text-3xl font-bold">
           ARKIVE
         </h1>
-        <p className="relative mt-1 text-sm text-white/60">アーク起業塾 交流会プラットフォーム</p>
+        <p className="relative mt-1 text-sm text-white/60">アーク起業アカデミー 交流会プラットフォーム</p>
         <p className="relative mt-3 text-[15px] leading-relaxed text-white/80">
           交流会の参加登録・二次会希望の確認、参加者の業種や繋がりたい人の情報の蓄積、
           交流会後のマッチング、当日のQR受付までを1つのアプリで完結できます。

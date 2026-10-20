@@ -26,7 +26,7 @@ export default async function LoginPage({
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           {isSignup
-            ? "ARKIVEでアーク起業塩の交流会に参加登録"
+            ? "ARKIVEでアーク起業アカデミーの交流会に参加登録"
             : "ARKIVEにログインして続ける"}
         </p>
       </div>
