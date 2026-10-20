@@ -19,7 +19,7 @@ interface UpcomingEventPreview {
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "こんにちは!ARKIVEサポートです。アーク起業塾の交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。交流会での通報や運営への問い合わせも、下のボタンまたはメッセージからそのまま受け付けられます。",
+    "こんにちは!ARKIVEサポートです。アーク起業アカデミーの交流会日程や、参加登録・マイページ・マッチングなどアプリの使い方について24時間お答えします。交流会での通報や運営への問い合わせも、下のボタンまたはメッセージからそのまま受け付けられます。",
 };
 
 const QUICK_ACTIONS: { label: string; icon: string; message: string }[] = [
