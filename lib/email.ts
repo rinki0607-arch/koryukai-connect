@@ -97,7 +97,7 @@ export function buildEventAnnouncementEmail(params: {
 
   const html = `
     <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
-      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業塾</p>
+      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業アカデミー</p>
       <h2 style="margin:8px 0 4px;">新しい交流会のお知らせ</h2>
       <p style="margin:0 0 20px;color:#555;">${eventDateLabel}${
     timeLabel ? ` ${timeLabel}` : ""
@@ -134,7 +134,7 @@ export function buildReEngagementEmail(params: { name: string | null; appUrl: st
 
   const html = `
     <div style="font-family:sans-serif;line-height:1.7;color:#10192f;max-width:480px;margin:0 auto;">
-      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業塾</p>
+      <p style="font-size:12px;color:#10192f;font-weight:bold;letter-spacing:.05em;">ARKIVE / アーク起業アカデミー</p>
       <h2 style="margin:8px 0 4px;">${name ? `${name}様、` : ""}お久しぶりです</h2>
       <p style="margin:0 0 20px;color:#555;font-size:14px;">
         しばらく交流会にお越しいただけていないようで、少し寂しく思いご連絡しました。
