@@ -16,6 +16,10 @@ const ONBOARDING_EXEMPT_PREFIXES = [
   "/c",
 ];
 
+// オンボーディング確認済み(または管理者)であることを記録するCookie。
+// これが付いているリクエストは、profilesテーブルへの問い合わせを省略して応答を速くする。
+const ONBOARDED_COOKIE = "arkive_onboarded";
+
 function isExemptFromOnboarding(pathname: string) {
   return ONBOARDING_EXEMPT_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
@@ -60,20 +64,35 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && !isExemptFromOnboarding(pathname)) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed, role")
-      .eq("id", user.id)
-      .maybeSingle();
+    const alreadyConfirmed = request.cookies.get(ONBOARDED_COOKIE)?.value === "1";
 
-    if (
-      profile &&
-      profile.role !== "admin" &&
-      profile.onboarding_completed === false
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/onboarding";
-      return NextResponse.redirect(url);
+    if (!alreadyConfirmed) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed, role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const needsOnboarding =
+        !!profile && profile.role !== "admin" && profile.onboarding_completed === false;
+
+      if (needsOnboarding) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/onboarding";
+        return NextResponse.redirect(url);
+      }
+
+      // 管理者、またはオンボーディング完了が確認できた場合のみCookieに記録する。
+      // 次回以降のアクセスでは、このCookieがある限りprofilesテーブルへの問い合わせを省略する。
+      if (profile && (profile.role === "admin" || profile.onboarding_completed !== false)) {
+        response.cookies.set(ONBOARDED_COOKIE, "1", {
+          maxAge: 60 * 60 * 24 * 30,
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+      }
     }
   }
 
