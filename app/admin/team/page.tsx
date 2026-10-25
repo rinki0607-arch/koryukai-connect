@@ -11,22 +11,24 @@ export default async function AdminTeamPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
+  const hasQuery = !!(q && q.trim());
 
-  const { data: admins } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("role", "admin")
-    .order("name");
+  // 運営メンバー一覧と、検索欄の絞り込み結果は互いに無関係な問い合わせなので
+  // (検索語があるときだけ)同時に取得する。
+  const [{ data: admins }, searchResult] = await Promise.all([
+    supabase.from("profiles").select("*").eq("role", "admin").order("name"),
+    hasQuery
+      ? supabase
+          .from("profiles")
+          .select("*")
+          .or(`name.ilike.%${q}%,email.ilike.%${q}%,company.ilike.%${q}%`)
+          .limit(20)
+      : Promise.resolve({ data: null as Profile[] | null }),
+  ]);
 
-  let searchResults: Profile[] = [];
-  if (q && q.trim()) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .or(`name.ilike.%${q}%,email.ilike.%${q}%,company.ilike.%${q}%`)
-      .limit(20);
-    searchResults = (data as Profile[]) || [];
-  }
+  const searchResults: Profile[] = hasQuery
+    ? ((searchResult.data as Profile[]) || [])
+    : [];
 
   return (
     <div className="space-y-8">

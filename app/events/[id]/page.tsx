@@ -26,26 +26,21 @@ export default async function EventDetailPage({
     redirect(`/login?next=/events/${id}`);
   }
 
-  const { data: event } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", id)
-    .single();
+  // 交流会情報・自分の参加登録・自分のプロフィールは互いに結果を必要としない
+  // (idとuser.idだけで決まる)ので、1つずつ待たずに同時に取得する。
+  const [{ data: event }, { data: registration }, { data: profile }] =
+    await Promise.all([
+      supabase.from("events").select("*").eq("id", id).single(),
+      supabase
+        .from("registrations")
+        .select("*")
+        .eq("event_id", id)
+        .eq("participant_id", user.id)
+        .maybeSingle(),
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
+    ]);
 
   if (!event) notFound();
-
-  const { data: registration } = await supabase
-    .from("registrations")
-    .select("*")
-    .eq("event_id", id)
-    .eq("participant_id", user.id)
-    .maybeSingle();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
 
   const ev = event as EventRow;
 

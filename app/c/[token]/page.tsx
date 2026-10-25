@@ -15,15 +15,15 @@ export default async function PublicCardPage({
   const { token } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .rpc("get_public_card", { p_token: token })
-    .maybeSingle();
+  // 名刺の取得とログイン状態の確認は互いに無関係なので同時に行う。
+  const [{ data, error }, {
+    data: { user },
+  }] = await Promise.all([
+    supabase.rpc("get_public_card", { p_token: token }).maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
 
   const card = !error ? (data as PublicCard | null) : null;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   let isOwnCard = false;
   if (user) {

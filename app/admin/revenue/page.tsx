@@ -12,10 +12,14 @@ function yen(n: number) {
 
 export default async function AdminRevenuePage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_admin_revenue_summary");
-  const rows = (data as AdminRevenueSummary[]) || [];
 
-  const stripeConfigured = await isStripeConfigured();
+  // 売上集計(DB)とStripe設定済みかの確認(こちらもDBを見に行く)は
+  // 互いに無関係なので同時に取得する。
+  const [{ data, error }, stripeConfigured] = await Promise.all([
+    supabase.rpc("get_admin_revenue_summary"),
+    isStripeConfigured(),
+  ]);
+  const rows = (data as AdminRevenueSummary[]) || [];
 
   const totalRevenue = rows.reduce((sum, r) => sum + (r.total_revenue || 0), 0);
   const totalPaid = rows.reduce((sum, r) => sum + (r.paid_count || 0), 0);
