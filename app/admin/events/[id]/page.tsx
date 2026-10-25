@@ -19,33 +19,36 @@ export default async function EditEventPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: event } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", id)
-    .single();
+  // 交流会本体・参加登録数・受付済み数・参加者一覧は、いずれもidだけで決まり
+  // 互いに結果を必要としないので、以前は4回順番に待っていた問い合わせを
+  // 同時に実行する。
+  const [
+    { data: event },
+    { count: registeredCount },
+    { count: checkedInCount },
+    { data: registrations },
+  ] = await Promise.all([
+    supabase.from("events").select("*").eq("id", id).single(),
+    supabase
+      .from("registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", id)
+      .eq("attending", true),
+    supabase
+      .from("attendance")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", id)
+      .not("checked_in_at", "is", null),
+    supabase
+      .from("registrations")
+      .select(
+        "participant_id, attending, afterparty, industry, connect_with, connect_with_tags, profiles(name, email, phone, company, job_type, job_title)"
+      )
+      .eq("event_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (!event) notFound();
-
-  const { count: registeredCount } = await supabase
-    .from("registrations")
-    .select("*", { count: "exact", head: true })
-    .eq("event_id", id)
-    .eq("attending", true);
-
-  const { count: checkedInCount } = await supabase
-    .from("attendance")
-    .select("*", { count: "exact", head: true })
-    .eq("event_id", id)
-    .not("checked_in_at", "is", null);
-
-  const { data: registrations } = await supabase
-    .from("registrations")
-    .select(
-      "participant_id, attending, afterparty, industry, connect_with, connect_with_tags, profiles(name, email, phone, company, job_type, job_title)"
-    )
-    .eq("event_id", id)
-    .order("created_at", { ascending: false });
 
   const participantRows: EventParticipantRow[] = (registrations || []).map(
     (r: any) => ({

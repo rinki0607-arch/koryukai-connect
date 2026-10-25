@@ -13,9 +13,13 @@ export default async function CheckinPage({
 }) {
   const { eventId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  // ログイン確認と交流会情報の取得は互いに無関係なので同時に行う。
+  // 権限(role)の確認はuser.idが分かった後でないと行えないため、引き続き順番に行う。
+  const [{ data: { user } }, { data: event }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("events").select("*").eq("id", eventId).single(),
+  ]);
   if (!user) redirect(`/login?next=/admin/checkin/${eventId}`);
 
   const { data: profile } = await supabase
@@ -25,11 +29,6 @@ export default async function CheckinPage({
     .single();
   if (profile?.role !== "admin") redirect("/");
 
-  const { data: event } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", eventId)
-    .single();
   if (!event) notFound();
 
   const ev = event as EventRow;

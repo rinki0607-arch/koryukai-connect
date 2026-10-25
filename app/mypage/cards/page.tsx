@@ -17,18 +17,16 @@ export default async function MyCardsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/mypage/cards");
 
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // 自分のプロフィールと保存済みの名刺一覧は互いに無関係なので同時に取得する。
+  const [{ data: profileData }, { data }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase
+      .from("business_cards")
+      .select("*")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false }),
+  ]);
   const profile = profileData as Profile;
-
-  const { data } = await supabase
-    .from("business_cards")
-    .select("*")
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
   const cards = (data as BusinessCard[]) || [];
 
   const qrValue = `ARKIVE:card:v1:${profile.card_token}`;

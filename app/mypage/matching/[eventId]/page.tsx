@@ -18,15 +18,11 @@ export default async function MatchingPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/mypage/matching/${eventId}`);
 
-  const { data: event } = await supabase
-    .from("events")
-    .select("title")
-    .eq("id", eventId)
-    .single();
-
-  const { data, error } = await supabase.rpc("get_event_attendees", {
-    p_event_id: eventId,
-  });
+  // 交流会タイトルと参加者候補一覧は互いに無関係なので同時に取得する。
+  const [{ data: event }, { data, error }] = await Promise.all([
+    supabase.from("events").select("title").eq("id", eventId).single(),
+    supabase.rpc("get_event_attendees", { p_event_id: eventId }),
+  ]);
 
   const attendees = (data as AttendeeCandidate[]) || [];
 
