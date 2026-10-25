@@ -36,24 +36,26 @@ export default async function MyPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/mypage");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // プロフィール・参加登録一覧・資産サマリー・アンケート未回答一覧は互いに
+  // 関係のないデータなので、1つずつ順番に待つのではなく同時に取得する
+  // (直列だと通信回数分の待ち時間がそのまま積み上がってしまうため)。
+  const [
+    { data: profile },
+    { data: registrations },
+    { data: capitalData },
+    { data: pendingFeedbackData },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase
+      .from("registrations")
+      .select("*, events(*)")
+      .eq("participant_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase.rpc("get_my_capital_summary"),
+    supabase.rpc("get_pending_feedback_events"),
+  ]);
 
-  const { data: registrations } = await supabase
-    .from("registrations")
-    .select("*, events(*)")
-    .eq("participant_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const { data: capitalData } = await supabase.rpc("get_my_capital_summary");
   const capital = (capitalData as CapitalSummary[] | null)?.[0];
-
-  const { data: pendingFeedbackData } = await supabase.rpc(
-    "get_pending_feedback_events"
-  );
   const pendingFeedback = (pendingFeedbackData as PendingFeedbackEvent[]) || [];
 
   const p = profile as Profile;
