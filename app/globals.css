@@ -49,8 +49,27 @@ button.card {
 }
 
 /* ============================================================
+   スケルトン(読み込み中の骨組み): データ取得中、白紙のまま
+   待たせず、おおよその形を淡いアニメーションで先に見せる
+   ============================================================ */
+.skeleton {
+  background: linear-gradient(90deg, #ece6e3 25%, #f4efec 37%, #ece6e3 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ============================================================
    ボタン: 指で押しやすい高さ(44px以上)・丸いピル型・
-   押した瞬間に少し沈む感触を持たせる
+   押した睹間に少し沈む感触を持たせる
    ============================================================ */
 .btn {
   @apply inline-flex min-h-[46px] items-center justify-center gap-1.5 rounded-full px-5 text-[15px] font-bold transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
@@ -128,7 +147,7 @@ button.card {
 @media (min-width: 1024px) {
   .pb-tabbar {
     /* デスクトップでも右下固定のサポートチャットボタン(.chatbot-fab、
-       bottom: 1.5rem、高さ56px)とページ下部のボタン類が重ならないよう、
+       bottom: 1.5rem、高ず56px)とページ下部のボタン類が重ならないよう、
        タブバー用の下部余白をチャットボタンの高さ分広めに確保する */
     padding-bottom: 6rem;
   }
