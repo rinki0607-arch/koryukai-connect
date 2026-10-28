@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventRow } from "@/lib/types";
 import { formatEventDate, formatMonthLabel } from "@/lib/constants";
@@ -26,16 +25,22 @@ export default async function EventsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login?next=/events");
-  }
-
+  // 仮説2：ログインしていなくても交流会の中身を見られるようにする(開催予定・受付終了のみ)。
+  // 参加登録のボタンを押した時点でアカウント作成に進む。
   const [{ data }, { data: myRegs }] = await Promise.all([
-    supabase.from("events").select("*").order("event_date", { ascending: false }),
-    supabase
-      .from("registrations")
-      .select("event_id, attending")
-      .eq("participant_id", user.id),
+    user
+      ? supabase.from("events").select("*").order("event_date", { ascending: false })
+      : supabase
+          .from("events")
+          .select("*")
+          .in("status", ["upcoming", "closed"])
+          .order("event_date", { ascending: true }),
+    user
+      ? supabase
+          .from("registrations")
+          .select("event_id, attending")
+          .eq("participant_id", user.id)
+      : Promise.resolve({ data: [] as { event_id: string; attending: boolean }[] }),
   ]);
 
   const events = (data as EventRow[]) || [];
@@ -53,6 +58,14 @@ export default async function EventsPage() {
   return (
     <div>
       <h1 className="mb-6 text-xl font-bold">交流会一覧</h1>
+      {!user && (
+        <div className="card mb-6 bg-primary-light text-sm text-gray-700">
+          アーク起業アカデミーの交流会です。気になる回を開くと、内容を見てから参加登録できます。
+          <Link href="/login" className="ml-1 font-semibold text-primary underline">
+            ログインはこちら
+          </Link>
+        </div>
+      )}
       {events.length === 0 ? (
         <p className="text-sm text-gray-500">まだ交流会が登録されていません。</p>
       ) : (

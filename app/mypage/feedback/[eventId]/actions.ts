@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function submitEventFeedback(formData: FormData) {
   const supabase = await createClient();
@@ -29,6 +30,22 @@ export async function submitEventFeedback(formData: FormData) {
     p_comment: comment,
   });
   if (error) throw new Error(error.message);
+
+  // 仮説1・3：交流会のあとに面談(個別相談)を希望したかを記録する。
+  // 参加者が自分で書き換えられない列なので、サーバー側の管理用クライアントで本人の行だけを更新する。
+  if (formData.get("wants_interview") === "on") {
+    try {
+      const admin = createAdminClient();
+      await admin
+        .from("registrations")
+        .update({ interview_requested_at: new Date().toISOString() })
+        .eq("event_id", eventId)
+        .eq("participant_id", user.id)
+        .is("interview_requested_at", null);
+    } catch {
+      // 記録に失敗してもアンケート送信は完了させる
+    }
+  }
 
   revalidatePath("/mypage");
   redirect("/mypage?feedback=done");

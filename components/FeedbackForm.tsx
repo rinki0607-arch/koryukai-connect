@@ -95,6 +95,18 @@ export default function FeedbackForm({
         />
       </div>
 
+      <div className="rounded-xl border border-primary/20 bg-primary-light p-3">
+        <label className="flex items-start gap-2 text-sm text-gray-700">
+          <input type="checkbox" name="wants_interview" className="mt-0.5" />
+          <span>
+            <span className="font-semibold">アーク起業アカデミーの個別相談(面談)を希望する</span>
+            <span className="mt-0.5 block text-xs text-gray-500">
+              今日の話の続きを、運営スタッフと1対1で相談できます。後日ご連絡します。
+            </span>
+          </span>
+        </label>
+      </div>
+
       <button type="submit" disabled={!canSubmit} className="btn-primary w-full disabled:opacity-40">
         アンケートを送信する
       </button>

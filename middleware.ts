@@ -54,13 +54,40 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // このアプリはスマホで共有・利用される前提のため、未ログインでリンク(トップページ)を開いた場合は、
-  // 紹介ランディングを挟まず、最初に新規登録/ログイン画面を表示する。
+  // 仮説4（紹介元）：?ref=コード 付きのリンクで来た人の紹介元を30日間覚えておき、参加登録に記録する。
+  const refParam = request.nextUrl.searchParams.get("ref");
+  const refCode = refParam ? normalizeRefCode(refParam) : null;
+  // 仮説2（公開ページ）：未ログインの閲覧者を数えるための、個人を特定しない識別子。
+  const needsVisitorId = !user && !request.cookies.get(VISITOR_COOKIE)?.value;
+  const visitorId = needsVisitorId ? crypto.randomUUID() : null;
+
+  const withTrackingCookies = (res: NextResponse) => {
+    if (refCode) {
+      res.cookies.set(REF_COOKIE, refCode, {
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+    if (visitorId) {
+      res.cookies.set(VISITOR_COOKIE, visitorId, {
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+    return res;
+  };
+
+  // 仮説2：未ログインでトップを開いた人には、登録画面より先に交流会の中身(一覧)を見せる。
+  // 参加登録のボタンを押した時点でアカウント作成に進む。
   if (!user && pathname === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("mode", "signup");
-    return NextResponse.redirect(url);
+    url.pathname = "/events";
+    return withTrackingCookies(NextResponse.redirect(url));
   }
 
   if (user && !isExemptFromOnboarding(pathname)) {
@@ -96,7 +123,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return response;
+  return withTrackingCookies(response);
+}
+
+const REF_COOKIE = "arkive_ref";
+const VISITOR_COOKIE = "arkive_vid";
+
+// 紹介コードは英数字・ハイフン・アンダースコアのみ、最大40文字に揃える
+function normalizeRefCode(raw: string) {
+  const code = raw.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 40);
+  return code || null;
 }
 
 export const config = {

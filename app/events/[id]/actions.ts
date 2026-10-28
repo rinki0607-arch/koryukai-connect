@@ -14,6 +14,10 @@ export async function submitRegistration(formData: FormData) {
   const saveAsDefault = formData.get("save_as_default") === "on";
   const wantsReceipt = formData.get("wants_receipt") === "on";
   const receiptName = String(formData.get("receipt_name") || "").trim() || null;
+  // 仮説3：事前マッチング(話すとよい3人の案内)の希望 / 仮説4：紹介元
+  const wantsIntro = formData.get("wants_intro") === "on";
+  const referralRaw = String(formData.get("referral_code") || "").trim();
+  const referralCode = referralRaw ? referralRaw.slice(0, 60) : null;
 
   const supabase = await createClient();
   const {
@@ -36,6 +40,9 @@ export async function submitRegistration(formData: FormData) {
       goal_text: attending ? goalText || null : null,
       wants_receipt: attending ? wantsReceipt : false,
       receipt_name: attending ? receiptName : null,
+      wants_intro: attending ? wantsIntro : false,
+      // 紹介元は入力がある時だけ書き込む(空欄で既存の記録を消さない)
+      ...(referralCode ? { referral_code: referralCode } : {}),
     },
     { onConflict: "event_id,participant_id" }
   );

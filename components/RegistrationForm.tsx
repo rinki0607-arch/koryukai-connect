@@ -9,10 +9,13 @@ export default function RegistrationForm({
   event,
   registration,
   profile,
+  refCode = null,
 }: {
   event: EventRow;
-  registration: RegistrationRow | null;
+  // 仮説検証(2026-10-29)で追加した列を含む
+  registration: (RegistrationRow & { wants_intro?: boolean | null; referral_code?: string | null }) | null;
   profile: Profile | null;
+  refCode?: string | null;
 }) {
   const [attending, setAttending] = useState<boolean>(
     registration ? registration.attending : true
@@ -212,6 +215,36 @@ export default function RegistrationForm({
             />
             <p className="mt-1 text-xs text-gray-400">
               当日の目的を具体的に書くほど、AIによる「おすすめの参加者」の精度が上がります。
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-primary/20 bg-primary-light p-3">
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                name="wants_intro"
+                className="mt-0.5"
+                defaultChecked={registration?.wants_intro ?? false}
+              />
+              <span>
+                <span className="font-semibold">交流会の前に、話すとよい3人を運営から案内してほしい</span>
+                <span className="mt-0.5 block text-xs text-gray-500">
+                  上の「繋がりたい人」「相談したいこと」をもとに、運営が当日までに3人をご案内します。
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <label className="label">ご紹介者(いれば)</label>
+            <input
+              name="referral_code"
+              className="input"
+              defaultValue={registration?.referral_code || refCode || ""}
+              placeholder="例: 紹介してくれた人の名前やコード"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              紹介リンクから来た場合は自動で入っています。
             </p>
           </div>
 

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { popPendingEventPath } from "@/lib/tracking";
 
 export async function completeOnboarding(formData: FormData) {
   const supabase = await createClient();
@@ -38,7 +39,7 @@ export async function completeOnboarding(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mypage");
-  redirect("/events?welcome=1");
+  redirect((await popPendingEventPath()) || "/events?welcome=1");
 }
 
 // プロフィール入力を後回しにする場合も、オンボーディング自体は完了扱いにして
@@ -57,5 +58,5 @@ export async function skipOnboarding() {
 
   if (error) throw new Error(error.message);
 
-  redirect("/events?welcome=1");
+  redirect((await popPendingEventPath()) || "/events?welcome=1");
 }

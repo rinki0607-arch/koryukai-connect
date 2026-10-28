@@ -64,6 +64,12 @@ export default async function AdminLayout({
         >
           全体集計・分析
         </Link>
+        <Link
+          href="/admin/validation"
+          className="font-semibold text-primary hover:text-primary"
+        >
+          仮説検証
+        </Link>
         <Link href="/admin/team" className="text-gray-600 hover:text-primary">
           運営メンバー
         </Link>
