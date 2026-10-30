@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryEntry } from "@/lib/types";
 import MemberDirectory from "@/components/MemberDirectory";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,10 @@ export default async function MembersPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold">参加者名簿</h1>
-        <div className="mt-2 h-1 w-14 rounded-full bg-gradient-to-r from-accent to-accent-dark" />
-        <p className="mt-3 text-sm text-gray-500">
-          これまでARKIVEにご登録いただいた参加者のプロフィールです。気になる方は⭐で保存したり、プロフィールを覗いて「話してみたい」を送ってみましょう。お互いに送り合うとマッチが成立し、メッセージでやりとりできるようになります。交流会での「話してみたい」の意思表示は、各交流会のマッチングページからも行えます。
-        </p>
-      </div>
+      <PageHeader
+        title="参加者名簿"
+        subtitle="これまでARKIVEにご登録いただいた参加者のプロフィールです。気になる方は⭐で保存したり、プロフィールを覗いて「話してみたい」を送ってみましょう。お互いに送り合うとマッチが成立し、メッセージでやりとりできるようになります。交流会での「話してみたい」の意思表示は、各交流会のマッチングページからも行えます。"
+      />
 
       {error && (
         <p className="card text-sm text-red-600">

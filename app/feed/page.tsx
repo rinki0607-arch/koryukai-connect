@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FeedPost } from "@/lib/types";
 import FeedComposer from "@/components/FeedComposer";
 import PostCard from "@/components/PostCard";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,10 @@ export default async function FeedPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-xl font-bold">コミュニティフィード</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        「求む: Web制作会社」「〇〇業界の詳しい方いませんか」など、交流会の合間にも会員同士でつながれる掲示板です。
-      </p>
+      <PageHeader
+        title="コミュニティフィード"
+        subtitle="「求む: Web制作会社」「〇〇業界の詳しい方いませんか」など、交流会の合間にも会員同士でつながれる掲示板です。"
+      />
 
       <FeedComposer name={profile?.name || null} avatarUrl={profile?.avatar_url || null} />
 

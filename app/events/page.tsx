@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { EventRow } from "@/lib/types";
 import { formatEventDate, formatMonthLabel } from "@/lib/constants";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function EventsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-bold">交流会一覧</h1>
+      <PageHeader title="交流会一覧" />
       {!user && (
         <div className="card mb-6 bg-primary-light text-sm text-gray-700">
           アーク起業アカデミーの交流会です。気になる回を開くと、内容を見てから参加登録できます。

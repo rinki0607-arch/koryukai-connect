@@ -4,8 +4,8 @@
   "description": "アーク起業アカデミーの交流会 参加登録・マッチング・QR受付アプリ",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f5f9",
-  "theme_color": "#10192f",
+  "background_color": "#fdf8f6",
+  "theme_color": "#D6304A",
   "orientation": "portrait",
   "icons": [
     {
