@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useTransition } from "react";
+import { ReactNode, useState, useTransition } from "react";
 import Link from "next/link";
 import { markRead, markAllRead } from "@/app/notifications/actions";
 
@@ -102,8 +102,25 @@ export default function NotificationList({
 }: {
   notifications: NotificationRow[];
 }) {
-  const [pending, startTransition] = useTransition();
-  const unread = notifications.filter((n) => !n.read_at).length;
+  const [, startTransition] = useTransition();
+  // 楽観的UI: 既読ボタン・リンクを押した瞬間にバッジを消す(サーバーの応答を待たない)
+  const [readIds, setReadIds] = useState<Set<string>>(
+    new Set(notifications.filter((n) => n.read_at).map((n) => n.id))
+  );
+
+  const isRead = (n: NotificationRow) => !!n.read_at || readIds.has(n.id);
+  const unread = notifications.filter((n) => !isRead(n)).length;
+
+  const handleMarkRead = (id: string) => {
+    if (readIds.has(id)) return;
+    setReadIds((prev) => new Set(prev).add(id));
+    startTransition(() => markRead(id));
+  };
+
+  const handleMarkAllRead = () => {
+    setReadIds(new Set(notifications.map((n) => n.id)));
+    startTransition(() => markAllRead());
+  };
 
   return (
     <div>
@@ -111,9 +128,8 @@ export default function NotificationList({
         <div className="mb-4 flex justify-end">
           <button
             type="button"
-            disabled={pending}
-            onClick={() => startTransition(() => markAllRead())}
-            className="text-sm font-semibold text-primary hover:underline disabled:opacity-40"
+            onClick={handleMarkAllRead}
+            className="text-sm font-semibold text-primary hover:underline"
           >
             すべて既読にする
           </button>
@@ -125,17 +141,18 @@ export default function NotificationList({
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => {
+            const read = isRead(n);
             const card = (
               <div
                 className={`card flex items-start gap-3 ${
-                  !n.read_at ? "border-accent/40 bg-accent/5" : ""
+                  !read ? "border-accent/40 bg-accent/5" : ""
                 }`}
               >
                 <NotificationIcon type={n.type} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-semibold">{n.title}</p>
-                    {!n.read_at && (
+                    {!read && (
                       <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent" />
                     )}
                   </div>
@@ -154,9 +171,7 @@ export default function NotificationList({
                 <Link
                   key={n.id}
                   href={n.link}
-                  onClick={() => {
-                    if (!n.read_at) startTransition(() => markRead(n.id));
-                  }}
+                  onClick={() => handleMarkRead(n.id)}
                   className="block"
                 >
                   {card}

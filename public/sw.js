@@ -1,4 +1,4 @@
-const CACHE_NAME = "arkive-shell-v1";
+const CACHE_NAME = "arkive-shell-v2";
 const SHELL_ASSETS = ["/", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -24,7 +24,7 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// ネットワーク優先、オフライン時のみキャッシュにフォールバック
+// ネットワーク優先、オフライン時のみキャッシュにフォールフッディンプレゼントアウシーン
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
@@ -50,7 +50,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 通知タップで該当ページを開く/フォーカスする
+// 通知タップで当該ページを開く/フォーカスする
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "/";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { deletePost, likePost, unlikePost } from "@/app/feed/actions";
 import { FeedPost } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/constants";
@@ -27,6 +27,28 @@ export default function PostCard({
   isOwn: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  // 楽観的UI: サーバーの応答を待たず、タップした瞬間に見た目を切り替える
+  // (Xのいいねと同じ挿動)。失敗したときだけ元の状態に戻す。
+  const [liked, setLiked] = useState(post.liked_by_me);
+  const [likeCount, setLikeCount] = useState(post.like_count);
+
+  const handleToggleLike = () => {
+    const nextLiked = !liked;
+    setLiked(nextLiked);
+    setLikeCount((c) => c + (nextLiked ? 1 : -1));
+    startTransition(async () => {
+      try {
+        if (nextLiked) {
+          await likePost(post.post_id);
+        } else {
+          await unlikePost(post.post_id);
+        }
+      } catch {
+        setLiked(!nextLiked);
+        setLikeCount((c) => c + (nextLiked ? -1 : 1));
+      }
+    });
+  };
 
   return (
     <div className="card">
@@ -51,22 +73,13 @@ export default function PostCard({
           </p>
           <div className="mt-3 flex items-center gap-4">
             <button
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  if (post.liked_by_me) {
-                    await unlikePost(post.post_id);
-                  } else {
-                    await likePost(post.post_id);
-                  }
-                })
-              }
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-all active:scale-95 disabled:opacity-40 ${
-                post.liked_by_me ? "text-accent-dark" : "text-gray-400 hover:text-accent-dark"
+              onClick={handleToggleLike}
+              className={`flex items-center gap-1.5 text-sm font-semibold transition-all active:scale-95 ${
+                liked ? "text-accent-dark" : "text-gray-400 hover:text-accent-dark"
               }`}
             >
-              <HeartIcon filled={post.liked_by_me} />
-              {post.like_count > 0 ? post.like_count : "いいね"}
+              <HeartIcon filled={liked} />
+              {likeCount > 0 ? likeCount : "いいね"}
             </button>
             {isOwn && (
               <button

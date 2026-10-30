@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ConversationRow } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +34,10 @@ export default async function MatchesPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-xl font-bold">メッセージ</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        お互いに「話してみたい」を選んだ相手とチャットできます。会話は相手ごとに、今後別の交流会で再びマッチしても続けて残ります。
-      </p>
+      <PageHeader
+        title="メッセージ"
+        subtitle="お互いに「話してみたい」を選んだ相手とチャットできます。会話は相手ごとに、今後別の交流会で再びマッチしても続けて残ります。"
+      />
 
       {error && (
         <p className="text-sm text-red-600">読み込みに失敗しました: {error.message}</p>

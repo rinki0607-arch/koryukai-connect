@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toggleSave, toggleGeneralLike } from "@/app/members/actions";
 
@@ -32,8 +32,8 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 export default function MemberActions({
   participantId,
-  isSaved,
-  alreadyLiked,
+  isSaved: isSavedProp,
+  alreadyLiked: alreadyLikedProp,
   isMatched,
 }: {
   participantId: string;
@@ -41,25 +41,46 @@ export default function MemberActions({
   alreadyLiked: boolean;
   isMatched: boolean;
 }) {
-  const [savePending, startSaveTransition] = useTransition();
-  const [likePending, startLikeTransition] = useTransition();
+  const [, startSaveTransition] = useTransition();
+  const [, startLikeTransition] = useTransition();
+  // 楽観的UI: サーバーの応答を待たず、タップした瞬間にボタンの見た目を切り替える。
+  // 失敗したときだけ元の状態に戻す。
+  const [isSaved, setIsSaved] = useState(isSavedProp);
+  const [alreadyLiked, setAlreadyLiked] = useState(alreadyLikedProp);
+
+  const handleToggleSave = () => {
+    const next = !isSaved;
+    setIsSaved(next);
+    startSaveTransition(async () => {
+      try {
+        await toggleSave(participantId, next);
+      } catch (err) {
+        setIsSaved(!next);
+        alert(err instanceof Error ? err.message : "エラーが発生しました");
+      }
+    });
+  };
+
+  const handleToggleLike = () => {
+    const next = !alreadyLiked;
+    setAlreadyLiked(next);
+    startLikeTransition(async () => {
+      try {
+        await toggleGeneralLike(participantId, next);
+      } catch (err) {
+        setAlreadyLiked(!next);
+        alert(err instanceof Error ? err.message : "エラーが発生しました");
+      }
+    });
+  };
 
   return (
     <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
       <button
         type="button"
-        disabled={savePending}
         aria-label={isSaved ? "保存を解除" : "プロフィールを保存"}
-        onClick={() =>
-          startSaveTransition(async () => {
-            try {
-              await toggleSave(participantId, !isSaved);
-            } catch (err) {
-              alert(err instanceof Error ? err.message : "エラーが発生しました");
-            }
-          })
-        }
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-150 active:scale-90 disabled:opacity-40 ${
+        onClick={handleToggleSave}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-150 active:scale-90 ${
           isSaved
             ? "bg-accent text-[#241a03] shadow-[0_4px_14px_rgba(201,162,75,0.35)]"
             : "border-[1.5px] border-gray-200 text-gray-400 hover:border-accent hover:text-accent-dark"
@@ -78,17 +99,8 @@ export default function MemberActions({
       ) : (
         <button
           type="button"
-          disabled={likePending}
-          onClick={() =>
-            startLikeTransition(async () => {
-              try {
-                await toggleGeneralLike(participantId, !alreadyLiked);
-              } catch (err) {
-                alert(err instanceof Error ? err.message : "エラーが発生しました");
-              }
-            })
-          }
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:opacity-40 ${
+          onClick={handleToggleLike}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.98] ${
             alreadyLiked
               ? "bg-primary text-white shadow-[0_4px_14px_rgba(214,48,74,0.35)]"
               : "border-[1.5px] border-gray-200 text-gray-500 hover:border-primary hover:text-primary-dark"
