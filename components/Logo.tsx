@@ -1,7 +1,7 @@
 // ARKIVEのロゴマーク。ホーム画面に追加したときに表示されるPWAアイコン
 // (/icons/icon-192.png)と完全に同じ画像を使うことで、「表示上のアイコン」と
 // 「アプリ内のロゴ」が違う状態を解消している。
-// ?v=2 はアイコン差し替え時にブラウザの古いキャッシュを読み直させるための目印。
+// ?v=3 はアイコン差し替え時にブラウザの古いキャッシュを読み直させるための目印。
 export default function Logo({ size = 32 }: { size?: number }) {
   const radius = Math.round(size * 0.32);
   return (
@@ -16,7 +16,7 @@ export default function Logo({ size = 32 }: { size?: number }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/icons/icon-192.png?v=2"
+        src="/icons/icon-192.png?v=3"
         alt="ARKIVE"
         width={size}
         height={size}

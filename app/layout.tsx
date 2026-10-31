@@ -29,10 +29,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        {/* ?v=2: マスコットアイコンに差し替えたとき、ブラウザ側に残っていた
+        {/* ?v=3: アイコンをAロゴマーク版に差し替えたとき、ブラウザ側に残っていた
             古いアイコンのキャッシュを読み直させるための目印(クエリが変われば再取得される) */}
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
-        <link rel="icon" href="/icons/icon-192.png?v=2" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=3" />
+        <link rel="icon" href="/icons/icon-192.png?v=3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
