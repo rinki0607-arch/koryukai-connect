@@ -4,6 +4,8 @@ import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { BrandRailLeft, BrandRailRight } from "@/components/BrandRails";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import NavProgressBar from "@/components/NavProgressBar";
+import InstallBanner from "@/components/InstallBanner";
 
 export const metadata: Metadata = {
   title: "ARKIVE",
@@ -45,6 +47,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
+        <NavProgressBar />
+        <InstallBanner />
         <BrandRailLeft />
         <BrandRailRight />
         <NavBar />
