@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { BrandRailLeft, BrandRailRight } from "@/components/BrandRails";
-import ChatbotWidget from "@/components/ChatbotWidget";
 import NavProgressBar from "@/components/NavProgressBar";
 import InstallBanner from "@/components/InstallBanner";
+
+// サポートチャットは全ピージで即必要なものではないため、初回表示の重さに含めず
+// 画面が出た後に遅延読み込みする(サーバー側では描画しない=ssr:false)。
+const ChatbotWidget = dynamic(() => import("@/components/ChatbotWidget"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "ARKIVE",
