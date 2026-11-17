@@ -7,7 +7,7 @@ import { BrandRailLeft, BrandRailRight } from "@/components/BrandRails";
 import NavProgressBar from "@/components/NavProgressBar";
 import InstallBanner from "@/components/InstallBanner";
 
-// サポートチャットは全ピージで即必要なものではないため、初回表示の重さに含めず
+// サポートチャットは全ページで即必要なものではないため、初回表示の重さに含めず
 // 画面が出た後に遅延読み込みする(サーバー側では描画しない=ssr:false)。
 const ChatbotWidget = dynamic(() => import("@/components/ChatbotWidget"), {
   ssr: false,

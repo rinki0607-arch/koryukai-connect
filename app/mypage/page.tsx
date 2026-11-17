@@ -127,7 +127,7 @@ export default async function MyPage({
           />
         </div>
 
-        <h2 className="mb-2 text-sm font-bold text-gray-400">クイックアドリース</h2>
+        <h2 className="mb-2 text-sm font-bold text-gray-400">クイックアクセス</h2>
         <div className="mb-8 flex flex-wrap gap-2">
           <Link href="/mypage/ticket" className="btn-secondary">
             🎫 マイQRコード
@@ -144,9 +144,9 @@ export default async function MyPage({
           <PushNotificationButton />
         </div>
 
-        {/* プロフィール編集: 項目数が多いため、普段は折りたとんでおき
+        {/* プロフィール編集: 項目数が多いため、普段は折りたたんでおき
             (名前・自己紹介が未設定のときだけ初期表示で開く)、見たい情報
-            (クイックアドリース・参加登録・スタッフコード)までのスクロールを短くする */}
+            (クイックアクセス・参加登録・スタッフコード)までのスクロールを短くする */}
         <details className="group card" open={!p?.name || !p?.bio}>
           <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
             <span>プロフィールを編集する</span>
