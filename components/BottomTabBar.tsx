@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface TabItem {
   href: string;
@@ -131,29 +134,44 @@ export default function BottomTabBar({
         { href: "/login", label: "ログイン", icon: <PersonIcon /> },
       ];
 
+  const pathname = usePathname() || "";
+  // 今いるページに最も近いタブだけを「選択中」として光らせる。
+  // 例: /mypage/matches/123 は「メッセージ」、/mypage/ticket は「マイページ」になるよう、
+  // 一致したhrefの中で一番長い(=一番具体的な)ものを選ぶ。
+  const activeHref = items
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(href + "/"))
+    .sort((a, b) => b.length - a.length)[0];
+
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden"
       style={{ boxShadow: "0 -2px 16px rgba(16,25,47,0.06)" }}
     >
       <div className="mx-auto flex max-w-5xl">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors active:text-primary"
-          >
-            <span className="relative">
-              {item.icon}
-              {!!item.badge && item.badge > 0 && (
-                <span className="absolute -right-1.5 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-[#241a03]">
-                  {item.badge > 9 ? "9+" : item.badge}
-                </span>
-              )}
-            </span>
-            <span className="text-[10px] font-semibold">{item.label}</span>
-          </Link>
-        ))}
+        {items.map((item) => {
+          const isActive = item.href === activeHref;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors active:text-primary ${
+                isActive ? "text-primary" : "text-gray-400"
+              }`}
+            >
+              <span className="relative">
+                {item.icon}
+                {!!item.badge && item.badge > 0 && (
+                  <span className="absolute -right-1.5 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-[#241a03]">
+                    {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+              </span>
+              <span className="text-[10px] font-semibold">{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

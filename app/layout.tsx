@@ -16,7 +16,7 @@ const ChatbotWidget = dynamic(() => import("@/components/ChatbotWidget"), {
 export const metadata: Metadata = {
   title: "ARKIVE",
   description:
-    "アーク起業アカデミーの交流会 参加登録・運営データ蝉積・参加者マッチング・QR受付をまとめて管理",
+    "アーク起業アカデミーの交流会 参加登録・運営データ蓄積・参加者マッチング・QR受付をまとめて管理",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

@@ -81,7 +81,7 @@ export default async function MyPage({
               📝 参加後アンケートにご協力ください
             </p>
             <p className="mt-1 text-sm text-gray-600">
-              交流会の感想をぶ詳お聞かせください。1分程度で回答できます。
+              交流会の感想をぜひ詳しくお聞かせください。1分程度で回答できます。
             </p>
             <div className="mt-3 space-y-2">
               {pendingFeedback.map((ev) => (
@@ -126,12 +126,14 @@ export default async function MyPage({
             avatarUrl={p?.avatar_url ?? null}
           />
         </div>
-        <div className="mb-6 flex flex-wrap gap-2">
+
+        <h2 className="mb-2 text-sm font-bold text-gray-400">クイックアドリース</h2>
+        <div className="mb-8 flex flex-wrap gap-2">
           <Link href="/mypage/ticket" className="btn-secondary">
             🎫 マイQRコード
           </Link>
           <Link href="/mypage/cards" className="btn-secondary">
-            📋 マイ名刑
+            📋 マイ名刺
           </Link>
           <Link href="/mypage/ranking" className="btn-secondary">
             🏆 ランキング
@@ -141,7 +143,34 @@ export default async function MyPage({
           </Link>
           <PushNotificationButton />
         </div>
-        <form action={updateProfile} className="card max-w-xl space-y-4">
+
+        {/* プロフィール編集: 項目数が多いため、普段は折りたとんでおき
+            (名前・自己紹介が未設定のときだけ初期表示で開く)、見たい情報
+            (クイックアドリース・参加登録・スタッフコード)までのスクロールを短くする */}
+        <details className="group card" open={!p?.name || !p?.bio}>
+          <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
+            <span>プロフィールを編集する</span>
+            <span className="flex items-center gap-1 text-xs font-normal text-gray-400">
+              <span className="group-open:hidden">開く</span>
+              <span className="hidden group-open:inline">閉じる</span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="transition-transform group-open:rotate-180"
+              >
+                <path
+                  d="M5 7.5 10 13l5-5.5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </summary>
+        <form action={updateProfile} className="mt-4 max-w-xl space-y-4">
           <p className="text-sm text-gray-500">
             ここで設定した内容は、次回以降の交流会申込フォームの初期値として使われます。
           </p>
@@ -263,6 +292,7 @@ export default async function MyPage({
             保存する
           </button>
         </form>
+        </details>
       </section>
 
       <section>
